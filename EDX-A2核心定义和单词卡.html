@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDX-A2核心定义和单词卡</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1f2733; --muted:#6b7686;
+    --line:#e6eaf2; --brand:#4f6ef7; --brand2:#19b8a6;
+    --warn:#e8833a; --bad:#e0524e; --good:#27a567; --soft:#eef2ff;
+    --shadow:0 10px 30px rgba(31,39,51,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 16px 60px}
+  header.top{
+    background:linear-gradient(120deg,#4f6ef7,#19b8a6);color:#fff;border-radius:18px;
+    padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  header.top h1{margin:0;font-size:21px;letter-spacing:.3px}
+  header.top .sub{opacity:.9;font-size:13px;margin-top:4px}
+  .toprow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);
+    padding:6px 12px;border-radius:999px;font-size:13px;display:flex;align-items:center;gap:6px}
+  .pill b{font-size:15px}
+  .tabs{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap}
+  .tab{appearance:none;border:1px solid var(--line);background:#fff;color:var(--muted);
+    padding:9px 16px;border-radius:12px;font-size:14px;cursor:pointer;transition:.15s;font-weight:600}
+  .tab:hover{border-color:#c9d2e6}
+  .tab.active{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:0 6px 16px rgba(79,110,247,.3)}
+  .panel{display:none;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  .panel.active{display:block}
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{appearance:none;border:none;border-radius:12px;padding:11px 18px;font-size:14px;
+    font-weight:700;cursor:pointer;transition:.15s;background:var(--brand);color:#fff}
+  .btn:hover{filter:brightness(1.05)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid #c9d2e6}
+  .btn.soft{background:var(--soft);color:var(--brand)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.bad{background:var(--bad)} .btn.warn{background:var(--warn)} .btn.good{background:var(--good)}
+  select,input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink)}
+  /* flip card */
+  .stage{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+  .progress{width:100%;height:8px;background:#eef1f7;border-radius:99px;overflow:hidden}
+  .progress>i{display:block;height:100%;background:linear-gradient(90deg,#4f6ef7,#19b8a6);width:0;transition:.3s}
+  .flip{width:100%;max-width:620px;height:300px;perspective:1400px;cursor:pointer}
+  .flip-in{position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+  .flip.flipped .flip-in{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;
+    display:flex;align-items:center;justify-content:center;padding:26px;text-align:center;
+    box-shadow:var(--shadow);border:1px solid var(--line)}
+  .front{background:linear-gradient(135deg,#ffffff,#eef3ff)}
+  .front .term{font-size:30px;font-weight:800;color:var(--ink);letter-spacing:.3px}
+  .front .hint{position:absolute;bottom:14px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .back{background:linear-gradient(135deg,#ffffff,#eafff8);transform:rotateY(180deg)}
+  .back .def{font-size:18px;color:#243;line-height:1.7}
+  .back .tag{position:absolute;top:12px;left:14px;font-size:12px;color:var(--muted)}
+  .back .meta{position:absolute;bottom:12px;left:0;right:0;font-size:12px;color:var(--muted)}
+  /* 挖空练习 */
+  .cloze-card{width:100%;max-width:620px;min-height:300px;border-radius:18px;position:relative;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    padding:52px 26px 60px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--line);
+    background:linear-gradient(135deg,#ffffff,#fff7ea)}
+  .cloze-card .ctag{position:absolute;top:12px;left:14px;font-size:12px;color:var(--muted)}
+  .cloze-card .cterm{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:.3px}
+  .cloze-card .cloze-def{font-size:17px;color:#243;line-height:1.8}
+  .cloze-card .cmeta{position:absolute;bottom:32px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .cloze-card .chint{position:absolute;bottom:12px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .cloze{display:inline-block;min-width:64px;padding:0 6px;border-bottom:2px solid #e39a2d;
+    color:#e39a2d;font-weight:800;letter-spacing:2px;border-radius:4px;background:#fff3dd}
+  .cloze.revealed{color:#0f766e;background:#e3fff6;border-bottom-color:#19b8a6;letter-spacing:.3px}
+  @media(max-width:560px){.cloze-card .cloze-def{font-size:15px}.cloze-card .cterm{font-size:20px}}
+  .ratings{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .ratings .btn{min-width:120px}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+  .empty .big{font-size:40px;margin-bottom:8px}
+  /* stats */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:#fafbff;border:1px solid var(--line);border-radius:14px;padding:14px}
+  .stat .n{font-size:26px;font-weight:800}
+  .stat .l{font-size:13px;color:var(--muted)}
+  .donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .legend{display:flex;flex-direction:column;gap:8px;font-size:14px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:middle}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:10px}
+  .bars .b{flex:1;background:var(--brand);border-radius:6px 6px 0 0;min-height:3px;position:relative}
+  .bars .b span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
+  .bars .b small{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+  /* calendar */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-width:360px;margin-top:10px}
+  .cal .d{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;background:#f3f5fa;color:var(--muted);border:1px solid transparent}
+  .cal .d.on{background:var(--brand);color:#fff;font-weight:700}
+  .cal .d.today{outline:2px solid var(--brand2)}
+  .cal .h{background:none;color:var(--muted);font-weight:700;font-size:12px}
+  /* browse */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{appearance:none;border:1px solid var(--line);background:#fff;color:var(--muted);
+    padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+  .chip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;transition:.15s}
+  .item:hover{border-color:#c9d2e6}
+  .item .t{font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .item .dd{display:none;margin-top:8px;color:#334;font-size:14px;line-height:1.6}
+  .item.open .dd{display:block}
+  .lvl{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--brand);font-weight:700}
+  .lvl.m{background:#e7f8ef;color:var(--good)}
+  .lvl.l{background:#fff1e8;color:var(--warn)}
+  .lvl.n{background:#eef1f7;color:var(--muted)}
+  .sum{text-align:center;padding:24px}
+  .sum .big{font-size:34px;font-weight:800;color:var(--brand)}
+  .chkline{margin-top:8px;font-size:15px;color:var(--brand);font-weight:600}
+  .pill.good{background:#19b8a6;color:#fff;border-color:#19b8a6}
+  .pill.idle{background:#f0f0f0;color:#888;border-color:#e2e2e2}
+  .chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:6px}
+  .chcard{text-align:left;cursor:pointer;background:#fff;border:1px solid #e6e8ef;border-radius:14px;
+    padding:13px 15px;transition:.15s;display:flex;flex-direction:column;gap:5px}
+  .chcard:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(25,184,166,.15);transform:translateY(-2px)}
+  .chcard .chn{font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.3px}
+  .chcard .cht{font-size:14px;font-weight:700;color:#1f2733;line-height:1.35;min-height:38px}
+  .chcard .chmeta{font-size:11.5px;color:var(--muted)}
+  .chbar{height:6px;border-radius:99px;background:#eef1f7;overflow:hidden}
+  .chbar>i{display:block;height:100%;background:var(--brand);border-radius:99px}
+  @media(max-width:560px){.chgrid{grid-template-columns:1fr 1fr;gap:9px}.chcard{padding:11px 12px}.chcard .cht{font-size:13px;min-height:34px}}
+  /* 学习方式选择 */
+  .moderow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+  .modecard{text-align:left;cursor:pointer;background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:18px 20px;transition:.15s;display:flex;flex-direction:column;gap:7px}
+  .modecard:hover{border-color:var(--brand);box-shadow:0 6px 18px rgba(79,110,247,.15);transform:translateY(-2px)}
+  .modecard .mi{font-size:30px;line-height:1}
+  .modecard .mn{font-size:17px;font-weight:800;color:#1f2733}
+  .modecard .md{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .countrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:6px}
+  .backbtn{margin-bottom:12px}
+  @media(max-width:560px){.moderow{grid-template-columns:1fr}}
+  @media(max-width:560px){.front .term{font-size:24px}.back .def{font-size:16px}.flip{height:260px}}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f2733;color:#fff;
+    padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .small{font-size:12px}
+  a.link{color:var(--brand);cursor:pointer}
+  /* 复习入口卡 */
+  .revopt{background:#fff;border:1px solid #e6e8ef;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  .revopt .rt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .revopt .rt .name{font-size:15px;font-weight:800;color:#1f2733}
+  .revopt .rt .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+  .revopt .rt .tag.auto{background:#e6f7f4;color:#0f9c8b}
+  .revopt .rt .tag.pick{background:#fff1e8;color:var(--warn)}
+  .revopt .desc{font-size:12.5px;color:var(--muted);margin:6px 0 10px;line-height:1.5}
+  .revopt .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+</style>
+<script>window.DECK_SLUG = "eda2words";</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="cloudstore.js"></script>
+<script src="auth.js"></script>
+<script src="sync.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>EDX-A2核心定义和单词卡</h1>
+    <div class="sub">根据 EDX-A2 阶段核心定义整理 · 共 <span id="totalN">0</span> 张单词卡</div>
+    <div class="sub" style="margin-top:3px;opacity:.8">制作：常亚菲 Donna</div>
+    <div class="toprow">
+      <div class="pill">今日 <b id="todayStr">-</b></div>
+      <div class="pill">连续打卡 <b id="streakN">0</b> 天</div>
+      <div class="pill">待复习 <b id="dueN">0</b> 张</div>
+      <div class="pill">已掌握 <b id="masterN">0</b> 张</div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="study">学习</button>
+    <button class="tab" data-tab="review">复习</button>
+    <button class="tab" data-tab="checkin">打卡</button>
+    <button class="tab" data-tab="stats">统计</button>
+    <button class="tab" data-tab="browse">词库</button>
+  </div>
+
+  <!-- STUDY — 两级导航：选方式 → 选章节/选个数 → 学习 -->
+  <section class="panel active" id="p-study">
+    <!-- 第 0 级：选择学习方式 -->
+    <div id="studyModeSel">
+      <div class="muted small" style="margin-bottom:10px">选择学习方式</div>
+      <div class="moderow">
+        <button class="modecard" data-mode="chapter">
+          <div class="mi">📚</div>
+          <div class="mn">按章节学习</div>
+          <div class="md">按教材章节一篇一篇背，适合系统过一遍；点开某个章节只显示该章闪卡</div>
+        </button>
+        <button class="modecard" data-mode="count">
+          <div class="mi">🔢</div>
+          <div class="mn">按个数学习</div>
+          <div class="md">自选本轮张数（20 / 30 / 40 / 50），系统优先抽取尚未掌握的单词</div>
+        </button>
+        <button class="modecard" data-mode="cloze">
+          <div class="mi">✏️</div>
+          <div class="mn">挖空练习</div>
+          <div class="md">定义里的重要术语被挖空，看上下文回忆该词；可按时/按章练习，进度独立记录</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 第 1 级：按章节 -->
+    <div id="studyChapter" style="display:none">
+      <button class="btn ghost backbtn" onclick="backToMode()">← 返回选择学习方式</button>
+      <div class="muted small" style="margin-bottom:10px">按章节学习 · 点击任意章节，学习该章全部单词（进度条=已学比例）</div>
+      <div class="chgrid" id="chapterGrid"></div>
+    </div>
+
+    <!-- 第 1 级：按个数 -->
+    <div id="studyCount" style="display:none">
+      <button class="btn ghost backbtn" onclick="backToMode()">← 返回选择学习方式</button>
+      <div class="muted small" style="margin-bottom:10px">按个数学习 · 选择本轮学习的张数，系统优先抽取尚未掌握的单词</div>
+      <div class="countrow">
+        <button class="modecard" data-count="20"><div class="mi">20</div><div class="mn">20 张</div><div class="md">随机抽 20 张</div></button>
+        <button class="modecard" data-count="30"><div class="mi">30</div><div class="mn">30 张</div><div class="md">随机抽 30 张</div></button>
+        <button class="modecard" data-count="40"><div class="mi">40</div><div class="mn">40 张</div><div class="md">随机抽 40 张</div></button>
+        <button class="modecard" data-count="50"><div class="mi">50</div><div class="mn">50 张</div><div class="md">随机抽 50 张</div></button>
+      </div>
+    </div>
+
+    <!-- 第 2 级：学习会话 -->
+    <div id="studyArea" style="display:none;margin-top:14px"></div>
+  </section>
+
+  <!-- REVIEW — 两级：复习选项菜单 → 会话 -->
+  <section class="panel" id="p-review">
+    <div id="reviewMenu">
+      <div class="grid" style="margin-bottom:14px">
+        <div class="stat"><div class="n" id="rDue">0</div><div class="l">今日待复习</div></div>
+        <div class="stat"><div class="n" id="rNew">0</div><div class="l">未学新词</div></div>
+        <div class="stat"><div class="n" id="rWeak">0</div><div class="l">薄弱词</div></div>
+      </div>
+      <!-- 复习待办：系统自动生成，全部做完 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">复习待办</span>
+          <span class="tag auto">系统自动安排</span>
+        </div>
+        <div class="desc">按艾宾浩斯遗忘曲线，把<b>今天到期的卡片</b>自动挑出来（<b id="revDueN">0</b> 张），<b>无需自己选个数，一次全部复习完</b>——这才是防遗忘的关键。做完今天就清零。</div>
+        <div class="actions">
+          <button class="btn" id="revDue">复习全部到期（<span id="revDueN2">0</span> 张）</button>
+        </div>
+      </div>
+
+      <!-- 专攻薄弱：主动加练，自选个数 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">专攻薄弱</span>
+          <span class="tag pick">主动加练 · 自选数量</span>
+        </div>
+        <div class="desc">在到期任务之外<b>额外加练</b>那些还没记牢的词（易错、掌握度低），<b>不管到没到期</b>。因为是主动补练，可自己定本轮做几张。</div>
+        <div class="actions">
+          <span class="muted small">本轮数量：</span>
+          <select id="sessionSize2">
+            <option value="10">10 张</option>
+            <option value="20" selected>20 张</option>
+            <option value="30">30 张</option>
+            <option value="40">40 张</option>
+            <option value="50">50 张</option>
+          </select>
+          <button class="btn soft" id="revWeak">开始专攻（<span id="revWeakN">0</span> 张薄弱）</button>
+        </div>
+      </div>
+
+      <!-- 全部过一遍：通盘复习，自选个数 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">全部过一遍</span>
+          <span class="tag pick">通盘复习 · 自选数量</span>
+        </div>
+        <div class="desc">不分到期与否，从<b>全部单词</b>里随机抽题通盘复习（如考前扫一遍）。数量沿用上面「本轮数量」的设置。</div>
+        <div class="actions">
+          <button class="btn ghost" id="revAll">开始通盘复习</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reviewArea" style="display:none;margin-top:14px"></div>
+  </section>
+
+  <!-- CHECKIN -->
+  <section class="panel" id="p-checkin">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div style="font-size:15px;font-weight:700">每日打卡</div>
+        <div class="muted small">完成学习后自动打卡，本页仅查看记录</div>
+      </div>
+      <div class="pill idle" id="todayChk">今日未打卡</div>
+    </div>
+    <div class="grid" style="margin:16px 0">
+      <div class="stat"><div class="n" id="cCur">0</div><div class="l">当前连续</div></div>
+      <div class="stat"><div class="n" id="cBest">0</div><div class="l">最长连续</div></div>
+      <div class="stat"><div class="n" id="cTot">0</div><div class="l">累计打卡</div></div>
+    </div>
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="btn ghost" style="font-size:12px;padding:6px 11px" onclick="calPrev()">‹ 上月</button>
+      <div class="row" style="gap:8px;align-items:center">
+        <div class="muted small" id="calTitle" style="font-weight:700;font-size:14px"></div>
+        <a class="link" style="font-size:12px" onclick="calToday()">回到本月</a>
+      </div>
+      <button class="btn ghost" style="font-size:12px;padding:6px 11px" onclick="calNext()">下月 ›</button>
+    </div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <!-- STATS -->
+  <section class="panel" id="p-stats">
+    <div class="grid">
+      <div class="stat"><div class="n" id="sNew">0</div><div class="l">新词</div></div>
+      <div class="stat"><div class="n" id="sLearn">0</div><div class="l">学习中</div></div>
+      <div class="stat"><div class="n" id="sMaster">0</div><div class="l">已掌握</div></div>
+      <div class="stat"><div class="n" id="sDue">0</div><div class="l">待复习</div></div>
+      <div class="stat"><div class="n" id="sRet">100%</div><div class="l">已学平均留存率</div></div>
+    </div>
+    <h3 style="margin:18px 0 6px">掌握度分布</h3>
+    <div class="donut-wrap">
+      <svg id="donut" width="140" height="140" viewBox="0 0 140 140"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <h3 style="margin:18px 0 6px">近 14 天学习量</h3>
+    <div class="bars" id="actBars"></div>
+    <h3 style="margin:20px 0 6px">记忆留存（艾宾浩斯遗忘曲线）</h3>
+    <div class="row" style="gap:18px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div class="muted small">系统按遗忘曲线排期：记忆随天数指数衰减，留存跌到约 90% 时（绿点）自动安排复习，记牢后间隔越拉越长。</div>
+      </div>
+      <div class="donut-wrap">
+        <svg id="retCurve" width="100%" style="max-width:340px"></svg>
+      </div>
+    </div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn ghost" id="exportBtn">导出进度</button>
+      <button class="btn ghost" id="importBtn">导入进度</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <button class="btn ghost" id="resetBtn">重置进度</button>
+    </div>
+    <div class="muted small" style="margin-top:8px">进度仅保存在本设备浏览器中；换设备请用“导出/导入”备份。</div>
+  </section>
+
+  <!-- BROWSE -->
+  <section class="panel" id="p-browse">
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="search" placeholder="搜索单词…" style="flex:1;min-width:160px">
+    </div>
+    <div class="filters" id="bFilters">
+      <button class="chip active" data-f="all">全部</button>
+      <button class="chip" data-f="new">新词</button>
+      <button class="chip" data-f="learn">学习中</button>
+      <button class="chip" data-f="master">已掌握</button>
+      <button class="chip" data-f="due">待复习</button>
+    </div>
+    <div class="list" id="bList"></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = [{"id":"eda2001","term":"co-operative","def":"a firm owned controlled and operated by a group of users such as the workers for their own benefit they each contribute by buying shares in the co-operative but have control of the firm on the basis of a one-member one-vote principle rather than having votes in proportion to the number of shares owned ie one-share one-vote.","chNum":1,"chTitle":"Types of business","cloze":"a firm [[owned controlled]] and operated by a group of users such as the workers for their own benefit they each contribute by [[buying shares]] in the co-operative but have control of the firm on the basis of a one-member one-vote principle rather than having votes in proportion to the number of [[shares owned]] ie one-share one-vote."},{"id":"eda2002","term":"dividends","def":"a share of the profit of a company that is distributed to its shareholders according to the number of shares held by them.","chNum":1,"chTitle":"Types of business","cloze":"a share of the [[profit]] of a company that is distributed to its [[shareholders]] according to the number of [[shares held]] by them."},{"id":"eda2003","term":"exploitation","def":"the act of using resources or a persons labour without offering adequate compensation.","chNum":1,"chTitle":"Types of business","cloze":"the act of using resources or a persons [[labour]] without offering [[adequate compensation]]."},{"id":"eda2004","term":"for-profit organisations","def":"organisations that have making a profit as a goal.","chNum":1,"chTitle":"Types of business","cloze":"organisations that have making a [[profit as a goal]]."},{"id":"eda2005","term":"joint venture","def":"where a separate business entity is created by two or more parties It involves sharing ownership returns and risks of the new project or other business activity for which the joint venture was set up.","chNum":1,"chTitle":"Types of business","cloze":"where a separate business entity is [[created by two]] or more parties It [[involves sharing ownership returns]] and risks of the [[new project]] or other business activity for which the joint venture was set up."},{"id":"eda2006","term":"limited company","def":"a type of business organisation where the owners are its shareholders ie those who have bought a part of the business by buying shares in the company it offers limited liability or legal protection to the shareholders as the company and its owners are legally separate.","chNum":1,"chTitle":"Types of business","cloze":"a type of business organisation where the owners are its shareholders ie those who have bought a part of the business by buying shares in the company it offers [[limited liability]] or [[legal protection]] to the shareholders as the company and its owners are [[legally separate]]."},{"id":"eda2007","term":"not-for-profit organisations","def":"organisations that do not have making a profit as a goal but may use any profit or surplus they generate to support their aims.","chNum":1,"chTitle":"Types of business","cloze":"organisations that do not have making a [[profit as a goal]] but may use any profit or [[surplus]] they [[generate]] to support their aims."},{"id":"eda2008","term":"partnership","def":"a type of business organisation where two or more people own the business.","chNum":1,"chTitle":"Types of business","cloze":"a type of business organisation where [[two or more people]] own the business."},{"id":"eda2009","term":"private sector organisations","def":"organisations that are owned by individuals or companies and not the state.","chNum":1,"chTitle":"Types of business","cloze":"organisations that are [[owned]] by individuals or companies and not the [[state]]."},{"id":"eda2010","term":"shareholder","def":"any person or company that owns one or more shares in a limited company.","chNum":1,"chTitle":"Types of business","cloze":"any person or company that [[owns]] one or more [[shares]] in a [[limited company]]."},{"id":"eda2011","term":"sole trader or sole proprietor","def":"a business owed and controlled by one person.","chNum":1,"chTitle":"Types of business","cloze":"a business [[owed]] and [[controlled]] by one person."},{"id":"eda2012","term":"state-owned enterprises (SOEs)","def":"large organisations that are created by a country s government to carry out commercial activities.","chNum":1,"chTitle":"Types of business","cloze":"large organisations that are [[created]] by a [[country s]] government to [[carry out commercial]] activities."},{"id":"eda2013","term":"unlimited liability","def":"the owners of the business are personally liable for its debts and may have to sell personal assets to pay for them.","chNum":1,"chTitle":"Types of business","cloze":"the owners of the business are [[personally liable]] for its [[debts]] and may have to [[sell personal assets]] to pay for them."},{"id":"eda2014","term":"asset stripping","def":"the practice of buying a company cheaply and then selling all the things it owns to make a quick profit.","chNum":2,"chTitle":"Size of businesses","cloze":"the [[practice]] of buying a company [[cheaply]] and then selling all the things it owns to make a [[quick profit]]."},{"id":"eda2015","term":"backward vertical integration","def":"a joining together of two or more firms into one firm where the purchaser merges with one or more of its suppliers.","chNum":2,"chTitle":"Size of businesses","cloze":"a [[joining together of two]] or more firms into one firm where the [[purchaser merges]] with one or more of its [[suppliers]]."},{"id":"eda2016","term":"conglomerate integration","def":"a joining together into one firm of two or more firms producing unrelated products.","chNum":2,"chTitle":"Size of businesses","cloze":"a [[joining together]] into one firm of two or more firms [[producing unrelated]] products."},{"id":"eda2017","term":"demerger","def":"when a firm splits into two or more independent businesses.","chNum":2,"chTitle":"Size of businesses","cloze":"when a firm [[splits into two]] or more [[independent]] businesses."},{"id":"eda2018","term":"forward vertical integration","def":"a joining together of two or more firms into one firm where the supplier merges with one or more of its buyers.","chNum":2,"chTitle":"Size of businesses","cloze":"a [[joining together of two]] or more firms into one firm where the [[supplier merges]] with one or more of its [[buyers]]."},{"id":"eda2019","term":"horizontal integration","def":"a joining together of two or more firms in the same industry at the same stage of production.","chNum":2,"chTitle":"Size of businesses","cloze":"a [[joining together of two]] or more firms in the same industry at the same [[stage]] of production."},{"id":"eda2020","term":"merger or take over","def":"the joining together of two or more firms under common ownership.","chNum":2,"chTitle":"Size of businesses","cloze":"the [[joining together of two]] or more firms under [[common]] ownership."},{"id":"eda2021","term":"niche market","def":"a market for a product or service perhaps an expensive or unusual one that does not have many buyers but that may make good profits for companies that sell it.","chNum":2,"chTitle":"Size of businesses","cloze":"a market for a product or [[service perhaps]] an expensive or unusual one that does not have [[many buyers but]] that may make [[good profits]] for companies that sell it."},{"id":"eda2022","term":"organic growth","def":"a firm increasing its size through investment in capital equipment or an increased labour force.","chNum":2,"chTitle":"Size of businesses","cloze":"a firm increasing its [[size]] through investment in [[capital equipment]] or an [[increased labour force]]."},{"id":"eda2023","term":"synergy/synergies","def":"when two or more activities or firms put together can lead to greater outcomes than the sum of the individual parts.","chNum":2,"chTitle":"Size of businesses","cloze":"when two or more activities or firms [[put together]] can [[lead]] to [[greater outcomes]] than the sum of the individual parts."},{"id":"eda2024","term":"vertical integration","def":"a joining together into one firm of two or more firms at different production stages in the same industry.","chNum":2,"chTitle":"Size of businesses","cloze":"a [[joining together]] into one firm of two or more firms at different production [[stages]] in the same industry."},{"id":"eda2025","term":"business objective","def":"a result that a firm aims to achieve.","chNum":3,"chTitle":"Business objectives","cloze":"a result that a firm [[aims]] to [[achieve]]."},{"id":"eda2026","term":"cost-plus pricing","def":"the technique adopted by firms of fixing a price for their products by adding a fixed percentage profit margin to the long-run average cost of production.","chNum":3,"chTitle":"Business objectives","cloze":"the technique adopted by firms of [[fixing a price]] for their products by adding a [[fixed percentage profit margin]] to the [[long-run average cost]] of production."},{"id":"eda2027","term":"divorce of ownership from control","def":"occurs when the managers and directors of a business are a different group of people from the owners of the business.","chNum":3,"chTitle":"Business objectives","cloze":"occurs when the [[managers]] and [[directors]] of a business are a different group of [[people]] from the owners of the business."},{"id":"eda2028","term":"profit maximisation","def":"occurs when the difference between total revenue and total cost is greatest.","chNum":3,"chTitle":"Business objectives","cloze":"occurs when the difference between [[total revenue]] and [[total cost]] is [[greatest]]."},{"id":"eda2029","term":"profit satisficing","def":"making sufficient profit to satisfy the demands of owners such as shareholders.","chNum":3,"chTitle":"Business objectives","cloze":"making [[sufficient profit]] to satisfy the demands of [[owners]] such as [[shareholders]]."},{"id":"eda2030","term":"revenue maximisation","def":"occurs when total revenue is highest and when marginal revenue equals zero.","chNum":3,"chTitle":"Business objectives","cloze":"occurs when [[total]] revenue is highest and when [[marginal revenue equals zero]]."},{"id":"eda2031","term":"sales volume maximisation","def":"occurs when the volume of sales is greatest when the objective of a firm this is usually subject to a profit satisficing constraint.","chNum":3,"chTitle":"Business objectives","cloze":"occurs when the volume of sales is [[greatest]] when the objective of a firm this is [[usually subject]] to a [[profit satisficing constraint]]."},{"id":"eda2032","term":"average revenue","def":"the average amount received per unit sold it is equal to total revenue divided by quantity sold.","chNum":4,"chTitle":"Revenue","cloze":"the average amount [[received]] per unit sold it is equal to [[total revenue divided]] by [[quantity sold]]."},{"id":"eda2033","term":"marginal revenue","def":"the addition to total revenue from the sale of an extra unit.","chNum":4,"chTitle":"Revenue","cloze":"the [[addition]] to [[total revenue]] from the [[sale]] of an extra unit."},{"id":"eda2034","term":"total revenue","def":"the total money received from the sale of any given quantity of output.","chNum":4,"chTitle":"Revenue","cloze":"the [[total money received]] from the sale of any given [[quantity]] of output."},{"id":"eda2035","term":"average cost ac","def":"the average cost of production per unit calculated by dividing the total cost by the quantity produced it is equal to average variable cost  average fixed cost.","chNum":5,"chTitle":"Costs","cloze":"the average cost of production per unit calculated by dividing the [[total cost]] by the quantity produced it is equal to [[average variable cost  average]] [[fixed cost]]."},{"id":"eda2036","term":"average fixed cost afc","def":"total fixed cost divided by the number of units produced.","chNum":5,"chTitle":"Costs","cloze":"[[total fixed cost divided]] by the number of units produced."},{"id":"eda2037","term":"average product ap","def":"the quantity of output per unit of factor input It is the total product divided by the level of output.","chNum":5,"chTitle":"Costs","cloze":"the [[quantity]] of [[output]] per unit of factor input It is the [[total product divided]] by the level of output."},{"id":"eda2038","term":"average variable cost avc","def":"total variable cost divided by the number of units produced.","chNum":5,"chTitle":"Costs","cloze":"[[total variable cost divided]] by the number of units produced."},{"id":"eda2039","term":"economic cost","def":"the opportunity cost of an input to the production process.","chNum":5,"chTitle":"Costs","cloze":"the [[opportunity cost]] of an [[input]] to the production process."},{"id":"eda2040","term":"factors of production","def":"the inputs to the production process land labour capital and enterprise or entrepreneurship.","chNum":5,"chTitle":"Costs","cloze":"the [[inputs]] to the production process [[land labour capital]] and [[enterprise]] or entrepreneurship."},{"id":"eda2041","term":"fixed cost fc or indirect overhead costs","def":"or costs which do not vary as the level of production increases or decreases.","chNum":5,"chTitle":"Costs","cloze":"or [[costs which do not]] [[vary]] as the level of production increases or [[decreases]]."},{"id":"eda2042","term":"imputed cost","def":"an economic cost which a firm does not pay for with money to another firm but is the opportunity cost of factors of production which the firm itself owns.","chNum":5,"chTitle":"Costs","cloze":"an economic cost which a firm [[does not pay]] for with [[money]] to another firm but is the [[opportunity cost]] of factors of production which the firm itself owns."},{"id":"eda2043","term":"law of diminishing returns marginal productivity","def":"or if increasing quantities of a variable input are combined with a fixed input eventually the marginal product and then the average product of that variable input will decline diminishing returns are said to exist when this decline occurs.","chNum":5,"chTitle":"Costs","cloze":"or if increasing quantities of a [[variable input]] are combined with a [[fixed input eventually]] the marginal product and then the average product of that variable input will [[decline diminishing returns]] are said to exist when this decline occurs."},{"id":"eda2044","term":"long run","def":"the period of time when all factor inputs can be varied but the state of technology remains constant.","chNum":5,"chTitle":"Costs","cloze":"the period of time when all factor [[inputs]] can be [[varied but]] the state of [[technology remains constant]]."},{"id":"eda2045","term":"marginal cost mc","def":"the cost of producing an extra unit of output.","chNum":5,"chTitle":"Costs","cloze":"the [[cost of producing]] an extra unit of output."},{"id":"eda2046","term":"marginal product mp","def":"the addition to output produced by an extra unit of input It is the change in total output divided by the change in the level of inputs.","chNum":5,"chTitle":"Costs","cloze":"the [[addition to output]] produced by an extra unit of input It is the change in [[total output divided]] by the change in the level of [[inputs]]."},{"id":"eda2047","term":"returns to scale","def":"the change in percentage output resulting from a percentage change in all the factors of production there are increasing returns to scale if the percentage increase in output is greater than the percentage increase in factors employed constant returns to scale if it is the same and decreasing returns to scale if it is less.","chNum":5,"chTitle":"Costs","cloze":"the change in [[percentage output resulting]] from a percentage change in all the factors of production there are increasing returns to [[scale if]] the percentage increase in output is greater than the percentage increase in factors employed constant returns to [[scale if]] it is the same and decreasing returns to scale if it is less."},{"id":"eda2048","term":"semi-variable cost","def":"a cost which contains within it a fixed cost element and a variable cost element.","chNum":5,"chTitle":"Costs","cloze":"a cost which contains within it a [[fixed cost]] element and a [[variable cost element]]."},{"id":"eda2049","term":"short run","def":"the period of time when at least one factor input to the production process can not be varied.","chNum":5,"chTitle":"Costs","cloze":"the period of time when at [[least]] one factor [[input]] to the production process can not be [[varied]]."},{"id":"eda2050","term":"total cost tc","def":"the cost of producing any given level of output It is equal to total variable cost  total fixed cost.","chNum":5,"chTitle":"Costs","cloze":"the cost of producing any given level of [[output]] It is equal to [[total variable cost  total]] [[fixed cost]]."},{"id":"eda2051","term":"total fixed cost tfc","def":"the value of the cost of production which does not vary however many units are produced.","chNum":5,"chTitle":"Costs","cloze":"the [[value of the cost]] of production which does [[not vary however many]] units are produced."},{"id":"eda2052","term":"total product tp","def":"the quantity of output measured in physical units produced by a given number of inputs over a period of time.","chNum":5,"chTitle":"Costs","cloze":"the [[quantity]] of [[output measured]] in [[physical]] units produced by a given number of inputs over a period of time."},{"id":"eda2053","term":"total variable cost tvc","def":"the overall cost of those factors of production that vary directly with the amount produced.","chNum":5,"chTitle":"Costs","cloze":"the [[overall cost]] of those factors of production that [[vary directly]] with the amount produced."},{"id":"eda2054","term":"variable cost vc or direct or prime costs","def":"costs which vary directly in proportion to the level of output of a firm.","chNum":5,"chTitle":"Costs","cloze":"[[costs which vary directly]] in proportion to the level of [[output]] of a firm."},{"id":"eda2055","term":"very long run","def":"the period of time when the state of technology may change.","chNum":5,"chTitle":"Costs","cloze":"the [[period]] of time when the [[state]] of [[technology]] may change."},{"id":"eda2056","term":"diseconomies of scale","def":"a rise in the long-run average costs of production as output rises.","chNum":6,"chTitle":"Economies and diseconomies of scale","cloze":"a rise in the [[long-run average costs]] of production as [[output]] rises."},{"id":"eda2057","term":"economies of scale","def":"a fall in the long-run average costs of production as output rises.","chNum":6,"chTitle":"Economies and diseconomies of scale","cloze":"a fall in the [[long-run average costs]] of production as [[output]] rises."},{"id":"eda2058","term":"external economies of scale","def":"falling average costs of production shown by a downward shift in the average cost curve which result from a growth in the size of the industry within which a firm operates.","chNum":6,"chTitle":"Economies and diseconomies of scale","cloze":"[[falling average costs]] of production shown by a downward shift in the [[average cost curve]] which result from a [[growth]] in the size of the industry within which a firm operates."},{"id":"eda2059","term":"internal economies of scale","def":"economies of scale which arise because of the growth in the scale of production within a firm.","chNum":6,"chTitle":"Economies and diseconomies of scale","cloze":"[[economies of scale which]] [[arise]] because of the [[growth]] in the scale of production within a firm."},{"id":"eda2060","term":"minimum efficient scale mes of production","def":"the lowest level of output at which long-run average cost is minimised.","chNum":6,"chTitle":"Economies and diseconomies of scale","cloze":"the lowest level of [[output]] at which [[long-run average cost]] is minimised."},{"id":"eda2061","term":"optimal level of production","def":"the range of output over which long-run average cost is lowest.","chNum":6,"chTitle":"Economies and diseconomies of scale","cloze":"the range of [[output]] over which [[long-run average cost]] is lowest."},{"id":"eda2062","term":"per annum","def":"per year.","chNum":6,"chTitle":"Economies and diseconomies of scale","cloze":""},{"id":"eda2063","term":"long-run shut down","def":"where normal profit is not being earned in the long run.","chNum":7,"chTitle":"Profits and losses","cloze":"where [[normal profit]] is not being earned in the [[long run]]."},{"id":"eda2064","term":"loss","def":"where total cost is greater than total revenue.","chNum":7,"chTitle":"Profits and losses","cloze":"where [[total cost]] is greater than total [[revenue]]."},{"id":"eda2065","term":"normal profit","def":"the profit that the firm could make by using its resources in their next best use normal profit is an economic cost.","chNum":7,"chTitle":"Profits and losses","cloze":"the profit that the firm could make by using its resources in their [[next best]] use normal profit is an economic [[cost]]."},{"id":"eda2066","term":"profit","def":"the difference between total revenue and total cost.","chNum":7,"chTitle":"Profits and losses","cloze":"the difference between [[total revenue]] and [[total cost]]."},{"id":"eda2067","term":"short-run shut down","def":"where variable costs are not being covered.","chNum":7,"chTitle":"Profits and losses","cloze":"where [[variable costs]] are not being covered."},{"id":"eda2068","term":"supernormal profit","def":"the profit over and above normal profit.","chNum":7,"chTitle":"Profits and losses","cloze":""},{"id":"eda2069","term":"allocative efficiency","def":"occurs when scarce resources are used to produce a bundle of goods which satisfies consumer preferences and maximises their welfare.","chNum":8,"chTitle":"Efficiency","cloze":"occurs when [[scarce]] resources are used to produce a bundle of goods which [[satisfies consumer preferences]] and [[maximises]] their welfare."},{"id":"eda2070","term":"dynamic efficiency","def":"occurs when resources are allocated efficiently over time.","chNum":8,"chTitle":"Efficiency","cloze":"occurs when resources are [[allocated efficiently]] over [[time]]."},{"id":"eda2071","term":"productive efficiency","def":"achieved when production is achieved at the lowest average cost.","chNum":8,"chTitle":"Efficiency","cloze":"[[achieved]] when production is achieved at the [[lowest average cost]]."},{"id":"eda2072","term":"market structures","def":"the characteristics of a market which determine the behaviour of firms within the market.","chNum":8,"chTitle":"Efficiency","cloze":"the [[characteristics]] of a market which [[determine]] the [[behaviour]] of firms within the market."},{"id":"eda2073","term":"supply chain","def":"the number of businesses which are involved at different stages in the production and distribution of a single good.","chNum":8,"chTitle":"Efficiency","cloze":"the number of businesses which are [[involved]] at different stages in the production and [[distribution]] of a [[single good]]."},{"id":"eda2074","term":"x-inefficiency","def":"inefficiency arising because a firm or other productive organisation fails to minimise its average costs of production at a given level of output.","chNum":8,"chTitle":"Efficiency","cloze":"[[inefficiency arising]] because a firm or other productive organisation fails to minimise its [[average costs]] of production at a given level of [[output]]."},{"id":"eda2075","term":"barriers to entry","def":"factors which make it difficult or impossible for firms to enter an industry and compete with existing producers.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"factors which make it difficult or [[impossible]] for firms to [[enter]] an industry and [[compete]] with existing producers."},{"id":"eda2076","term":"barriers to exit","def":"factors which make it difficult for firms to cease production and leave an industry.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"factors which make it [[difficult]] for firms to [[cease]] production and [[leave]] an industry."},{"id":"eda2077","term":"brand","def":"a name design symbol or other feature that distinguishes a product from other similar products and which makes it non-homogeneous.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"a [[name design symbol]] or other [[feature]] that [[distinguishes]] a product from other similar products and which makes it non-homogeneous."},{"id":"eda2078","term":"concentration ratio","def":"the market share of the largest firms in an industry for instance a 5-firm concentration ratio of 60 percent shows that the five largest firms in the industry have a combined market share of 60 per cent.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"the market share of the largest firms in an industry for [[instance a 5-firm concentration]] ratio of 60 percent shows that the [[five largest]] firms in the industry have a [[combined market share]] of 60 per cent."},{"id":"eda2079","term":"homogeneous goods","def":"goods made by different firms but which are identical.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"goods made by different firms but which are [[identical]]."},{"id":"eda2080","term":"independent","def":"in market theory when the actions of one firm will have no significant impact on any other single firm in the market.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"in market [[theory]] when the actions of one firm will have [[no significant impact]] on any other [[single]] firm in the market."},{"id":"eda2081","term":"interdependent","def":"in market theory when the actions of one firm will have an impact on other firms in the market.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"in market [[theory]] when the [[actions]] of one firm will have an [[impact]] on other firms in the market."},{"id":"eda2082","term":"market concentration","def":"the degree to which the output of an industry is dominated by its largest producers.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"the degree to which the [[output]] of an industry is [[dominated]] by its [[largest]] producers."},{"id":"eda2083","term":"market share","def":"the proportion of sales in a market taken by a firm or a group of firms.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"the [[proportion]] of [[sales]] in a market [[taken]] by a firm or a group of firms."},{"id":"eda2084","term":"market structures","def":"the characteristics of a market which determine the behaviour of firms within the market.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"the [[characteristics]] of a market which [[determine]] the [[behaviour]] of firms within the market."},{"id":"eda2085","term":"non-homogeneous goods","def":"goods made by different firms which are similar but not identical such as branded goods.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"goods made by different firms which are [[similar but not identical]] such as [[branded]] goods."},{"id":"eda2086","term":"perfect knowledge","def":"exists if all buyers in a market are fully informed of prices and quantities for sale while producers have equal access to information about production techniques.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"exists if all buyers in a market are [[fully informed of prices]] and quantities for sale while producers have [[equal access]] to [[information about]] production techniques."},{"id":"eda2087","term":"product differentiation","def":"aspects of a good or service which serve to distinguish one product from another such as product formulation packaging marketing or availability.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"aspects of a good or service which serve to [[distinguish]] one product from another such as product [[formulation packaging marketing]] or [[availability]]."},{"id":"eda2088","term":"uncertainty","def":"in market theory when one firm does not know how other firms in the market will react if it changes its strategy such as changing its price.","chNum":9,"chTitle":"Market structures and concentration ratios","cloze":"in market theory when one firm [[does not know how]] other firms in the market will [[react if]] it changes its strategy such as [[changing its price]]."},{"id":"eda2089","term":"economic welfare","def":"the level of well-being or prosperity or living standards of an individual or group of individuals such as a country.","chNum":10,"chTitle":"Perfect competition","cloze":"the level of [[well]]-being or [[prosperity]] or [[living standards]] of an individual or group of individuals such as a country."},{"id":"eda2090","term":"perfect competition","def":"a market structure where there are many buyers and sellers where there is freedom of entry and exit to the market where there is perfect knowledge and where all firms produce a homogeneous product.","chNum":10,"chTitle":"Perfect competition","cloze":"a market structure where there are [[many buyers]] and [[sellers]] where there is freedom of entry and exit to the market where there is [[perfect knowledge]] and where all firms produce a homogeneous product."},{"id":"eda2091","term":"price taker","def":"a firm which has no control over the market price and has to accept the market price if it wants to sell its product.","chNum":10,"chTitle":"Perfect competition","cloze":"a firm which has [[no control]] over the market price and has to [[accept]] the market [[price if]] it wants to sell its product."},{"id":"eda2092","term":"spot market","def":"a market where commodities oil metals farm products etc are bought for immediate delivery rather than a futures market.","chNum":10,"chTitle":"Perfect competition","cloze":"a market where [[commodities oil metals farm]] products etc are bought for [[immediate delivery]] rather than a [[futures]] market."},{"id":"eda2093","term":"monopolistic competition","def":"a market structure where a large number of small firms produces non-homogeneous products and where there are no barriers to entry or exit.","chNum":11,"chTitle":"Monopolistic competition","cloze":"a market structure where a large number of [[small firms produces non]]-[[homogeneous]] products and where there are [[no barriers]] to entry or exit."},{"id":"eda2094","term":"cartel","def":"a group of firms that have made a formal agreement to limit competition in the market for example by limiting output in order to raise prices.","chNum":12,"chTitle":"Oligopoly","cloze":"a group of firms that have made a formal agreement to [[limit competition]] in the market for example by [[limiting output]] in order to [[raise prices]]."},{"id":"eda2095","term":"collusion","def":"collective agreements either formal or tacit between firms that restrict competition.","chNum":12,"chTitle":"Oligopoly","cloze":"[[collective]] agreements either formal or [[tacit]] between firms that [[restrict competition]]."},{"id":"eda2096","term":"collusive oligopoly","def":"a market with a high concentration ratio where a few interdependent firms cooperate either formally or tacitly to restrict competition.","chNum":12,"chTitle":"Oligopoly","cloze":"a market with a high concentration [[ratio]] where a [[few interdependent firms cooperate]] either formally or tacitly to [[restrict competition]]."},{"id":"eda2097","term":"concentrated market","def":"a market where most of the output is produced by a few firms and where therefore the concentration ratio is high.","chNum":12,"chTitle":"Oligopoly","cloze":"a market where most of the [[output]] is produced by a few firms and where [[therefore]] the [[concentration ratio]] is high."},{"id":"eda2098","term":"consumer surplus","def":"the difference between how much buyers are prepared to pay for a good and what they actually pay.","chNum":12,"chTitle":"Oligopoly","cloze":"the difference between [[how much buyers]] are [[prepared]] to pay for a good and what they [[actually pay]]."},{"id":"eda2099","term":"formal collusion","def":"when firms make agreements among themselves to restrict competition typically by reducing output raising prices and keeping potential competitors out of the market cartels are one example of formal collusion.","chNum":12,"chTitle":"Oligopoly","cloze":"when firms make agreements among themselves to [[restrict competition typically]] by [[reducing output raising prices]] and [[keeping potential competitors out]] of the market cartels are one example of formal collusion."},{"id":"eda2100","term":"game theory","def":"the analysis of situations in which players are interdependent.","chNum":12,"chTitle":"Oligopoly","cloze":"the [[analysis]] of situations in which [[players]] are interdependent."},{"id":"eda2101","term":"interdependent","def":"a situation where the actions of one large firm will directly affect another large firm.","chNum":12,"chTitle":"Oligopoly","cloze":"a situation where the actions of one [[large firm will directly]] [[affect]] another [[large]] firm."},{"id":"eda2102","term":"limit pricing","def":"when firms set a low enough price to deter new entrants from coming into the market.","chNum":12,"chTitle":"Oligopoly","cloze":"when firms set a [[low enough price]] to [[deter new entrants]] from coming into the market."},{"id":"eda2103","term":"market conduct","def":"the behaviour of firms such as pricing policies promotion of products branding and collusion with other firms.","chNum":12,"chTitle":"Oligopoly","cloze":"the behaviour of firms such as [[pricing policies promotion]] of products [[branding]] and [[collusion]] with other firms."},{"id":"eda2104","term":"oligopoly","def":"a market structure where there is a small number of firms in the industry and where firms are interdependent with one another creating uncertainty barriers to entry are likely to exist.","chNum":12,"chTitle":"Oligopoly","cloze":"a market structure where there is a small number of firms in the industry and where firms are [[interdependent]] with one another [[creating uncertainty barriers]] to entry are likely to [[exist]]."},{"id":"eda2105","term":"predatory pricing","def":"a pricing strategy where an incumbent firm lowers its prices when a new entrant comes into the market in order to force the competitor out of the market and then puts prices back up again once this objective has been achieved.","chNum":12,"chTitle":"Oligopoly","cloze":"a pricing strategy where an incumbent firm lowers its [[prices]] when a new entrant comes into the market in order to force the [[competitor out]] of the market and then puts [[prices back up again]] once this objective has been achieved."},{"id":"eda2106","term":"price agreement","def":"a type of formal collusion where two or more firms arrange to fix prices of their products.","chNum":12,"chTitle":"Oligopoly","cloze":"a type of [[formal collusion where two]] or more firms arrange to [[fix prices]] of their products."},{"id":"eda2107","term":"price follower","def":"a firm which sets its price by reference to the prices set by the price leader in a market.","chNum":12,"chTitle":"Oligopoly","cloze":"a firm which sets its [[price by reference]] to the [[prices set]] by the [[price leader]] in a market."},{"id":"eda2108","term":"price leadership","def":"when one firm the price leader sets its own prices and other firms in the market set their prices in relationship to the price leader.","chNum":12,"chTitle":"Oligopoly","cloze":"when one firm the [[price leader sets]] its [[own prices]] and other firms in the market set their [[prices]] in relationship to the price leader."},{"id":"eda2109","term":"price wars","def":"a situation where several firms in a market repeatedly lower their prices to outcompete other firms the objective may be to gain or defend market share.","chNum":12,"chTitle":"Oligopoly","cloze":"a situation where [[several]] firms in a market [[repeatedly lower their prices]] to outcompete other firms the objective may be to gain or [[defend market share]]."},{"id":"eda2110","term":"prisoners dilemma","def":"a game where given that neither player knows the strategy of the other player the optimum strategy for each player leads to a worse situation than if they had known the strategy of the other player and been able to co-operate and co-ordinate their strategies.","chNum":12,"chTitle":"Oligopoly","cloze":"a game where given that neither [[player knows]] the strategy of the other player the [[optimum strategy]] for each [[player leads]] to a worse situation than if they had known the strategy of the other player and been able to co-operate and co-ordinate their strategies."},{"id":"eda2111","term":"tacit collusion","def":"when firms collude without any formal agreement having been reached and where there is no explicit communication between firms about strategies an example is price leadership.","chNum":12,"chTitle":"Oligopoly","cloze":"when firms collude without any formal agreement having been reached and where there is [[no explicit]] [[communication between firms about]] strategies an example is [[price leadership]]."},{"id":"eda2112","term":"monopolist","def":"a firm which controls all the output in a market.","chNum":13,"chTitle":"Monopoly and monopsony","cloze":"a firm which [[controls]] all the [[output]] in a market."},{"id":"eda2113","term":"monopoly or pure monopoly","def":"market structure where one firm supplies all output in the market without facing competition because of high barriers to entry to the market.","chNum":13,"chTitle":"Monopoly and monopsony","cloze":"market structure where one firm [[supplies all output]] in the market without [[facing competition]] because of [[high barriers]] to entry to the market."},{"id":"eda2114","term":"monopoly power","def":"exists when firms are able to control the price they charge for their product in a market.","chNum":13,"chTitle":"Monopoly and monopsony","cloze":"[[exists]] when firms are able to [[control the price]] they [[charge]] for their product in a market."},{"id":"eda2115","term":"monopsony","def":"exists when there is only one buyer in the market.","chNum":13,"chTitle":"Monopoly and monopsony","cloze":"[[exists]] when there is [[only]] one [[buyer]] in the market."},{"id":"eda2116","term":"natural monopoly","def":"a monopoly that arises due to continuing falling economies of scale.","chNum":13,"chTitle":"Monopoly and monopsony","cloze":"a monopoly that arises due to continuing [[falling economies of scale]]."},{"id":"eda2117","term":"price discrimination","def":"charging a different price for the same good or service in different markets.","chNum":13,"chTitle":"Monopoly and monopsony","cloze":"[[charging a different price]] for the same good or [[service]] in different markets."},{"id":"eda2118","term":"contestable market","def":"a market where there is freedom of entry to the industry and where costs of exit are low.","chNum":14,"chTitle":"Contestability","cloze":"a market where there is [[freedom]] of entry to the industry and where [[costs]] of [[exit]] are low."},{"id":"eda2119","term":"hit-and-run competition","def":"when firms can enter a market at low cost attracted by high profits and then leave the market at low cost when profits fall.","chNum":14,"chTitle":"Contestability","cloze":"when firms can enter a market at [[low cost attracted]] by [[high profits]] and then leave the market at [[low cost]] when profits fall."},{"id":"eda2120","term":"sunk costs","def":"costs which can not be recovered when a firm leaves an industry.","chNum":14,"chTitle":"Contestability","cloze":"[[costs which can not]] be [[recovered]] when a firm leaves an industry."},{"id":"eda2121","term":"derived demand","def":"demand for labour is derived from the demand for the product.","chNum":15,"chTitle":"The demand for labour","cloze":"[[demand for labour]] is derived from the demand for the product."},{"id":"eda2122","term":"elasticity of demand for labour","def":"the responsiveness of the quantity demanded of labour to changes in the price of labour the wage rate It is measured by the formula  change in quantity of labour demanded /  change in the wage rate.","chNum":15,"chTitle":"The demand for labour","cloze":"the responsiveness of the [[quantity demanded]] of labour to changes in the price of labour the [[wage rate]] It is measured by the formula  change in quantity of [[labour demanded]] /  change in the wage rate."},{"id":"eda2123","term":"marginal physical product mpp","def":"the physical addition to output of an extra unit of a variable factor of production.","chNum":15,"chTitle":"The demand for labour","cloze":"the [[physical addition to output]] of an extra unit of a [[variable]] factor of production."},{"id":"eda2124","term":"marginal revenue product mrp","def":"the value of the physical addition to output of an extra unit of a variable factor of production in a perfectly competitive product market where marginal revenue equals price it is equal to marginal physical product times the price of the good produced.","chNum":15,"chTitle":"The demand for labour","cloze":"the value of the physical addition to output of an extra unit of a variable factor of production in a [[perfectly competitive product market]] where [[marginal revenue equals price]] it is equal to [[marginal physical]] product times the price of the good produced."},{"id":"eda2125","term":"total physical product tpp","def":"the total output of a given quantity of factors of production.","chNum":15,"chTitle":"The demand for labour","cloze":"the [[total output]] of a given [[quantity]] of factors of production."},{"id":"eda2126","term":"unit labour cost","def":"cost of employing labour per unit of output or production.","chNum":15,"chTitle":"The demand for labour","cloze":"cost of [[employing labour]] per unit of [[output]] or production."},{"id":"eda2127","term":"activity or participation","def":"rate the percentage or proportion of any given population in the labour force.","chNum":16,"chTitle":"The supply of labour","cloze":"[[rate the percentage]] or proportion of any given population in the [[labour force]]."},{"id":"eda2128","term":"aging population","def":"where there is an upwards shift in the average age of the population of a country so that there is a growing number of people who are older than the standard working age.","chNum":16,"chTitle":"The supply of labour","cloze":"where there is an [[upwards shift]] in the [[average age]] of the population of a country so that there is a growing number of people who are older than the [[standard working age]]."},{"id":"eda2129","term":"demographics","def":"the statistics of the characteristics of a population who live in a particular area or country examples of the characteristics that can be included are age income education gender ethnicity.","chNum":16,"chTitle":"The supply of labour","cloze":"the statistics of the characteristics of a population who live in a particular [[area]] or country examples of the characteristics that can be [[included]] are age [[income education gender ethnicity]]."},{"id":"eda2130","term":"disposable income","def":"household income over a period of time including state benefits less direct taxes.","chNum":16,"chTitle":"The supply of labour","cloze":"household income over a [[period]] of [[time]] including state [[benefits less direct taxes]]."},{"id":"eda2131","term":"economically active","def":"the number of workers in the workforce who are in a job or are unemployed.","chNum":16,"chTitle":"The supply of labour","cloze":"the number of [[workers]] in the [[workforce]] who are in a job or are [[unemployed]]."},{"id":"eda2132","term":"net migration","def":"the difference between emigration and immigration.","chNum":16,"chTitle":"The supply of labour","cloze":"the difference between [[emigration]] and [[immigration]]."},{"id":"eda2133","term":"supply of labour to an occupation","def":"the number of workers willing and able to work in a particular job or occupation for a given wage rate.","chNum":16,"chTitle":"The supply of labour","cloze":"the number of [[workers willing]] and able to [[work]] in a particular job or occupation for a given [[wage rate]]."},{"id":"eda2134","term":"underemployment","def":"where people are not able to work as many hours as they would like or are in jobs that are below their skill level.","chNum":16,"chTitle":"The supply of labour","cloze":"where people are [[not able]] to work as [[many hours]] as they would like or are in jobs that are below their [[skill]] level."},{"id":"eda2135","term":"welfare benefits","def":"money paid by a government to give financial benefits to people who are ill unemployed on a low income or too old to work.","chNum":16,"chTitle":"The supply of labour","cloze":"[[money paid]] by a government to [[give financial benefits]] to people who are ill unemployed on a [[low income]] or too old to work."},{"id":"eda2136","term":"working population","def":"size of the population aged between the school leaving age and the state retirement age.","chNum":16,"chTitle":"The supply of labour","cloze":"size of the population aged between the [[school leaving age]] and the [[state retirement age]]."},{"id":"eda2137","term":"bilateral monopoly","def":"when a single buyer faces a single seller in a market in a labour market this is most likely to occur when government is the single buyer of a type of labour and the workforce is unionised so that the trade union acts as a single seller.","chNum":17,"chTitle":"The determination of wage rates in competitive and non-competitive markets","cloze":"when a [[single buyer faces]] a single seller in a market in a [[labour market]] this is most likely to occur when government is the single buyer of a type of labour and the workforce is unionised so that the [[trade union acts]] as a single seller."},{"id":"eda2138","term":"net benefits","def":"as well as the wage rate the supply of labour is influenced by non-monetary benefits or drawbacks such as changes in working conditions job security holiday entitlement promotion prospects and other effects of working in a particular job or occupation.","chNum":17,"chTitle":"The determination of wage rates in competitive and non-competitive markets","cloze":"as well as the [[wage rate]] the [[supply]] of labour is influenced by [[non-monetary benefits]] or drawbacks such as changes in working conditions job security holiday entitlement promotion prospects and other effects of working in a particular job or occupation."},{"id":"eda2139","term":"geographical immobility","def":"when workers find it difficult to move from one area to another.","chNum":18,"chTitle":"Market failure in the labour market","cloze":"when [[workers find]] it [[difficult]] to move from one [[area]] to another."},{"id":"eda2140","term":"occupational immobility","def":"when workers find it difficult to transfer from one occupation to another.","chNum":18,"chTitle":"Market failure in the labour market","cloze":"when [[workers find]] it [[difficult]] to [[transfer]] from one occupation to another."},{"id":"eda2141","term":"structural unemployment","def":"when the pattern of demand and production changes leaving workers unemployed in labour markets where demand has shrunk.","chNum":18,"chTitle":"Market failure in the labour market","cloze":"when the pattern of [[demand]] and production changes leaving workers [[unemployed in labour markets]] where [[demand]] has shrunk."},{"id":"eda2142","term":"competitive tendering","def":"introducing competition among private sector firms which put in bids for work that has been contracted out by the public sector.","chNum":19,"chTitle":"Government intervention in product markets","cloze":"[[introducing competition]] among [[private]] sector firms which put in bids for work that has been contracted out by the [[public]] sector."},{"id":"eda2143","term":"contracting out","def":"getting private sector firms to produce goods and services which are then provided by the state for its citizens.","chNum":19,"chTitle":"Government intervention in product markets","cloze":"[[getting private]] sector firms to produce goods and services which are then provided by the [[state]] for its [[citizens]]."},{"id":"eda2144","term":"deadweight welfare loss","def":"the overall loss in welfare which arises after a tariff is imposed.","chNum":19,"chTitle":"Government intervention in product markets","cloze":"the [[overall]] loss in welfare which [[arises]] after a [[tariff]] is imposed."},{"id":"eda2145","term":"deregulation","def":"the process of removing government controls from markets.","chNum":19,"chTitle":"Government intervention in product markets","cloze":"the process of [[removing]] government [[controls]] from markets."},{"id":"eda2146","term":"nationalisation","def":"the transfer of firms or assets from private sector ownership to state ownership it is the opposite of privatisation.","chNum":19,"chTitle":"Government intervention in product markets","cloze":"the transfer of firms or [[assets]] from [[private]] sector ownership to state ownership it is the opposite of [[privatisation]]."},{"id":"eda2147","term":"privatisation","def":"the transfer of organisations or assets from state ownership to private sector ownership it is the opposite of nationalisation.","chNum":19,"chTitle":"Government intervention in product markets","cloze":"the transfer of organisations or [[assets]] from state ownership to [[private]] sector ownership it is the opposite of [[nationalisation]]."},{"id":"eda2148","term":"regulatory capture","def":"an example of government failure it occurs when firms in an industry are able to influence to their advantage a regulatory body which is supposed to be regulating their behaviour.","chNum":19,"chTitle":"Government intervention in product markets","cloze":"an example of government [[failure]] it occurs when firms in an industry are able to influence to their [[advantage]] a [[regulatory body]] which is supposed to be regulating their behaviour."},{"id":"eda2149","term":"discrimination","def":"occurs in the labour market when there is an information failure leading employers to appreciate one group in society and deliberately under value another group.","chNum":20,"chTitle":"Government intervention in labour markets","cloze":"occurs in the [[labour market]] when there is an [[information failure leading employers]] to [[appreciate]] one group in society and deliberately under value another group."},{"id":"eda2150","term":"maximum wage","def":"a legal maximum wage rate per hour or total pay employers can not pay a higher amount than this to their workers.","chNum":20,"chTitle":"Government intervention in labour markets","cloze":"a [[legal maximum]] [[wage rate]] per hour or [[total pay employers]] can not pay a higher amount than this to their workers."},{"id":"eda2151","term":"minimum wage","def":"a legal minimum wage rate per hour which employers must pay their workers.","chNum":20,"chTitle":"Government intervention in labour markets","cloze":"a [[legal minimum]] [[wage rate]] per hour which [[employers]] must pay their workers."},{"id":"eda2152","term":"capital controls","def":"intervention by governments to prevent capital flight.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"intervention by governments to [[prevent capital flight]]."},{"id":"eda2153","term":"containerisation","def":"the use of containers with standardised dimensions in the transport of goods.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"the use of [[containers]] with [[standardised dimensions]] in the transport of goods."},{"id":"eda2154","term":"foreign direct investment (FDI)","def":"flows of money between countries where one firm buys or sets up another firm in another country.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"flows of [[money]] between countries where one firm [[buys]] or [[sets up]] another firm in another country."},{"id":"eda2155","term":"globalisation","def":"from an economic perspective the ever increasing integration of the worlds local regional and national economies into a single international market.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"from an economic perspective the [[ever increasing integration]] of the worlds [[local regional]] and national economies into a [[single international]] market."},{"id":"eda2156","term":"greenfield foreign direct investment","def":"when a firm in one country creates a firm in another country from scratch or extends the production capacity of an existing firm.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"when a firm in one [[country creates]] a firm in another country from [[scratch]] or extends the production [[capacity]] of an existing firm."},{"id":"eda2157","term":"multiplier effect","def":"the increase in final income arising from any new injection of spending.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"the increase in [[final income arising]] from any new [[injection]] of spending."},{"id":"eda2158","term":"per capita","def":"per individual in a population.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":""},{"id":"eda2159","term":"protectionism","def":"government actions or policies that restrict international trade.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"government actions or policies that [[restrict international trade]]."},{"id":"eda2160","term":"regional trade agreement","def":"an agreement between at least two countries to reduce or eliminate tariffs, quotas and other protectionist barriers between themselves.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"an agreement between at [[least two countries]] to reduce or [[eliminate tariffs, quotas]] and other protectionist barriers between [[themselves]]."},{"id":"eda2161","term":"trade liberalisation","def":"the move towards greater free trade through the removal of protectionist barriers to trade.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"the [[move]] [[towards greater free trade]] through the [[removal]] of protectionist barriers to trade."},{"id":"eda2162","term":"trading bloc","def":"a group of countries that have signed an agreement to reduce or eliminate tariffs, quotas and other protectionist barriers.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"a group of countries that have [[signed]] an agreement to reduce or [[eliminate tariffs, quotas]] and other [[protectionist barriers]]."},{"id":"eda2163","term":"transnational/multinational company or transnational/multinational corporation","def":"a company with significant product operations in at least two countries.","chNum":21,"chTitle":"Characteristics and causes of globalisation","cloze":"a company with significant product [[operations]] in at [[least two countries]]."},{"id":"eda2164","term":"economies of scale","def":"a fall in the long run average costs of production as output rises.","chNum":22,"chTitle":"The effects of globalisation","cloze":"a fall in the [[long run average costs]] of production as [[output]] rises."},{"id":"eda2165","term":"redistribution","def":"when income and wealth is taken by governments from some individuals and given to others.","chNum":22,"chTitle":"The effects of globalisation","cloze":"when [[income]] and [[wealth]] is taken by governments from some individuals and given to [[others]]."},{"id":"eda2166","term":"sweatshop","def":"a small business factory etc where people work hard in bad conditions for very little money.","chNum":22,"chTitle":"The effects of globalisation","cloze":"a small business [[factory]] etc where [[people work hard]] in bad conditions for [[very little money]]."},{"id":"eda2167","term":"tax avoidance","def":"when an individual or firm deliberately manipulates the tax system to pay less than the fair amount.","chNum":22,"chTitle":"The effects of globalisation","cloze":"when an individual or firm [[deliberately manipulates the tax]] system to [[pay less]] than the [[fair]] amount."},{"id":"eda2168","term":"tax base","def":"the income and wealth which a government can tax based on their tax laws.","chNum":22,"chTitle":"The effects of globalisation","cloze":"the [[income]] and [[wealth]] which a government can tax based on their [[tax laws]]."},{"id":"eda2169","term":"tax haven","def":"a place where people go to live or f firms locate to avoid paying high taxes in their own country.","chNum":22,"chTitle":"The effects of globalisation","cloze":"a [[place]] where people go to live or [[f firms locate]] to [[avoid paying high taxes]] in their own country."},{"id":"eda2170","term":"transfer pricing","def":"an accounting technique used by transnational companies to reduce taxes on profits by selling goods at a low price internally from a high-tax country to another part of the company in a low-tax country.","chNum":22,"chTitle":"The effects of globalisation","cloze":"an accounting technique used by transnational companies to reduce taxes on profits by selling goods at a [[low price internally]] from a [[high-tax country]] to another part of the company in a [[low-tax country]]."},{"id":"eda2171","term":"absolute advantage","def":"exists when a country is able to produce a good more cheaply in absolute terms than another country.","chNum":23,"chTitle":"Specialisation and comparative advantage","cloze":"[[exists]] when a country is [[able]] to produce a good more [[cheaply]] in absolute terms than another country."},{"id":"eda2172","term":"comparative advantage","def":"exists when a country is able to produce a good at a lower opportunity cost than another country opportunity cost the benefits foregone of the next best alternative.","chNum":23,"chTitle":"Specialisation and comparative advantage","cloze":"exists when a country is able to produce a good at a [[lower opportunity cost]] than another [[country opportunity cost]] the benefits foregone of the [[next best alternative]]."},{"id":"eda2173","term":"production possibility frontier","def":"a curve which shows the maximum potential level of output of one good given a level of output for another good.","chNum":23,"chTitle":"Specialisation and comparative advantage","cloze":"a curve which shows the maximum [[potential level of output]] of one good given a level of [[output for another good]]."},{"id":"eda2174","term":"specialisation","def":"when nations are not self-sufficient but concentrate on producing certain goods and services and trading the surplus with others.","chNum":23,"chTitle":"Specialisation and comparative advantage","cloze":"when [[nations]] are not [[self-sufficient but concentrate]] on producing certain goods and services and trading the [[surplus]] with others."},{"id":"eda2175","term":"terms of trade","def":"measure the rate of exchange of one product for another when two countries trade.","chNum":23,"chTitle":"Specialisation and comparative advantage","cloze":"measure the [[rate]] of [[exchange]] of one product for another when [[two countries trade]]."},{"id":"eda2176","term":"theory of comparative advantage","def":"states that countries will find it mutually advantageous to trade if the opportunity cost of production of goods differs.","chNum":23,"chTitle":"Specialisation and comparative advantage","cloze":"states that countries will find it [[mutually advantageous]] to [[trade if]] the [[opportunity cost]] of production of goods differs."},{"id":"eda2177","term":"bilateral trade agreement","def":"an agreement between two countries or between a country and a trading bloc which gives favourable trade arrangements it reduces some barriers of trade between the two.","chNum":24,"chTitle":"Patterns and volume of world trade","cloze":"an agreement between [[two countries]] or between a country and a trading bloc which [[gives favourable trade arrangements]] it reduces some barriers of [[trade between the two]]."},{"id":"eda2178","term":"emerging countries","def":"middle-income countries which could become high-income countries over the next 20 or 30 years.","chNum":24,"chTitle":"Patterns and volume of world trade","cloze":"[[middle-income]] countries which could [[become high-income countries]] over the next 20 or 30 years."},{"id":"eda2179","term":"merchandise","def":"goods to be bought or sold.","chNum":24,"chTitle":"Patterns and volume of world trade","cloze":""},{"id":"eda2180","term":"pattern of trade","def":"refers to composition of exports and imports and geographical distribution of trade.","chNum":24,"chTitle":"Patterns and volume of world trade","cloze":"refers to composition of exports and imports and [[geographical distribution of trade]]."},{"id":"eda2181","term":"index of terms of trade","def":"equal to index of export prices/index of import prices x 100.","chNum":25,"chTitle":"The terms of trade","cloze":"equal to index of [[export prices/index]] of import [[prices x]] 100."},{"id":"eda2182","term":"terms of trade","def":"the ratio of export prices to import prices.","chNum":25,"chTitle":"The terms of trade","cloze":"the ratio of [[export]] prices to [[import prices]]."},{"id":"eda2183","term":"bilateral trade agreement","def":"an agreement between two countries or between a country and a trading bloc which gives favourable trade arrangements it reduces some barriers of trade between the two.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"an agreement between [[two countries]] or between a country and a trading bloc which [[gives favourable trade arrangements]] it reduces some barriers of [[trade between the two]]."},{"id":"eda2184","term":"common external tariff","def":"a common tariff set by a group of countries imposed on imported goods from non-member countries.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a [[common tariff set]] by a group of countries imposed on [[imported goods from non]]-member countries."},{"id":"eda2185","term":"common market","def":"a group of countries between which there is free trade in products and factors of production and which imposes a common external tariff on imported goods from outside the market product standards and laws concerning free movement of goods and services are common between countries.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a group of countries between which there is [[free trade]] in products and factors of production and which imposes a [[common external tariff]] on [[imported goods from outside]] the market product standards and laws concerning free movement of goods and services are common between countries."},{"id":"eda2186","term":"creative destruction","def":"a process where firms produce or create innovative new products that replace or destroy existing products in the market for example the internet has led to a significant shift of spending from bricks and mortar high street shops to online shopping.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a process where firms produce or [[create innovative new]] products that replace or destroy existing products in the market for example the internet has led to a [[significant shift]] of spending from bricks and [[mortar high street shops]] to online shopping."},{"id":"eda2187","term":"customs union","def":"a group of countries between which there is free trade in products and which imposes a common external tariff on imported goods from outside the market.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a group of countries between which there is [[free trade]] in products and which imposes a [[common external tariff]] on [[imported goods from outside]] the market."},{"id":"eda2188","term":"economic union","def":"a group of countries where the economies of member countries are as fully integrated economically as different regions within a single country for example a single market will be combined with a fiscal and monetary union.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a group of countries where the economies of member countries are as fully integrated economically as different regions within a [[single country]] for example a single market will be combined with a [[fiscal]] and [[monetary union]]."},{"id":"eda2189","term":"fiscal union","def":"a group of countries where a central body has some powers over government borrowing government spending and setting uniform rates of taxation in member countries.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a group of countries where a [[central body]] has some powers over government borrowing government spending and [[setting uniform rates]] of [[taxation]] in member countries."},{"id":"eda2190","term":"free trade area","def":"a group of countries between which there is free trade in goods and services but where member countries are allowed to set their own level of tariffs against non-member countries.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a group of countries between which there is free trade in goods and services but where [[member countries]] are [[allowed]] to set their own level of [[tariffs against non-member]] countries."},{"id":"eda2191","term":"harmonisation","def":"establishing common standards rules and levels on everything from safety standards to tariffs taxes and currencies.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"[[establishing common standards rules]] and levels on everything from safety standards to [[tariffs taxes]] and currencies."},{"id":"eda2192","term":"monetary union or currency union","def":"a group of countries which share a common currency such as the euro multilateral or plurilateral trade agreement a regional trade agreement between three or more countries or trading blocs quota a physical limit on the quantity of an import.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a group of countries which share a common currency such as the euro multilateral or [[plurilateral trade agreement]] a [[regional trade agreement]] between three or more countries or [[trading blocs quota]] a physical limit on the quantity of an import."},{"id":"eda2193","term":"regional trade agreement","def":"an agreement between at least two countries to reduce or eliminate tariffs, quotas and other protectionist barriers between themselves.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"an agreement between at [[least two countries]] to reduce or [[eliminate tariffs, quotas]] and other protectionist barriers between [[themselves]]."},{"id":"eda2194","term":"tariff a tax","def":"on imported goods which has the effect of raising the domestic price of imports and thus restricting demand for the mn.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"on imported goods which has the [[effect]] of raising the [[domestic price]] of imports and [[thus restricting demand]] for the mn."},{"id":"eda2195","term":"trade creation","def":"the switch from purchasing products from a high-cost producer to a lower-cost producer.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"the switch from [[purchasing]] products from a [[high-cost]] producer to a [[lower-cost]] producer."},{"id":"eda2196","term":"trade diversion","def":"the switch from purchasing products from aow-cost producer to a higher-cost producer.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"the switch from [[purchasing]] products from [[aow-cost]] producer to a [[higher-cost]] producer."},{"id":"eda2197","term":"trade liberalisation","def":"the move towards greater free trade through the removal of protectionist barriers to trade.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"the [[move]] [[towards greater free trade]] through the [[removal]] of protectionist barriers to trade."},{"id":"eda2198","term":"trading bloc","def":"a group of countries that have signed an agreement to reduce or eliminate tariffs, quotas and other protectionist barriers between themselves.","chNum":26,"chTitle":"Trade liberalisation and trading blocs","cloze":"a group of countries that have [[signed]] an agreement to reduce or [[eliminate tariffs, quotas]] and other protectionist barriers between [[themselves]]."},{"id":"eda2199","term":"dumping","def":"the sale of goods at less than cost price by foreign producers in the domestic market.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"the sale of goods at less than [[cost price]] by [[foreign]] producers in the [[domestic]] market."},{"id":"eda2200","term":"free trade","def":"international trade conducted without the existence of barriers to trade such as tariffs or quotas.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"[[international trade conducted]] without the existence of barriers to trade such as [[tariffs]] or [[quotas]]."},{"id":"eda2201","term":"geriatric industry","def":"an industry which is in decline.","chNum":27,"chTitle":"Restrictions on free trade","cloze":""},{"id":"eda2202","term":"infant industry","def":"an industry which is just starting up and in it s early stages of development.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"an industry which is [[just starting up]] and in it [[s early]] stages of [[development]]."},{"id":"eda2203","term":"national security","def":"the security of a nation state both military and non-military dimensions such as energy security food security cyber security and environmental security are included.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"the security of a [[nation state both military]] and non-[[military dimensions]] such as [[energy security food security]] cyber security and environmental security are included."},{"id":"eda2204","term":"non-tariff barrier","def":"restriction on free trade other than a tariff.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"restriction on [[free trade]] other than a tariff."},{"id":"eda2205","term":"protectionism","def":"government actions or policies that restrict international trade.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"government actions or policies that [[restrict international trade]]."},{"id":"eda2206","term":"quota","def":"a physical limit on the quantity of an imported good.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"a physical limit on the [[quantity]] of an [[imported good]]."},{"id":"eda2207","term":"restrictions on free trade trade barriers","def":"or any measure which artificially restricts international trade.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"or any measure which artificially [[restricts]] [[international trade]]."},{"id":"eda2208","term":"tariff or import duty or customs","def":"duty a tax on imported goods which has the effect of raising the domestic price of imports and thus restricting demand for them.","chNum":27,"chTitle":"Restrictions on free trade","cloze":"duty a [[tax on imported]] goods which has the effect of raising the [[domestic price]] of imports and [[thus restricting demand]] for them."},{"id":"eda2209","term":"balance of payments","def":"a record of all financial transactions made between residents of one country and the rest of the world.","chNum":28,"chTitle":"Balance of payments","cloze":"a record of all [[financial transactions]] made between [[residents]] of one country and the [[rest]] of the world."},{"id":"eda2210","term":"capital account","def":"shows the credit money inflows and debit items money outflows for non-produced non-financial assets and capital transfers between residents and non-residents.","chNum":28,"chTitle":"Balance of payments","cloze":"shows the [[credit money inflows]] and [[debit items money outflows]] for non-produced [[non-financial assets]] and capital transfers between residents and non-residents."},{"id":"eda2211","term":"current account","def":"where payments for the purchase and sale of goods and services are recorded along with primary and secondary income flows.","chNum":28,"chTitle":"Balance of payments","cloze":"where payments for the [[purchase]] and sale of goods and services are [[recorded along]] with primary and [[secondary income flows]]."},{"id":"eda2212","term":"current account deficit","def":"when debits - outflows of money are greater than credits  inflows of money on the current account.","chNum":28,"chTitle":"Balance of payments","cloze":"when debits - outflows of [[money]] are greater than credits  inflows of [[money]] on [[the current account]]."},{"id":"eda2213","term":"current account surplus","def":"when credits  inflows of money are greater than debits - outflows of money on the current account.","chNum":28,"chTitle":"Balance of payments","cloze":"when credits  inflows of [[money]] are greater than debits - outflows of [[money]] on [[the current account]]."},{"id":"eda2214","term":"devaluation of a currency","def":"when a government or central bank officially fixes a new lower exchange rate for the currency in a fixed or pegged system of exchange rates.","chNum":28,"chTitle":"Balance of payments","cloze":"when a government or [[central bank officially]] fixes a [[new lower exchange rate]] for the currency in a fixed or pegged system of [[exchange rates]]."},{"id":"eda2215","term":"expenditure reducing","def":"in a balance of payments context government policies to reduce the level of aggregate demand in order to reduce imports and boost exports.","chNum":28,"chTitle":"Balance of payments","cloze":"in a [[balance of payments context]] government [[policies]] to reduce the level of [[aggregate demand]] in order to reduce imports and boost exports."},{"id":"eda2216","term":"expenditure switching","def":"in a balance of payments context government policies such as devaluation or protectionism designed to switch production currently being sold domestically to exports.","chNum":28,"chTitle":"Balance of payments","cloze":"in a [[balance of payments context]] government [[policies]] such as devaluation or [[protectionism designed]] to switch production currently being sold domestically to exports."},{"id":"eda2217","term":"financial account","def":"a record of almost all the flows of financial capital into and out of a country it is split into three main parts.","chNum":28,"chTitle":"Balance of payments","cloze":"a record of [[almost]] all the flows of [[financial capital]] into and out of a country it is [[split into three main]] parts."},{"id":"eda2218","term":"adjustable peg system","def":"an exchange rate system where currencies are fixed in value in the short term but can be devalued or revalued in the longer term.","chNum":29,"chTitle":"Exchange rate systems","cloze":"an [[exchange rate]] system where currencies are [[fixed]] in value in the short term but can be [[devalued]] or revalued in the longer term."},{"id":"eda2219","term":"bretton woods system","def":"an adjustable peg exchange rate system which was used in the post-second world war period until its collapse in the early 1970s.","chNum":29,"chTitle":"Exchange rate systems","cloze":"an [[adjustable peg exchange rate]] system which was used in the post-[[second world war period]] [[until]] its collapse in the early 1970s."},{"id":"eda2220","term":"crawling peg system","def":"an adjustable peg system of exchange rates where there is an in built mechanism for regular changes in the central value of the currency.","chNum":29,"chTitle":"Exchange rate systems","cloze":"an adjustable peg system of [[exchange rates]] where there is an in [[built mechanism]] for regular changes in the central value of the [[currency]]."},{"id":"eda2221","term":"depreciation of a currency","def":"when the value of a currency falls because of free market forces or with a managed float because of government intervention.","chNum":29,"chTitle":"Exchange rate systems","cloze":"when the value of a [[currency falls]] because of [[free market forces]] or with a [[managed float]] because of government intervention."},{"id":"eda2222","term":"effective exchange rate trade weighted exchange rate index","def":"or measure of the exchange rate of a country s currency usually against a basket of currencies of a country s major trading partners.","chNum":29,"chTitle":"Exchange rate systems","cloze":"or measure of the [[exchange rate of]] a [[country s currency usually]] against a basket of currencies of a [[country s major]] trading partners."},{"id":"eda2223","term":"exchange rate","def":"the value of one currency when traded for another currency.","chNum":29,"chTitle":"Exchange rate systems","cloze":"the [[value]] of one [[currency when traded]] for another currency."},{"id":"eda2224","term":"exchange rate systems","def":"systems which determine the conditions under which one currency can be exchanged for another.","chNum":29,"chTitle":"Exchange rate systems","cloze":"systems which determine the [[conditions]] under which one [[currency]] can be [[exchanged]] for another."},{"id":"eda2225","term":"fixed exchange rate system","def":"a rate of exchange between at east two currencies which is constant over a period of time.","chNum":29,"chTitle":"Exchange rate systems","cloze":"a [[rate of exchange]] between at [[east two currencies]] which is constant over a period of [[time]]."},{"id":"eda2226","term":"floating or free exchange rate system","def":"where the value of a currency is determined by free market forces and where the value of a currency changes from day to day.","chNum":29,"chTitle":"Exchange rate systems","cloze":"where the value of a [[currency is determined]] by [[free market forces and]] where the value of a [[currency]] changes from day to day."},{"id":"eda2227","term":"foreign exchange markets","def":"trading arrangements where currencies are bought and sold for each other.","chNum":29,"chTitle":"Exchange rate systems","cloze":"[[trading arrangements]] where currencies are [[bought]] and [[sold]] for each other."},{"id":"eda2228","term":"gold and foreign currency reserves","def":"gold and foreign currency owned by the central bank of a country and used mainly to change the foreign exchange value of the domestic currency by buying and selling currency on foreign exchanges.","chNum":29,"chTitle":"Exchange rate systems","cloze":"gold and [[foreign currency owned]] by the central bank of a country and used mainly to change the [[foreign exchange value]] of the [[domestic currency]] by buying and selling currency on foreign exchanges."},{"id":"eda2229","term":"managed exchange rate system or hybrid or intermediate system","def":"an exchange rate system where free markets determine the value of a currency but where central banks intervene from time to time to change the value of their currency.","chNum":29,"chTitle":"Exchange rate systems","cloze":"[[an exchange rate]] system where [[free markets determine]] the value of a [[currency but]] where central banks intervene from time to time to change the value of their currency."},{"id":"eda2230","term":"managed or dirty float","def":"where the exchange rate is determined by free market forces but governments intervene from time to time to alter the free market price of a currency.","chNum":29,"chTitle":"Exchange rate systems","cloze":"where the [[exchange rate]] is determined by [[free market forces but]] governments intervene from time to time to alter the [[free market price]] of a currency."},{"id":"eda2231","term":"nominal exchange rate","def":"the rate at which one currency is bought and sold on the foreign exchange markets for another currency.","chNum":29,"chTitle":"Exchange rate systems","cloze":"the rate at which one [[currency is bought]] and [[sold]] on the [[foreign exchange markets]] for another currency."},{"id":"eda2232","term":"purchasing power parity theory of exchange rates","def":"the hypothesis that long run changes in exchange rates are caused by differences in inflation rates between countries.","chNum":29,"chTitle":"Exchange rate systems","cloze":"the hypothesis that [[long run]] changes in [[exchange rates are caused]] by differences in [[inflation rates]] between countries."},{"id":"eda2233","term":"real exchange rate","def":"the ratio of the cost of a typical bundle of goods in one country compared to its cost in another country in the currencies of each country.","chNum":29,"chTitle":"Exchange rate systems","cloze":"the [[ratio of the cost]] of a typical bundle of goods in one [[country compared]] to its [[cost in another country]] in the currencies of each country."},{"id":"eda2234","term":"appreciation of a currency","def":"when the value of a currency rises because of free market forces or with a managed float because of government intervention.","chNum":30,"chTitle":"The impact of changes in exchange rates","cloze":"when the value of a [[currency rises]] because of [[free market forces]] or with a [[managed float]] because of government intervention."},{"id":"eda2235","term":"depreciation of a currency","def":"when the value of a currency falls because of free market forces or with a managed float because of government intervention.","chNum":30,"chTitle":"The impact of changes in exchange rates","cloze":"when the value of a [[currency falls]] because of [[free market forces]] or with a [[managed float]] because of government intervention."},{"id":"eda2236","term":"devaluation of a currency","def":"when a government or central bank officially fixes a new lower exchange rate for the currency in a fixed or pegged system of exchange rates.","chNum":30,"chTitle":"The impact of changes in exchange rates","cloze":"when a government or [[central bank officially]] fixes a [[new lower exchange rate]] for the currency in a fixed or pegged system of [[exchange rates]]."},{"id":"eda2237","term":"j curve effect","def":"in the short term a devaluation is likely to lead to a deterioration in the current account position before it starts to improve.","chNum":30,"chTitle":"The impact of changes in exchange rates","cloze":"in the short term a devaluation is likely to lead to a [[deterioration]] in the [[current account position]] before it starts to [[improve]]."},{"id":"eda2238","term":"marshall-lerner condition","def":"devaluation will lead to an improvement in the current account so long as the combined price elasticities of exports and imports are greater than 1.","chNum":30,"chTitle":"The impact of changes in exchange rates","cloze":"devaluation will lead to an [[improvement]] in the [[current account so long]] as the [[combined price elasticities]] of exports and imports are greater than 1."},{"id":"eda2239","term":"revaluation of a currency","def":"when a government or central bank officially fixes a new higher exchange rate for the currency in a fixed or pegged system of exchange rates.","chNum":30,"chTitle":"The impact of changes in exchange rates","cloze":"when a government or [[central bank officially]] fixes a [[new higher exchange rate]] for the currency in a fixed or pegged system of [[exchange rates]]."},{"id":"eda2240","term":"international competitiveness","def":"the ability of a firm or a country to compete effectively in international markets.","chNum":31,"chTitle":"International competitiveness","cloze":"the [[ability]] of a firm or a [[country]] to [[compete effectively]] in international markets."},{"id":"eda2241","term":"labour productivity","def":"output per hour worked or output per worker it is often measured as real gdp per hour worked.","chNum":31,"chTitle":"International competitiveness","cloze":"[[output per hour worked]] or [[output]] per worker it is often measured as [[real gdp]] per hour worked."},{"id":"eda2242","term":"multifactor productivity","def":"the overall efficiency with which labour and capital inputs are used together in the production process.","chNum":31,"chTitle":"International competitiveness","cloze":"the [[overall efficiency]] with which [[labour]] and [[capital inputs]] are used together in the production process."},{"id":"eda2243","term":"non-price factors","def":"factors other than price which affect competitiveness.","chNum":31,"chTitle":"International competitiveness","cloze":"factors other than [[price which affect]] competitiveness."},{"id":"eda2244","term":"relative export prices","def":"export prices of a country s goods and services compared to the export prices of that country s main trading partners.","chNum":31,"chTitle":"International competitiveness","cloze":"export prices of a country s goods and services [[compared to the export]] [[prices of that country]] [[s main]] trading partners."},{"id":"eda2245","term":"relative productivity","def":"labour productivity compared to other countries.","chNum":31,"chTitle":"International competitiveness","cloze":"labour [[productivity compared]] to other countries."},{"id":"eda2246","term":"relative unit labour costs","def":"unit labour costs compared to other countries.","chNum":31,"chTitle":"International competitiveness","cloze":"unit labour [[costs compared]] to other countries."},{"id":"eda2247","term":"trade liberalisation","def":"the move towards greater free trade through the removal of protectionist barriers to trade.","chNum":31,"chTitle":"International competitiveness","cloze":"the [[move]] [[towards greater free trade]] through the [[removal]] of protectionist barriers to trade."},{"id":"eda2248","term":"unit labour cost","def":"the cost of employing labour per unit of output or production.","chNum":31,"chTitle":"International competitiveness","cloze":"the cost of [[employing labour]] per unit of [[output]] or production."},{"id":"eda2249","term":"absolute poverty","def":"exists when individuals do not have the resources to be able to consume sufficient necessities to survive.","chNum":32,"chTitle":"Poverty","cloze":"exists when individuals [[do not]] have the resources to be able to [[consume sufficient necessities]] to [[survive]]."},{"id":"eda2250","term":"child mortality","def":"the number of children who die data normally focuses on children under the age of 14/15 and also specifically on the under 5s.","chNum":32,"chTitle":"Poverty","cloze":"the number of [[children]] who [[die data normally focuses]] on children under the age of 14/15 and also [[specifically]] on the under 5s."},{"id":"eda2251","term":"cycle of poverty","def":"when poor children find it hard to escape poverty in adult life.","chNum":32,"chTitle":"Poverty","cloze":"when [[poor children]] find it hard to [[escape poverty]] in adult life."},{"id":"eda2252","term":"formal jobs","def":"jobs in the formal sector these jobs have employment contracts and employees are protected by employment laws.","chNum":32,"chTitle":"Poverty","cloze":"jobs in the formal sector these jobs have [[employment contracts]] and employees are [[protected]] by [[employment laws]]."},{"id":"eda2253","term":"formal sector","def":"activities in the economy which are recorded in national income statistics.","chNum":32,"chTitle":"Poverty","cloze":"activities in the economy which are recorded in [[national income statistics]]."},{"id":"eda2254","term":"informal jobs","def":"jobs in the informal sector informal jobs have little or no protection for employees they are usually poorly paid with little training and low career progression.","chNum":32,"chTitle":"Poverty","cloze":"jobs in the informal sector informal jobs have little or no protection for employees they are [[usually poorly paid]] with [[little training]] and [[low career progression]]."},{"id":"eda2255","term":"informal sector","def":"activities in the economy which are not recorded in national income statistics.","chNum":32,"chTitle":"Poverty","cloze":"activities in the economy which are not [[recorded]] in [[national income statistics]]."},{"id":"eda2256","term":"median household income","def":"the level of income the middle household would receive if all households were ordered from the poorest income to the richest income.","chNum":32,"chTitle":"Poverty","cloze":"the level of [[income the middle]] household would receive if all households were ordered from the [[poorest income]] to the [[richest income]]."},{"id":"eda2257","term":"progressive taxes","def":"taxes which take a higher percentage from the income of high-income earners than they do from low-income individuals.","chNum":32,"chTitle":"Poverty","cloze":"[[taxes which take]] a higher percentage from the income of [[high-income earners]] than they do from [[low-income]] individuals."},{"id":"eda2258","term":"purchasing power parity","def":"an exchange rate of one currency for another which compares the cost of a typical basket of goods in different countries.","chNum":32,"chTitle":"Poverty","cloze":"an [[exchange rate]] of one [[currency]] for another which [[compares the cost]] of a typical basket of goods in different countries."},{"id":"eda2259","term":"regressive taxes","def":"taxes which take a higher percentage from the income of low-income earners than they do from high-income earners.","chNum":32,"chTitle":"Poverty","cloze":"taxes which take a higher percentage from the [[income]] of [[low-income earners]] than they do from [[high-income earners]]."},{"id":"eda2260","term":"relative poverty","def":"poverty which is defined relative to existing living standards for the average individual measurement of relative poverty often focuses on how the poorest incomes compare with the median household income in a country.","chNum":32,"chTitle":"Poverty","cloze":"poverty which is defined relative to existing living standards for the [[average]] individual measurement of relative [[poverty often focuses]] on how the poorest incomes compare with the [[median household income]] in a country."},{"id":"eda2261","term":"structural changes in the economy","def":"any basic changes in the way resources are allocated in an economy.","chNum":32,"chTitle":"Poverty","cloze":"any [[basic]] changes in the way resources are [[allocated]] in an economy."},{"id":"eda2262","term":"gini coefficient","def":"a statistical measure of inequality of income its value ranges from 0 where there is perfect equality of income to 1 where income is highly unequal with one person having all the income and everyone else having no income.","chNum":33,"chTitle":"Inequality","cloze":"a statistical measure of [[inequality]] of income its value ranges from 0 where there is [[perfect equality of income]] to 1 where income is highly unequal with one person having all the income and everyone else having [[no income]]."},{"id":"eda2263","term":"gini index","def":"the gini coefficient times 100.","chNum":33,"chTitle":"Inequality","cloze":"the gini [[coefficient]] times 100."},{"id":"eda2264","term":"life expectancy","def":"number of years a newborn infant could expect to live typically within a country assuming patterns of death remain as they are.","chNum":33,"chTitle":"Inequality","cloze":"number of years a [[newborn infant]] could expect to [[live typically]] within a [[country assuming patterns]] of death remain as they are."},{"id":"eda2265","term":"lorenz curve","def":"a graphical representation of the degree of income or wealth inequality in society.","chNum":33,"chTitle":"Inequality","cloze":"a graphical representation of the [[degree of income]] or [[wealth inequality]] in society."},{"id":"eda2266","term":"subsidy","def":"a grant that lowers the price of a good usually designed to encourage production or consumption of a good.","chNum":33,"chTitle":"Inequality","cloze":"a grant that [[lowers the price]] of a good [[usually designed]] to encourage production or [[consumption]] of a good."},{"id":"eda2267","term":"asian tigers","def":"the economies of hong kong singapore south korea and taiwan which all experienced rapid industrialisation and at the same time exceptionally high economic growth rates.","chNum":34,"chTitle":"Public expenditure","cloze":"the economies of hong kong singapore south korea and taiwan which all [[experienced rapid industrialisation]] and at the same time [[exceptionally high economic growth]] [[rates]]."},{"id":"eda2268","term":"capital government expenditure","def":"spending by government on investment goods such as new roads new hospitals or new street lighting.","chNum":34,"chTitle":"Public expenditure","cloze":"spending by government on [[investment]] goods such as [[new roads new hospitals]] or [[new street]] lighting."},{"id":"eda2269","term":"crowding in","def":"in the context of public sector spending crowding in occurs when extra government spending leads to higher private sector spending.","chNum":34,"chTitle":"Public expenditure","cloze":"in the context of [[public]] sector [[spending crowding]] in occurs when extra government spending leads to [[higher private]] sector spending."},{"id":"eda2270","term":"crowding out","def":"in the context of public sector spending crowding out occurs when extra government spending leads to lower private sector spending.","chNum":34,"chTitle":"Public expenditure","cloze":"in the context of [[public]] sector [[spending crowding]] out occurs when extra government spending leads to [[lower private]] sector spending."},{"id":"eda2271","term":"current government expenditure","def":"spending by government on goods and services which will be consumed in the short term such as teachers salaries or heating for government buildings it also includes transfer payments and debt interest.","chNum":34,"chTitle":"Public expenditure","cloze":"spending by government on goods and services which will be consumed in the short term such as [[teachers salaries]] or heating for government buildings it also [[includes transfer payments]] and [[debt interest]]."},{"id":"eda2272","term":"expansionary fiscal policy","def":"fiscal policy that leads to an increase in aggregate demand.","chNum":34,"chTitle":"Public expenditure","cloze":"fiscal policy that [[leads]] to an increase in [[aggregate demand]]."},{"id":"eda2273","term":"transfer payments","def":"spending for which there is no corresponding real output in government expenditure transfer payments are welfare payments such as the state pension or child benefit.","chNum":34,"chTitle":"Public expenditure","cloze":"spending for which there is [[no corresponding real output]] in government [[expenditure transfer]] payments are [[welfare payments]] such as the state pension or child benefit."},{"id":"eda2274","term":"direct tax","def":"a tax levied directly on an individual or organisation.","chNum":35,"chTitle":"Taxation","cloze":"a [[tax levied directly]] on an individual or organisation."},{"id":"eda2275","term":"indirect tax","def":"a tax on a good or service.","chNum":35,"chTitle":"Taxation","cloze":""},{"id":"eda2276","term":"laffer curve","def":"a curve which shows that at low levels of taxation tax revenues will increase if tax rates are increased however if tax rates are high then a further rise in rates will reduce total tax revenues because of the disincentive effects of the increase in tax.","chNum":35,"chTitle":"Taxation","cloze":"a curve which shows that at low levels of [[taxation tax revenues]] will increase if tax rates are [[increased however if tax]] rates are high then a further rise in rates will [[reduce total tax revenues]] because of the disincentive effects of the increase in tax."},{"id":"eda2277","term":"progressive tax","def":"a tax where the proportion of income paid in tax rises as the income of the taxpayer rises.","chNum":35,"chTitle":"Taxation","cloze":"a tax where the proportion of [[income paid]] in [[tax rises]] as the [[income]] of the taxpayer rises."},{"id":"eda2278","term":"proportional tax","def":"a tax where the proportion paid in tax remains the same while the income of the taxpayer changes.","chNum":35,"chTitle":"Taxation","cloze":"a [[tax where the proportion]] paid in [[tax remains]] the same while the [[income]] of the taxpayer changes."},{"id":"eda2279","term":"regressive tax","def":"a tax where the proportion of income paid in tax falls as the income of the taxpayer rises.","chNum":35,"chTitle":"Taxation","cloze":"a tax where the proportion of [[income paid]] in [[tax falls]] as the [[income]] of the taxpayer rises."},{"id":"eda2280","term":"automatic stabilisers","def":"mechanisms which affect levels of government spending and taxation without any direct intervention by the government when national income changes they occur automatically and act to minimise fluctuations in actual gdp around the long-term growth rate.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"mechanisms which affect levels of government spending and [[taxation]] without any direct intervention by the government when national income changes they occur automatically and act to minimise fluctuations in [[actual gdp around]] the long-term [[growth rate]]."},{"id":"eda2281","term":"current budget deficit","def":"occurs when government revenues are less than current expenditure it does not include government capital expenditure.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"occurs when government revenues are less than [[current expenditure]] it does [[not include]] government [[capital expenditure]]."},{"id":"eda2282","term":"cyclical deficit","def":"that part of the fiscal deficit which is caused by government spending and taxes changing through the trade cycle.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"that part of the [[fiscal deficit]] which is caused by government spending and [[taxes changing]] through the [[trade cycle]]."},{"id":"eda2283","term":"debt servicing","def":"the regular repayments which need to be made to the lender on outstanding loans this includes interest repayments.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"the [[regular repayments]] which [[need]] to be made to the lender on outstanding loans this [[includes interest repayments]]."},{"id":"eda2284","term":"discretionary fiscal policy","def":"the deliberate manipulation of government spending and taxes to influence the economy.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"the [[deliberate manipulation]] of government spending and [[taxes]] to [[influence]] the economy."},{"id":"eda2285","term":"fiscal austerity","def":"tax rises or government spending cuts designed to reduce a fiscal deficit.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"[[tax rises]] or government spending [[cuts]] designed to reduce a [[fiscal deficit]]."},{"id":"eda2286","term":"fiscal deficit","def":"when government spending is greater than government revenue.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"when government [[spending]] is [[greater]] than government [[revenue]]."},{"id":"eda2287","term":"fiscal surplus","def":"when government spending is less than its revenue.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"when government [[spending]] is [[less]] than its [[revenue]]."},{"id":"eda2288","term":"intergeneration al equity","def":"fairness between different generations.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"fairness between different [[generations]]."},{"id":"eda2289","term":"national debt","def":"the total accumulated borrowing of the government which remains to be paid to lenders.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"the [[total accumulated borrowing]] of the government which remains to be [[paid]] to [[lenders]]."},{"id":"eda2290","term":"primary deficit or surplus","def":"the actual fiscal deficit or surplus not taking into account interest payments on the national debt.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"the actual fiscal deficit or [[surplus not taking]] into [[account interest payments]] on the national debt."},{"id":"eda2291","term":"structural deficit","def":"that part of a fiscal deficit that exists even when the cyclical deficit is zero at the top of a boom.","chNum":36,"chTitle":"Public sector borrowing and public sector debt","cloze":"that part of a [[fiscal deficit]] that exists even when the [[cyclical deficit]] is zero at the top of a [[boom]]."},{"id":"eda2292","term":"automatic or built-in stabilisers","def":"mechanisms that reduce the impact of changes in the economy on national income.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"[[mechanisms]] that reduce the [[impact]] of changes in the economy on [[national income]]."},{"id":"eda2293","term":"bailout","def":"when financial support is provided to a company or a country facing a potential bankruptcy threat.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"when [[financial support]] is provided to a company or a country facing a [[potential bankruptcy threat]]."},{"id":"eda2294","term":"deflationary policies","def":"fiscal or monetary policies aimed at reducing aggregate demand.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"fiscal or monetary policies aimed at [[reducing aggregate demand]]."},{"id":"eda2295","term":"demand management","def":"government use of fiscal or other policies to manipulate the level of aggregate demand in the economy.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"government use of [[fiscal]] or other [[policies]] to manipulate the level of [[aggregate demand]] in the economy."},{"id":"eda2296","term":"direct control","def":"a government measure that is imposed on the price or the quantity of a single product or factor of production.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"a government measure that is [[imposed]] on the [[price]] or the [[quantity of a single]] product or factor of production."},{"id":"eda2297","term":"exchange rate policy","def":"the manipulation of the exchange rate to achieve policy objectives.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"the manipulation of the [[exchange rate to achieve]] policy objectives."},{"id":"eda2298","term":"fiscal austerity","def":"tax rises or government spending cuts designed to reduce a government budget deficit.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"[[tax rises]] or government [[spending cuts]] designed to reduce a government [[budget deficit]]."},{"id":"eda2299","term":"fiscal policy","def":"the deliberate manipulation of government expenditure and taxes to influence the economy.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"the [[deliberate manipulation]] of government [[expenditure]] and [[taxes]] to influence the economy."},{"id":"eda2300","term":"monetary policy","def":"changes to monetary variables by central banks such as interest rates and the money supply to achieve its objectives.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"changes to [[monetary variables]] by central banks such as [[interest rates]] and the [[money supply]] to achieve its objectives."},{"id":"eda2301","term":"payday lenders","def":"lenders who give loans for small amounts to borrowers who are supposed to repay the loan on their next pay day or when they next receive their welfare benefit users of payday lenders often find it hard to arrange credit elsewhere.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"lenders who give loans for small amounts to borrowers who are supposed to repay the loan on their next pay day or when they next receive their [[welfare benefit users]] of payday [[lenders often find]] it hard to [[arrange credit elsewhere]]."},{"id":"eda2302","term":"reflationary policies","def":"fiscal or monetary policies aimed at increasing aggregate demand.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"fiscal or monetary policies aimed at [[increasing aggregate demand]]."},{"id":"eda2303","term":"supply-side policies","def":"government policies designed to increase the productive potential of the economy.","chNum":37,"chTitle":"Using macroeconomic policies","cloze":"government [[policies designed]] to increase the [[productive]] [[potential]] of the economy."},{"id":"eda2304","term":"external shock","def":"a demand-side or supply-side shock to an economy which has been caused by factors outside the individual country s control.","chNum":38,"chTitle":"Impact and problems of macroeconomic policies","cloze":"a [[demand-side]] or [[supply-side shock]] to an economy which has been caused by factors outside the individual [[country s control]]."},{"id":"eda2305","term":"hyperinflation","def":"large increases in the price level.","chNum":38,"chTitle":"Impact and problems of macroeconomic policies","cloze":"large [[increases]] in the [[price]] level."},{"id":"eda2306","term":"regulation of transfer pricing","def":"rules made by governments on transfer pricing to ensure the amount of profits paid by tncs is fair.","chNum":38,"chTitle":"Impact and problems of macroeconomic policies","cloze":"rules made by governments on transfer pricing to [[ensure]] the amount of [[profits paid]] by [[tncs]] is fair."},{"id":"eda2307","term":"tax avoidance","def":"when an individual or firm deliberately manipulates the tax system to pay less than the fair amount.","chNum":38,"chTitle":"Impact and problems of macroeconomic policies","cloze":"when an individual or firm [[deliberately manipulates the tax]] system to [[pay less]] than the [[fair]] amount."},{"id":"eda2308","term":"transfer pricing","def":"an accounting technique used by transnational companies to reduce taxes on profits by selling goods at a low price internally from a high-tax country to another part of the company in a low-tax country.","chNum":38,"chTitle":"Impact and problems of macroeconomic policies","cloze":"an accounting technique used by transnational companies to reduce taxes on profits by selling goods at a [[low price internally]] from a [[high-tax country]] to another part of the company in a [[low-tax country]]."},{"id":"eda2309","term":"indicators of development","def":"improvement over time of a wide range of economic indicators such as gross national income gni life expectancy educational achievement access to clean water and mobile phone connections the range of data which is used to help measure development such as gross national income gni levels life expectancy and the percentage of adult male labour in agriculture sometimes called least developed countries.","chNum":39,"chTitle":"Measures of economic development","cloze":"improvement over time of a wide range of economic indicators such as gross national [[income gni life expectancy]] educational achievement access to clean water and mobile phone connections the range of data which is used to help measure development such as [[gross national income gni]] levels life expectancy and the percentage of [[adult male labour]] in agriculture sometimes called least developed countries."},{"id":"eda2310","term":"developing countries or developed countries","def":"high-income countries such as france germany spain and the us less broadly middle-income and low-income countries.","chNum":39,"chTitle":"Measures of economic development","cloze":"high-income countries such as france germany [[spain]] and the us [[less broadly middle-income]] and [[low-income countries]]."},{"id":"eda2311","term":"emerging countries","def":"sometimes called newly industrialised countries or nics middle-income countries which could become high-income countries over the next 20 or 30 years.","chNum":39,"chTitle":"Measures of economic development","cloze":"sometimes called [[newly]] industrialised countries or [[nics middle-income countries]] which could [[become high-income countries]] over the next 20 or 30 years."},{"id":"eda2312","term":"bric countries","def":"brazil russia india and china.","chNum":39,"chTitle":"Measures of economic development","cloze":"[[brazil russia]] india and china."},{"id":"eda2313","term":"tiger economies","def":"an economy which undergoes rapid economic growth the term was originally applied to the four asian tigers-south korea taiwan hong kong and singapore.","chNum":39,"chTitle":"Measures of economic development","cloze":"an economy which [[undergoes rapid economic growth]] the term was [[originally]] applied to the four asian [[tigers-south korea taiwan]] hong kong and singapore."},{"id":"eda2314","term":"human development index hdi","def":"a measure of development developed by the united nations based on three components health education and income.","chNum":39,"chTitle":"Measures of economic development","cloze":"a measure of [[development developed]] by the united nations based on three components [[health education and income]]."},{"id":"eda2315","term":"capital flight","def":"when savings are sent abroad by citizens and firms of a country to another country which is either seen as being more secure or where the money can be hidden from government authorities.","chNum":40,"chTitle":"Constraints on growth and development","cloze":"when [[savings]] are sent abroad by citizens and firms of a country to another country which is either seen as being more secure or where the [[money]] can be hidden from government [[authorities]]."},{"id":"eda2316","term":"demographic dividend","def":"economic growth potential that can result from shifts in a populations age structure mainly when the share of the working-age population 15 to 64 is larger than the non-working-age share of the population 14 and younger and 65 and older.","chNum":40,"chTitle":"Constraints on growth and development","cloze":"[[economic growth potential]] that can result from shifts in a [[populations age structure mainly]] when the share of the [[working-age population]] 15 to 64 is larger than the non-working-age share of the population 14 and younger and 65 and older."},{"id":"eda2317","term":"dutch disease","def":"where exploitation of natural resources leads to a rise in the exchange rate and the loss of international competitiveness of the country in the production of non-resource goods and services.","chNum":40,"chTitle":"Constraints on growth and development","cloze":"where [[exploitation]] of natural resources leads to a rise in the [[exchange rate]] and the loss of [[international competitiveness]] of the country in the production of non-resource goods and services."},{"id":"eda2318","term":"foreign currency exchange gap","def":"the difference between the actual level of exports and the level of exports needed to create higher economic growth for an economy sometimes called the foreign exchange gap.","chNum":40,"chTitle":"Constraints on growth and development","cloze":"the difference between the actual level of exports and the level of [[exports needed]] to [[create higher economic growth]] for an economy sometimes called the [[foreign exchange gap]]."},{"id":"eda2319","term":"Harrod-Domar growth model","def":"a model which suggests that economic growth is dependent on the saving ratio and technological progress.","chNum":40,"chTitle":"Constraints on growth and development","cloze":"a model which [[suggests that economic growth]] is dependent on the [[saving ratio]] and technological progress."},{"id":"eda2320","term":"Prebisch-Singer hypothesis","def":"suggests that over the long run the prices of commodities will fall compared to all other goods such as manufactured goods this suggests that countries with a high export dependency on primary products will experience a continued worsening of their terms of trade.","chNum":40,"chTitle":"Constraints on growth and development","cloze":"suggests that over the [[long run]] the [[prices]] of commodities will fall compared to all other goods such as manufactured goods this suggests that countries with a [[high export dependency]] on primary products will experience a continued worsening of their terms of trade."},{"id":"eda2321","term":"resource curse","def":"exists where an abundance of natural resources in a country is exploited but there is consequently little increase in economic development.","chNum":40,"chTitle":"Constraints on growth and development","cloze":"exists where an abundance of natural resources in a country is [[exploited but]] there is [[consequently little]] increase in economic [[development]]."},{"id":"eda2322","term":"savings gap","def":"in development economics the difference between the actual level of savings in an economy and the level of savings needed to finance the investment required for a higher rate of economic growth.","chNum":40,"chTitle":"Constraints on growth and development","cloze":"in [[development economics]] the difference between the actual level of savings in an economy and the level of savings needed to finance the [[investment required]] for a higher [[rate of economic growth]]."},{"id":"eda2323","term":"bilateral aid","def":"when aid is given directly by one country to another.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"when aid is given [[directly]] by one [[country]] to another."},{"id":"eda2324","term":"buffer stock scheme","def":"a scheme whereby an organisation buys and sells in the open market so as to maintain minimum and maximum prices in the market for a product.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"a scheme whereby an organisation buys and sells in the [[open market so]] as to [[maintain minimum]] and [[maximum prices]] in the market for a product."},{"id":"eda2325","term":"industrialisation","def":"when an economy moves from one where output and employment are dominated by agriculture to one where manufacturing has a much higher share.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"when an economy moves from one where [[output and employment]] are dominated by agriculture to one where [[manufacturing]] has a [[much higher share]]."},{"id":"eda2326","term":"interventionist strategies","def":"strategies where government plays a leading role regulating and manipulating markets or bypassing markets through direct provision of goods and services.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"strategies where government plays a [[leading role regulating]] and [[manipulating markets or bypassing]] markets through direct [[provision]] of goods and services."},{"id":"eda2327","term":"joint venture","def":"a company that is owned by usually two major firms or a firm and a government.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"a company that is [[owned]] by [[usually two major]] firms or a firm and a government."},{"id":"eda2328","term":"market-orientated strategies","def":"strategies which rely upon free markets to deliver economic development.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"strategies which [[rely]] upon [[free markets to deliver]] economic development."},{"id":"eda2329","term":"microfinance schemes","def":"when very small loans are given out to individuals by non-governmental organisations who would otherwise not have access to borrowed money.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"when [[very small loans]] are given out to individuals by [[non-governmental]] organisations who would otherwise not have access to [[borrowed money]]."},{"id":"eda2330","term":"multilateral aid","def":"when donor countries give money to an international agency and the agency then disperses the aid.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"when [[donor countries give money]] to an international [[agency]] and the agency then [[disperses]] the aid."},{"id":"eda2331","term":"tied aid","def":"offering aid on the condition that it is used to buy goods or services from the provider of the aid.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"offering aid on the [[condition]] that it is used to buy goods or services from the [[provider]] of the aid."},{"id":"eda2332","term":"trade liberalisation","def":"the move towards greater free trade through the removal of protectionist barriers to trade.","chNum":41,"chTitle":"Measures to promote growth and development","cloze":"the [[move]] [[towards greater free trade]] through the [[removal]] of protectionist barriers to trade."}];;;
+
+/* ============ FSRS 式记忆模型 ============
+ * 每张卡记录：state(状态) / S(稳定度，天，= 留存跌到 90% 所需天数) / D(难度 1-10) / reps / lapses / last / due
+ * 遗忘曲线（艾宾浩斯指数衰减）：R(t) = e^(-k·t/S)，其中 k = -ln(0.9) ≈ 0.1054
+ * 即 t = S 时 R ≈ 90%，所以“下次复习间隔 = S 天”。
+ */
+const R_TARGET = 0.9;
+const K_DECAY = -Math.log(R_TARGET); // ≈ 0.1053605
+const K_PROG="eda2words_progress_v1", K_CHK="eda2words_checkin_v1", K_STAT="eda2words_stats_v1", K_SESS="eda2words_session_v1";
+
+/* ---------- 存储 ---------- */
+function load(k,def){try{return JSON.parse(localStorage.getItem(k))??def}catch(e){return def}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+let PROG = load(K_PROG,{});
+// ---- Phase 3：进度云端同步访问器（供 sync.js 读写本地 PROG/CPROG）----
+window.__deckStore = {
+  deckSlug: DECK_SLUG,
+  getProg: function(){ return PROG; },
+  setProg: function(p){ PROG = p; save(K_PROG, PROG); },
+  hasCloze: function(){ return typeof CPROG !== 'undefined'; },
+  getCProg: function(){ return (typeof CPROG !== 'undefined') ? CPROG : null; },
+  setCProg: function(p){ if (typeof CPROG !== 'undefined') { CPROG = p; save(K_CPROG, CPROG); } }
+};
+let CHK  = load(K_CHK,[]);
+let STAT = load(K_STAT,{});
+
+/* ---------- 旧版 Leitner(盒子) 进度迁移到新模型（不丢已有学生进度） ---------- */
+function migrate(p){
+  if(!p) return null;
+  if(p.S!==undefined) return p;            // 已经是新模型
+  if(p.box===undefined && p.due===undefined) return p;
+  const box = p.box||0;
+  if(box===0) return {state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()};
+  const oldInt = {1:1,2:2,3:4,4:8,5:16}[Math.min(5,box)] || 1;
+  const D = clamp(5 + (p.lapses||0)*1.2 - (p.reps||0)*0.15, 1, 10);
+  const last = addDays(p.due||todayStr(), -oldInt);
+  return {state:"review", S:oldInt, D, reps:p.reps||0, lapses:p.lapses||0, last, due:p.due||todayStr()};
+}
+for(const id in PROG) PROG[id]=migrate(PROG[id]);
+
+/* ---------- 日期 ---------- */
+function todayStr(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDays(ds,n){let d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return todayStr(d)}
+function daysBetween(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+
+/* ---------- 状态 ---------- */
+function st(id){return PROG[id]||{state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()}}
+function isNew(id){return st(id).state==="new"}
+function isDue(id){const p=st(id);if(p.state==="new")return false;return p.due<=todayStr()}
+function statusOf(id){const p=st(id);
+  if(p.state==="new")return"new";
+  if(p.state==="relearning")return"learn";
+  if((p.S||0)>=21)return"master";
+  return"learn";
+}
+function levelLabel(id){const p=st(id);
+  if(p.state==="new")return["新词","n"];
+  if(p.state==="relearning")return["再学习","l"];
+  if(statusOf(id)==="master")return["已掌握","m"];
+  if((p.S||0)<=4)return["薄弱","l"];
+  return["学习",""];
+}
+function isWeak(id){const p=st(id);return p.state!=="new"&&(p.state==="relearning"||(p.S||0)<=4)}
+function retention(id){const p=st(id);if(p.state==="new"||!p.S)return 1;
+  const dt=Math.max(0,daysBetween(p.last,todayStr()));return Math.exp(-K_DECAY*dt/Math.max(0.1,p.S));}
+
+/* ---------- 评分 / 排期（FSRS 式） ---------- */
+function rate(id,grade){
+  const p=st(id);
+  let S=p.S||0, D=p.D||5, reps=p.reps||0, lapses=p.lapses||0;
+  const firstSuccess = (p.state==="new"||p.state==="learning"||p.state==="relearning");
+  let np;
+  if(grade==="again"){
+    lapses++;
+    S=Math.max(0.2,(S||1)*0.3);
+    D=clamp(D+1.2,1,10);
+    np={state:"relearning",S,D,reps:reps,lapses,last:todayStr(),due:addDays(todayStr(),1)};
+  } else {
+    if(firstSuccess){
+      const base = grade==="hard"?1.2:2.0;        // 首次间隔
+      S=base;
+      D=clamp(D+(grade==="hard"?0.6:-0.4),1,10);
+      reps=1;
+    } else {
+      const ease = grade==="hard"?1.3:2.1;
+      const diffFactor = 1 + (10-D)/10*0.3;        // 越难(D大)增长越慢
+      S=Math.min(365,Math.max(0.2,S*ease*diffFactor));
+      D=clamp(D+(grade==="hard"?0.3:-0.5),1,10);
+      reps++;
+    }
+    np={state:"review",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),Math.round(S))};
+  }
+  PROG[id]=np; save(K_PROG,PROG);
+  const t=todayStr(); STAT[t]=(STAT[t]||0)+1; save(K_STAT,STAT);
+  if(window.Sync)Sync.push();
+}
+
+/* ---------- 挖空练习（cloze）独立进度（不污染单词卡进度） ---------- */
+const K_CPROG="eda2words_cloze_v1";
+let CPROG=load(K_CPROG,{});
+const CLOZE_SET=new Set(DATA.filter(d=>d.cloze).map(d=>d.id));
+function cst(id){return CPROG[id]||{state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()}}
+function cisNew(id){return cst(id).state==="new"}
+function cisDue(id){const p=cst(id);if(p.state==="new")return false;return p.due<=todayStr()}
+function cstatusOf(id){const p=cst(id);if(p.state==="new")return"new";if(p.state==="relearning")return"learn";if((p.S||0)>=21)return"master";return"learn"}
+function cisWeak(id){const p=cst(id);return p.state!=="new"&&(p.state==="relearning"||(p.S||0)<=4)}
+function crate(id,grade){
+  const p=cst(id); let S=p.S||0,D=p.D||5,reps=p.reps||0,lapses=p.lapses||0;
+  const firstSuccess=(p.state==="new"||p.state==="learning"||p.state==="relearning");
+  let np;
+  if(grade==="again"){lapses++;S=Math.max(0.2,(S||1)*0.3);D=clamp(D+1.2,1,10);np={state:"relearning",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),1)};}
+  else{
+    if(firstSuccess){const base=grade==="hard"?1.2:2.0;S=base;D=clamp(D+(grade==="hard"?0.6:-0.4),1,10);reps=1;}
+    else{const ease=grade==="hard"?1.3:2.1;const diffFactor=1+(10-D)/10*0.3;S=Math.min(365,Math.max(0.2,S*ease*diffFactor));D=clamp(D+(grade==="hard"?0.3:-0.5),1,10);reps++;}
+    np={state:"review",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),Math.round(S))};
+  }
+  CPROG[id]=np; save(K_CPROG,CPROG);
+  const t=todayStr(); STAT[t]=(STAT[t]||0)+1; save(K_STAT,STAT);
+  if(window.Sync)Sync.push();
+}
+
+/* ---------- 打卡（仅由完成学习自动触发，不可手动） ---------- */
+function autoCheckin(){return checkin()}
+function checkin(){
+  const t=todayStr();
+  let added=false;
+  if(!CHK.includes(t)){CHK.push(t);CHK.sort();save(K_CHK,CHK);added=true;}
+  refresh();
+  return added;
+}
+function streak(){
+  if(CHK.length===0)return{cur:0,best:0,tot:0};
+  let best=1,run=1;
+  const sorted=[...CHK].sort();
+  for(let i=1;i<sorted.length;i++){if(daysBetween(sorted[i-1],sorted[i])===1)run++;else run=1;best=Math.max(best,run)}
+  let cur=0;const t=todayStr();
+  if(CHK.includes(t)){cur=1;let d=addDays(t,-1);while(CHK.includes(d)){cur++;d=addDays(d,-1)}}
+  return{cur,best,tot:CHK.length};
+}
+
+/* ---------- 工具 ---------- */
+function toast(m){const el=document.getElementById("toast");el.textContent=m;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800)}
+function $(id){return document.getElementById(id)}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+// Phase5：错误次数加权复习 —— 错得越多的卡越优先进入复习队列（权重 = 1 + 错误次数）
+function wrongCount5(id){
+  const p=st(id);
+  return (p && typeof p.lapses==='number') ? p.lapses : 0;
+}
+// 指数加权洗牌：权重 w 越大越偏向排到队首（会话数量有限时优先保留易错卡）
+function weightedShuffle(ids, wfn){
+  return ids.map(function(id){
+    const w = 1 + (wfn ? wfn(id) : 0);
+    return { id: id, k: Math.pow(Math.random(), 1 / Math.max(0.0001, w)) };
+  }).sort(function(a,b){ return b.k - a.k; }).map(function(o){ return o.id; });
+}
+
+
+/* ---------- 本轮数量 ---------- */
+function getSessionSize(){const n=parseInt(load(K_SESS,"20"),10);return isNaN(n)?20:n}
+function setSessionSize(n){save(K_SESS,String(n));
+  const b=$("sessionSize2"); if(b)b.value=String(n);}
+
+/* ---------- 章节列表与渲染 ---------- */
+function chaptersList(){
+  const seen=new Map();
+  DATA.forEach(d=>{ if(!seen.has(d.chNum)) seen.set(d.chNum,{num:d.chNum,title:d.chTitle,ids:[]}); seen.get(d.chNum).ids.push(d.id); });
+  return [...seen.values()].sort((a,b)=>a.num-b.num);
+}
+function renderChapters(){
+  const box=$("chapterGrid"); if(!box)return;
+  const isC = topMode==="cloze";
+  const newF = isC?cisNew:isNew;
+  const stF  = isC?cstatusOf:statusOf;
+  box.innerHTML=chaptersList().map(c=>{
+    const ids = isC ? c.ids.filter(id=>CLOZE_SET.has(id)) : c.ids;
+    const total=ids.length;
+    const learned=ids.filter(id=>!newF(id)).length;
+    const mastered=ids.filter(id=>stF(id)==="master").length;
+    const pct=total?Math.round(learned/total*100):0;
+    return `<button class="chcard" data-ch="${c.num}">
+      <div class="chn">Chapter ${c.num}</div>
+      <div class="cht">${esc(c.title)}</div>
+      <div class="chmeta">${total} 词 · 已学 ${learned} · 掌握 ${mastered}</div>
+      <div class="chbar"><i style="width:${pct}%"></i></div>
+    </button>`;
+  }).join("");
+  box.querySelectorAll(".chcard").forEach(b=>b.onclick=()=>{
+    const prefix = topMode==="cloze" ? "cloze:ch:" : "ch:";
+    startSession(prefix+b.dataset.ch,"studyArea");
+  });
+}
+
+/* ---------- 选择卡片 ---------- */
+function pickCards(mode){
+  // 挖空练习：cloze:ch:N / cloze:all / cloze:due —— 按源顺序（不随机），进度用 CPROG 独立存储
+  if(typeof mode==="string" && mode.indexOf("cloze:")===0){
+    const sub=mode.slice(6);
+    if(sub==="due") return DATA.filter(d=>d.cloze&&cisDue(d.id)).map(d=>d.id);
+    if(sub.indexOf("ch:")===0){const n=parseInt(sub.slice(3),10);return DATA.filter(d=>d.chNum===n&&d.cloze).map(d=>d.id);}
+    return DATA.filter(d=>d.cloze).map(d=>d.id);   // cloze:all
+  }
+  // 按章节学习：返回该章全部单词，不做数量裁剪
+  if(typeof mode==="string" && mode.indexOf("ch:")===0){
+    const n=parseInt(mode.slice(3),10);
+    return DATA.filter(d=>d.chNum===n).map(d=>d.id);
+  }
+  // 按个数学习：优先未掌握词（Phase5 易错优先），不足再补已掌握，按选定张数裁剪
+  if(typeof mode==="string" && mode.indexOf("count:")===0){
+    const n=parseInt(mode.slice(6),10);
+    const need=DATA.filter(d=>statusOf(d.id)!=="master").map(d=>d.id);
+    const rest=DATA.filter(d=>statusOf(d.id)==="master").map(d=>d.id);
+    let ids=weightedShuffle(need, wrongCount5).concat(shuffle(rest));
+    if(n>0 && n<ids.length) ids=ids.slice(0,n);
+    return ids;
+  }
+  // 复习待办：系统按遗忘曲线自动生成的到期卡，全部返回（不掺新词）；Phase5 易错优先排序
+  if(mode==="due"){
+    return weightedShuffle(DATA.filter(d=>isDue(d.id)).map(d=>d.id), wrongCount5);
+  }
+  // 专攻薄弱 / 全部过一遍：主动加练，按「本轮数量」裁剪；Phase5 易错优先排序（all 保持源顺序）
+  let ids;
+  if(mode==="new") ids=DATA.filter(d=>isNew(d.id)).map(d=>d.id);
+  else if(mode==="weak") ids=DATA.filter(d=>isWeak(d.id)).map(d=>d.id);
+  else if(mode==="all") ids=DATA.map(d=>d.id);
+  else ids=DATA.filter(d=>isDue(d.id)).map(d=>d.id);
+  if(mode!=="all") ids=weightedShuffle(ids, wrongCount5);
+  const n=getSessionSize();
+  if(n>0 && n<ids.length) ids=ids.slice(0,n);
+  return ids;
+}
+
+/* ---------- 学习会话 ---------- */
+let Q=[],QI=0,sessionDone=0,sessionMode="due",activeAreaId="",topMode="word";
+
+/* ---------- 多轮重来（Anki 式：失误重排，最多 MAX_RETRY 轮） ---------- */
+let SESS_TOTAL=0, SESS_PASSED=0;
+const RETRY_MAP={}; const MAX_RETRY=3; const REQ_GAP=3;   // 失误后隔几张再出现
+function onGrade(areaId,id,grade){
+  // 认识 → 本轮通过
+  if(grade==="good"){
+    SESS_PASSED++;
+    if(SESS_PASSED>=SESS_TOTAL){ finishSession(areaId); return; }
+    QI++; if(SESS_PASSED>=SESS_TOTAL || QI>=Q.length) finishSession(areaId); else renderCard(areaId);
+    return;
+  }
+  // 不认识 / 模糊 → 没过，重来（最多 MAX_RETRY 轮）
+  RETRY_MAP[id]=(RETRY_MAP[id]||0)+1;
+  if(RETRY_MAP[id]<=MAX_RETRY){
+    Q.splice(Math.min(QI+1+REQ_GAP, Q.length), 0, id);   // 隔几张再出现，避免机械重复
+  } else {
+    // 超过上限：放弃本轮重来，标记待巩固（rate 已置 relearning），计入已处理
+    SESS_PASSED++;
+    if(SESS_PASSED>=SESS_TOTAL){ finishSession(areaId); return; }
+  }
+  QI++; if(SESS_PASSED>=SESS_TOTAL || QI>=Q.length) finishSession(areaId); else renderCard(areaId);
+}
+
+/* 学习区视图切换：mode=选方式 / chapter=选章节 / count=选个数 / session=学习中 */
+function showStudyView(v){
+  $("studyModeSel").style.display  = v==="mode"    ? "" : "none";
+  $("studyChapter").style.display = v==="chapter" ? "" : "none";
+  $("studyCount").style.display   = v==="count"   ? "" : "none";
+  $("studyArea").style.display    = v==="session" ? "" : "none";
+}
+function backToMode(){ showStudyView("mode"); }
+function backToChapters(){ showStudyView("chapter"); }
+function backToCount(){ showStudyView("count"); }
+function backFromSession(){
+  if(activeAreaId==="studyArea"){
+    if(typeof sessionMode==="string" && (sessionMode.indexOf("ch:")===0 || sessionMode.indexOf("cloze:ch:")===0)) showStudyView("chapter");
+    else if(typeof sessionMode==="string" && sessionMode.indexOf("count:")===0) showStudyView("count");
+    else showStudyView("mode");
+  }
+  activeAreaId="";
+}
+function backFromReview(){ const m=$("reviewMenu"); if(m)m.style.display=""; $("reviewArea").style.display="none"; $("reviewArea").innerHTML=""; refresh(); }
+function startSession(mode,areaId){
+  sessionMode=mode;
+  activeAreaId=areaId;
+  Q=pickCards(mode); QI=0; sessionDone=0; SESS_TOTAL=Q.length; SESS_PASSED=0; for(const k in RETRY_MAP) delete RETRY_MAP[k];
+  if(Q.length===0){$(areaId).innerHTML='<div class="empty"><div class="big">🎉</div>暂时没有需要学习的卡片，去“词库”看看，或换个范围吧。</div>';return}
+  if(areaId==="studyArea") showStudyView("session");
+  if(areaId==="reviewArea"){const m=$("reviewMenu"); if(m)m.style.display="none"; $("reviewArea").style.display="";}
+  renderCard(areaId);
+}
+function renderCard(areaId){
+  const id=Q[QI];
+  const card=DATA.find(d=>d.id===id);
+  const total=SESS_TOTAL, left=SESS_TOTAL-SESS_PASSED;
+  // 挖空练习模式：单面卡片，正面 term 提示 + 挖空定义，点击揭示
+  if(typeof sessionMode==="string" && sessionMode.indexOf("cloze:")===0){
+    renderClozeCard(areaId, id, card, left, total);
+    return;
+  }
+  const lv=levelLabel(id);
+  const p=st(id);
+  let retP, nextTxt;
+  if(p.state==="new"){retP="—"; nextTxt="首次学习";}
+  else if(p.state==="relearning"){retP="需巩固"; nextTxt="明天再练";}
+  else { retP=Math.round(retention(id)*100)+"%"; const nd=daysBetween(todayStr(),p.due); nextTxt = nd<=0?"今天":nd+"天后"; }
+  let topLine;
+  if(areaId==="studyArea"){
+    const isCh = typeof sessionMode==="string" && sessionMode.indexOf("ch:")===0;
+    const backText = isCh ? "← 返回选章节" : "← 返回选个数";
+    topLine = `<div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromSession()">${backText}</button>
+      <span class="muted small">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</span>
+    </div>`;
+  } else if(areaId==="reviewArea"){
+    topLine = `<div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromReview()">← 返回复习选项</button>
+      <span class="muted small">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</span>
+    </div>`;
+  } else {
+    topLine = `<div class="muted small" style="width:100%;text-align:right">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</div>`;
+  }
+  $(areaId).innerHTML=`
+    <div class="progress"><i style="width:${Math.round(SESS_PASSED/SESS_TOTAL*100)}%"></i></div>
+    ${topLine}
+    <div class="stage">
+      <div class="flip" id="flip">
+        <div class="flip-in">
+          <div class="face front">
+            <div class="term">${esc(card.term)}</div>
+            <div class="hint">点击卡片 / 按空格 翻看定义（再点一次返回单词）</div>
+          </div>
+          <div class="face back">
+            <div class="tag">定义</div>
+            <div class="def">${esc(card.def)}</div>
+            <div class="meta">当前留存 ${retP} · 下次复习 ${nextTxt}</div>
+          </div>
+        </div>
+      </div>
+      <div class="ratings" id="ratings" style="visibility:hidden">
+        <button class="btn bad" data-q="again">不认识</button>
+        <button class="btn warn" data-q="hard">模糊</button>
+        <button class="btn good" data-q="good">认识</button>
+      </div>
+    </div>`;
+  const flip=$(areaId).querySelector("#flip");
+  if(flip){
+    flip.onclick=()=>{const f=flip.classList.toggle("flipped");const r=$(areaId).querySelector("#ratings"); if(r)r.style.visibility=f?"visible":"hidden"};
+  }
+  const rt=$(areaId).querySelector("#ratings");
+  if(rt){
+    rt.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      rate(id,b.dataset.q);
+      onGrade(areaId,id,b.dataset.q);
+    });
+  }
+}
+
+/* ---------- 挖空练习卡片渲染 ---------- */
+function renderClozeCard(areaId, id, card, left, total){
+  const cp=cst(id);
+  let retP, nextTxt;
+  if(cp.state==="new"){retP="—"; nextTxt="首次练习";}
+  else if(cp.state==="relearning"){retP="需巩固"; nextTxt="明天再练";}
+  else { const dt=Math.max(0,daysBetween(cp.last,todayStr())); retP=Math.round(Math.exp(-K_DECAY*dt/Math.max(0.1,cp.S||0.1))*100)+"%"; const nd=daysBetween(todayStr(),cp.due); nextTxt = nd<=0?"今天":nd+"天后"; }
+  const backText = (typeof sessionMode==="string" && sessionMode.indexOf("cloze:ch:")===0) ? "← 返回选章节" : "← 返回选择学习方式";
+  const clozeHtml = (card.cloze||card.def)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\[\[(.+?)\]\]/g,'<span class="cloze" data-w="$1">_____</span>');
+  $(areaId).innerHTML=`
+    <div class="progress"><i style="width:${Math.round(SESS_PASSED/SESS_TOTAL*100)}%"></i></div>
+    <div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromSession()">${backText}</button>
+      <span class="muted small">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</span>
+    </div>
+    <div class="stage">
+      <div class="cloze-card cloze-face">
+        <div class="ctag">挖空练习 · 提示词</div>
+        <div class="cterm">${esc(card.term)}</div>
+        <div class="cloze-def">${clozeHtml}</div>
+        <div class="cmeta">当前留存 ${retP} · 下次复习 ${nextTxt}</div>
+        <div class="chint">读定义，回忆被遮住的词；点击卡片 / 按空格 揭示答案</div>
+      </div>
+      <div class="ratings" id="ratings">
+        <button class="btn bad" data-q="again">不认识</button>
+        <button class="btn warn" data-q="hard">模糊</button>
+        <button class="btn good" data-q="good">认识</button>
+      </div>
+    </div>`;
+  const face=$(areaId).querySelector(".cloze-face");
+  let revealed=false;
+  const reveal=()=>{
+    if(revealed) return;
+    revealed=true;
+    face.querySelectorAll(".cloze").forEach(s=>{ s.textContent=s.dataset.w; s.classList.add("revealed"); });
+    const r=$(areaId).querySelector("#ratings"); if(r) r.style.visibility="visible";
+  };
+  if(face){ face.onclick=(e)=>{ if(e.target.closest(".ratings")) return; reveal(); }; }
+  const rt=$(areaId).querySelector("#ratings");
+  if(rt){
+    rt.style.visibility="hidden";
+    rt.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      crate(id,b.dataset.q);
+      onGrade(areaId,id,b.dataset.q);
+    });
+  }
+}
+function sessionChName(mode){
+  if(typeof mode!=="string") return "未选择章节";
+  let chPart="";
+  if(mode.indexOf("cloze:ch:")===0) chPart=mode.slice(9);
+  else if(mode.indexOf("ch:")===0) chPart=mode.slice(3);
+  if(!chPart) return "全库模式";
+  const n=Number(chPart);
+  if(!isNaN(n)){
+    const c=chaptersList().find(x=>x.num===n);
+    return (c && c.title) ? c.title : `Chapter ${chPart}`;
+  }
+  const groups=chaptersList();
+  for(const g of groups){
+    if(g.subs){
+      for(const s of g.subs){
+        if(String(s.key)===chPart) return (s.title) ? s.title : chPart;
+      }
+    }
+  }
+  return chPart;
+}
+function finishSession(areaId){
+  const learned=(SESS_TOTAL>0)?SESS_TOTAL:Q.length;
+  const reReview=Object.keys(RETRY_MAP).filter(k=>RETRY_MAP[k]>0).length;
+  const chName=sessionChName(sessionMode);
+  const justChecked=autoCheckin();          // 完成学习 → 自动打卡（仅记录当天）
+  const s=streak();
+  const chkTxt=justChecked?"✅ 今日打卡已自动记录":"📅 今日已打卡";
+  const streakTxt=s.cur>0?` · 连续 ${s.cur} 天`:"";
+  let backBtns="";
+  if(areaId==="studyArea"){
+    const isCh = typeof sessionMode==="string" && (sessionMode.indexOf("ch:")===0 || sessionMode.indexOf("cloze:")===0);
+    backBtns = isCh
+      ? `<button class="btn soft" onclick="backToChapters()">返回选章节</button>`
+      : `<button class="btn soft" onclick="backToCount()">返回选个数</button>`;
+    backBtns += `<button class="btn ghost" onclick="backToMode()">返回选择学习方式</button>`;
+  } else if(areaId==="reviewArea"){
+    backBtns = `<button class="btn soft" onclick="backFromReview()">返回复习选项</button>`;
+  }
+  $(areaId).innerHTML=`<div class="sum">
+    <div class="big">本轮完成 🎉</div>
+    <p class="muted">章节：${chName}</p>
+    <p class="muted">已学习 ${learned} 张 · ${todayStr()} · 进度已自动保存</p>
+    ${reReview>0?`<p class="muted" style="color:#c0392b">其中 ${reReview} 张需多练几轮，已加入待巩固</p>`:""}
+    <div class="chkline">${chkTxt}${streakTxt}</div>
+    <div class="row" style="justify-content:center;margin-top:10px;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="startSession(sessionMode,'${areaId}')">再来一组</button>
+      ${backBtns}
+      <button class="btn ghost" onclick="switchTab('checkin')">查看打卡</button>
+    </div></div>`;
+  if(window.Sync)Sync.push();
+  refresh();
+}
+function returnToChapters(){ showStudyView("chapter"); }
+let currentMode="due";
+
+/* ---------- 渲染：统计 ---------- */
+function refresh(){
+  $("totalN").textContent=DATA.length;
+  const due=DATA.filter(d=>isDue(d.id)).length;
+  const master=DATA.filter(d=>statusOf(d.id)==="master").length;
+  const s=streak();
+  $("streakN").textContent=s.cur;
+  $("dueN").textContent=due;
+  $("masterN").textContent=master;
+  $("todayStr").textContent=todayStr();
+  const weak=DATA.filter(d=>isWeak(d.id)).length;
+  $("rDue").textContent=due;
+  $("rNew").textContent=DATA.filter(d=>isNew(d.id)).length;
+  $("rWeak").textContent=weak;
+  ["revDueN","revDueN2"].forEach(k=>{const el=$(k);if(el)el.textContent=due;});
+  const rw=$("revWeakN"); if(rw)rw.textContent=weak;
+  $("cCur").textContent=s.cur; $("cBest").textContent=s.best; $("cTot").textContent=s.tot;
+  const tc=$("todayChk"); if(tc){ if(CHK.includes(todayStr())){tc.textContent="今日已打卡 ✓";tc.className="pill good";}else{tc.textContent="今日未打卡 · 去学习后自动记录";tc.className="pill idle";} }
+  renderChapters();
+  renderCal();
+  $("sNew").textContent=DATA.filter(d=>statusOf(d.id)==="new").length;
+  $("sLearn").textContent=DATA.filter(d=>statusOf(d.id)==="learn").length;
+  $("sMaster").textContent=master;
+  $("sDue").textContent=due;
+  renderDonut();
+  renderAct();
+  renderRet();
+  renderBrowse();
+}
+let calY=(new Date()).getFullYear(), calM=(new Date()).getMonth();
+function renderCal(){
+  const y=calY, m=calM;
+  $("calTitle").textContent=`${y} 年 ${m+1} 月`;
+  const first=new Date(y,m,1); const startD=first.getDay();
+  const days=new Date(y,m+1,0).getDate();
+  const wl=["日","一","二","三","四","五","六"];
+  let h=""; wl.forEach(w=>h+=`<div class="d h">${w}</div>`);
+  for(let i=0;i<startD;i++)h+=`<div class="d"></div>`;
+  const t=todayStr();
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const on=CHK.includes(ds)?" on":""; const tod=ds===t?" today":"";
+    h+=`<div class="d${on}${tod}">${d}</div>`;
+  }
+  $("cal").innerHTML=h;
+}
+function calPrev(){ calM--; if(calM<0){calM=11;calY--;} renderCal(); }
+function calNext(){ calM++; if(calM>11){calM=0;calY++;} renderCal(); }
+function calToday(){ const n=new Date(); calY=n.getFullYear(); calM=n.getMonth(); renderCal(); }
+function renderDonut(){
+  const n=DATA.filter(d=>statusOf(d.id)==="new").length;
+  const l=DATA.filter(d=>statusOf(d.id)==="learn").length;
+  const m=DATA.filter(d=>statusOf(d.id)==="master").length;
+  const segs=[["新词",n,"#c9d2e6"],["学习中",l,"#e8833a"],["已掌握",m,"#27a567"]];
+  const total=DATA.length||1; let acc=0,r=54,cx=70,cy=70;
+  let p="";
+  segs.forEach(([nm,v,col])=>{const a0=acc/total*2*Math.PI-Math.PI/2;acc+=v;
+    const a1=acc/total*2*Math.PI-Math.PI/2;
+    if(v>0){const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+      const large=(a1-a0)>Math.PI?1:0;
+      p+=`<path d="M${cx} ${cy} L${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${col}"/>`}});
+  p+=`<circle cx="${cx}" cy="${cy}" r="34" fill="#fff"/>`;
+  p+=`<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="20" font-weight="800" fill="#1f2733">${m}</text>`;
+  p+=`<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="11" fill="#6b7686">已掌握</text>`;
+  $("donut").innerHTML=p;
+  $("legend").innerHTML=segs.map(([nm,v,col])=>`<div><i style="background:${col}"></i>${nm}：${v}</div>`).join("");
+}
+function renderAct(){
+  const days=[];for(let i=13;i>=0;i--)days.push(addDays(todayStr(),-i));
+  const max=Math.max(1,...days.map(d=>STAT[d]||0));
+  $("actBars").innerHTML=days.map(d=>{const v=STAT[d]||0;const h=Math.round(v/max*100);
+    const on=CHK.includes(d)?"style='background:#19b8a6'":"";
+    return `<div class="b" ${on} style="height:${Math.max(3,h)}%"><span>${v||""}</span><small>${d.slice(5)}</small></div>`}).join("");
+}
+function renderRet(){
+  const S0=12, W=300,H=120, pad=26;
+  const maxT=30;
+  const X=t=> pad + t/maxT*(W-pad-10);
+  const Y=r=> H-pad - r*(H-pad-12);
+  let path="";
+  for(let t=0;t<=maxT;t+=0.5){const r=Math.exp(-K_DECAY*t/S0);path+=(t===0?"M":"L")+X(t).toFixed(1)+" "+Y(r).toFixed(1)+" ";}
+  const sx=X(S0), sy=Y(0.9);
+  $("retCurve").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:340px">
+    <line x1="${pad}" y1="${H-pad}" x2="${W-10}" y2="${H-pad}" stroke="#e6eaf2"/>
+    <line x1="${pad}" y1="10" x2="${pad}" y2="${H-pad}" stroke="#e6eaf2"/>
+    <path d="${path}" fill="none" stroke="#4f6ef7" stroke-width="2.5"/>
+    <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="4" fill="#19b8a6"/>
+    <text x="${(sx+4).toFixed(1)}" y="${(sy-6).toFixed(1)}" font-size="10" fill="#19b8a6">复习点(留存90%)</text>
+    <text x="${pad}" y="9" font-size="10" fill="#6b7686">留存率</text>
+    <text x="${W-30}" y="${H-8}" font-size="10" fill="#6b7686">天数</text>
+  </svg>`;
+  const rev=DATA.filter(d=>!isNew(d.id));
+  const avg= rev.length? Math.round(rev.reduce((a,d)=>a+retention(d.id),0)/rev.length*100):100;
+  $("sRet").textContent=avg+"%";
+}
+
+/* ---------- 词库 ---------- */
+let bFilter="all", bSearch="";
+function renderBrowse(){
+  let arr=DATA.slice();
+  if(bFilter==="new")arr=arr.filter(d=>statusOf(d.id)==="new");
+  else if(bFilter==="learn")arr=arr.filter(d=>statusOf(d.id)==="learn");
+  else if(bFilter==="master")arr=arr.filter(d=>statusOf(d.id)==="master");
+  else if(bFilter==="due")arr=arr.filter(d=>isDue(d.id));
+  if(bSearch)arr=arr.filter(d=>(d.term+" "+d.def).toLowerCase().includes(bSearch.toLowerCase()));
+  const el=$("bList");
+  if(arr.length===0){el.innerHTML='<div class="empty">没有匹配的卡片</div>';return}
+  el.innerHTML=arr.map(d=>{const lv=levelLabel(d.id);
+    return `<div class="item" onclick="this.classList.toggle('open')">
+      <div class="t"><span>${esc(d.term)}</span><span class="lvl ${lv[1]}">${lv[0]}</span></div>
+      <div class="dd">${esc(d.def)}</div></div>`}).join("");
+}
+
+/* ---------- 转义 ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ---------- Tab ---------- */
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="p-"+name));
+  if(name==="study") showStudyView("mode");   // 进入学习页 → 回到“选择学习方式”
+  if(name==="review"){ const m=$("reviewMenu"); if(m)m.style.display=""; const ra=$("reviewArea"); if(ra){ra.style.display="none"; ra.innerHTML="";} }
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
+
+/* ---------- 事件 ---------- */
+$("sessionSize2").onchange=e=>setSessionSize(parseInt(e.target.value,10));
+$("revDue").onclick=()=>startSession("due","reviewArea");
+$("revWeak").onclick=()=>startSession("weak","reviewArea");
+$("revAll").onclick=()=>startSession("all","reviewArea");
+// 学习方式选择
+document.querySelectorAll('#studyModeSel [data-mode]').forEach(b=>b.onclick=()=>{
+  const m=b.dataset.mode;
+  topMode = (m==="cloze") ? "cloze" : "word";
+  renderChapters();
+  showStudyView(m==="count" ? "count" : "chapter");
+});
+// 按个数学习
+document.querySelectorAll('#studyCount [data-count]').forEach(b=>b.onclick=()=>startSession("count:"+b.dataset.count,"studyArea"));
+$("search").oninput=e=>{bSearch=e.target.value;renderBrowse()};
+document.querySelectorAll("#bFilters .chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll("#bFilters .chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active");bFilter=c.dataset.f;renderBrowse();
+});
+$("exportBtn").onclick=()=>{
+  const blob=new Blob([JSON.stringify({PROG,CHK,STAT},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="eda2words_progress_"+todayStr()+".json";a.click();toast("已导出进度");
+};
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const o=JSON.parse(r.result);
+    if(o.PROG){PROG=o.PROG;for(const id in PROG)PROG[id]=migrate(PROG[id]);save(K_PROG,PROG);}
+    if(o.CHK){CHK=o.CHK;save(K_CHK,CHK);}
+    if(o.STAT){STAT=o.STAT;save(K_STAT,STAT);}
+    refresh();toast("进度已导入");}catch(err){toast("文件格式错误")}};
+  r.readAsText(f)};
+$("resetBtn").onclick=()=>{if(confirm("确定要清空所有学习进度和打卡记录吗？")){
+  PROG={};CHK=[];STAT={};save(K_PROG,PROG);save(K_CHK,CHK);save(K_STAT,STAT);refresh();toast("已重置");}};
+
+/* ---------- 键盘 ---------- */
+document.addEventListener("keydown",e=>{
+  const ps=$("p-study"), pr=$("p-review");
+  let panel=null;
+  if(ps&&ps.classList.contains("active"))panel=ps;
+  else if(pr&&pr.classList.contains("active"))panel=pr;
+  if(!panel)return;
+  const flip=panel.querySelector("#flip");
+  if(!flip){
+    const cf=panel.querySelector(".cloze-face"); if(!cf)return;
+    if(e.code==="Space"){e.preventDefault();cf.click();}
+    const rt=panel.querySelector("#ratings");
+    if(rt && rt.style.visibility==="visible"){
+      if(e.key==="1")rt.querySelector('[data-q=again]').click();
+      if(e.key==="2")rt.querySelector('[data-q=hard]').click();
+      if(e.key==="3")rt.querySelector('[data-q=good]').click();
+    }
+    return;
+  }
+  if(e.code==="Space"){e.preventDefault();flip.click();}
+  if(flip.classList.contains("flipped")){
+    const rt=panel.querySelector("#ratings"); if(!rt)return;
+    if(e.key==="1")rt.querySelector('[data-q=again]').click();
+    if(e.key==="2")rt.querySelector('[data-q=hard]').click();
+    if(e.key==="3")rt.querySelector('[data-q=good]').click();
+  }
+});
+
+/* ---------- 初始化 ---------- */
+if (typeof AuthGate !== "undefined") {
+  AuthGate.start({
+    deck: DECK_SLUG,
+    onSuccess: function(){
+      var after = function(){ $("sessionSize2").value=String(getSessionSize()); refresh(); };
+      if (window.Sync) { Sync.init(DECK_SLUG); Sync.pull().finally(after); }
+      else after();
+    }
+  });
+} else {
+  // 登录脚本未加载时（如 CDN 失败或本地调试），降级为原有本地模式
+  $("sessionSize2").value=String(getSessionSize());
+  refresh();
+}
+</script>
+<script>
+// Phase5：复习页提示「易错优先」
+(function(){
+  var rm=document.getElementById('reviewMenu');
+  if(rm && !document.getElementById('p5hint')){
+    var d=document.createElement('div');
+    d.id='p5hint'; d.className='pill idle';
+    d.style.margin='0 0 14px'; d.style.fontSize='13px';
+    d.textContent='\u2696 \u6613\u9519\u4f18\u5148\uff1a\u9519\u5f97\u8d8a\u591a\u7684\u8bcd\u8d8a\u6392\u5230\u524d\u9762\u3001\u88ab\u4f18\u5148\u62bd\u5230\uff08\u6309\u4f60\u7684\u9519\u8bef\u6b21\u6570\u52a0\u6743\uff09\u3002';
+    rm.insertBefore(d, rm.firstChild);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+# ============================================================
+# 本 .gitignore 只排除「开发 / 测试 / 构建 / 备份」文件，
+# 保留部署到 GitHub Pages 所需的所有静态资源。
+# ============================================================
+
+# —— 备份目录 ——
+bak*/
+bak_*/
+
+# —— Python 构建脚本（数据已内联进 HTML，无需部署）——
+*.py
+
+# —— 源数据 JSON（已内联进 HTML）——
+*_data.json
+
+# —— 测试 / 调试脚本 ——
+smoke_*.js
+gen_*.js
+check_*.js
+verify_*.js
+stats_*.js
+inspect_*.js
+proto_*.js
+analyze_*.js
+
+# —— 补丁脚本（已应用，无需部署）——
+patch_*.py
+
+# —— 数据库 schema（仅需在 Supabase 后台执行一次）——
+schema*.sql
+
+# —— 杂项本地文件 ——
+闪卡总目录.html
+macro_raw.txt
+
+# —— WorkBuddy 项目记忆（不进版本库）——
+.workbuddy/
+
+# —— 系统 / 编辑器 ——
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP宏观经济词汇闪卡</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1f2733; --muted:#6b7686;
+    --line:#e6eaf2; --brand:#4f6ef7; --brand2:#19b8a6;
+    --warn:#e8833a; --bad:#e0524e; --good:#27a567; --soft:#eef2ff;
+    --shadow:0 10px 30px rgba(31,39,51,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 16px 60px}
+  header.top{
+    background:linear-gradient(120deg,#4f6ef7,#19b8a6);color:#fff;border-radius:18px;
+    padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  header.top h1{margin:0;font-size:21px;letter-spacing:.3px}
+  header.top .sub{opacity:.9;font-size:13px;margin-top:4px}
+  .toprow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);
+    padding:6px 12px;border-radius:999px;font-size:13px;display:flex;align-items:center;gap:6px}
+  .pill b{font-size:15px}
+  .tabs{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap}
+  .tab{appearance:none;border:1px solid var(--line);background:#fff;color:var(--muted);
+    padding:9px 16px;border-radius:12px;font-size:14px;cursor:pointer;transition:.15s;font-weight:600}
+  .tab:hover{border-color:#c9d2e6}
+  .tab.active{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:0 6px 16px rgba(79,110,247,.3)}
+  .panel{display:none;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  .panel.active{display:block}
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{appearance:none;border:none;border-radius:12px;padding:11px 18px;font-size:14px;
+    font-weight:700;cursor:pointer;transition:.15s;background:var(--brand);color:#fff}
+  .btn:hover{filter:brightness(1.05)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid #c9d2e6}
+  .btn.soft{background:var(--soft);color:var(--brand)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.bad{background:var(--bad)} .btn.warn{background:var(--warn)} .btn.good{background:var(--good)}
+  select,input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink)}
+  /* flip card */
+  .stage{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+  .progress{width:100%;height:8px;background:#eef1f7;border-radius:99px;overflow:hidden}
+  .progress>i{display:block;height:100%;background:linear-gradient(90deg,#4f6ef7,#19b8a6);width:0;transition:.3s}
+  .flip{width:100%;max-width:620px;height:300px;perspective:1400px;cursor:pointer}
+  .flip-in{position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+  .flip.flipped .flip-in{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;
+    display:flex;align-items:center;justify-content:center;padding:26px;text-align:center;
+    box-shadow:var(--shadow);border:1px solid var(--line)}
+  .front{background:linear-gradient(135deg,#ffffff,#eef3ff)}
+  .front .term{font-size:30px;font-weight:800;color:var(--ink);letter-spacing:.3px}
+  .front .hint{position:absolute;bottom:14px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .back{background:linear-gradient(135deg,#ffffff,#eafff8);transform:rotateY(180deg)}
+  .back .def{font-size:18px;color:#243;line-height:1.7}
+  .back .tag{position:absolute;top:12px;left:14px;font-size:12px;color:var(--muted)}
+  .back .meta{position:absolute;bottom:12px;left:0;right:0;font-size:12px;color:var(--muted)}
+  /* 挖空练习 */
+  .cloze-card{width:100%;max-width:620px;min-height:300px;border-radius:18px;position:relative;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    padding:52px 26px 60px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--line);
+    background:linear-gradient(135deg,#ffffff,#fff7ea)}
+  .cloze-card .ctag{position:absolute;top:12px;left:14px;font-size:12px;color:var(--muted)}
+  .cloze-card .cterm{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:.3px}
+  .cloze-card .cloze-def{font-size:17px;color:#243;line-height:1.8}
+  .cloze-card .cmeta{position:absolute;bottom:32px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .cloze-card .chint{position:absolute;bottom:12px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .cloze{display:inline-block;min-width:64px;padding:0 6px;border-bottom:2px solid #e39a2d;
+    color:#e39a2d;font-weight:800;letter-spacing:2px;border-radius:4px;background:#fff3dd}
+  .cloze.revealed{color:#0f766e;background:#e3fff6;border-bottom-color:#19b8a6;letter-spacing:.3px}
+  @media(max-width:560px){.cloze-card .cloze-def{font-size:15px}.cloze-card .cterm{font-size:20px}}
+  .ratings{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .ratings .btn{min-width:120px}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+  .empty .big{font-size:40px;margin-bottom:8px}
+  /* stats */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:#fafbff;border:1px solid var(--line);border-radius:14px;padding:14px}
+  .stat .n{font-size:26px;font-weight:800}
+  .stat .l{font-size:13px;color:var(--muted)}
+  .donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .legend{display:flex;flex-direction:column;gap:8px;font-size:14px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:middle}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:10px}
+  .bars .b{flex:1;background:var(--brand);border-radius:6px 6px 0 0;min-height:3px;position:relative}
+  .bars .b span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
+  .bars .b small{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+  /* calendar */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-width:360px;margin-top:10px}
+  .cal .d{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;background:#f3f5fa;color:var(--muted);border:1px solid transparent}
+  .cal .d.on{background:var(--brand);color:#fff;font-weight:700}
+  .cal .d.today{outline:2px solid var(--brand2)}
+  .cal .h{background:none;color:var(--muted);font-weight:700;font-size:12px}
+  /* browse */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{appearance:none;border:1px solid var(--line);background:#fff;color:var(--muted);
+    padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+  .chip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;transition:.15s}
+  .item:hover{border-color:#c9d2e6}
+  .item .t{font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .item .dd{display:none;margin-top:8px;color:#334;font-size:14px;line-height:1.6}
+  .item.open .dd{display:block}
+  .lvl{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--brand);font-weight:700}
+  .lvl.m{background:#e7f8ef;color:var(--good)}
+  .lvl.l{background:#fff1e8;color:var(--warn)}
+  .lvl.n{background:#eef1f7;color:var(--muted)}
+  .sum{text-align:center;padding:24px}
+  .sum .big{font-size:34px;font-weight:800;color:var(--brand)}
+  .chkline{margin-top:8px;font-size:15px;color:var(--brand);font-weight:600}
+  .pill.good{background:#19b8a6;color:#fff;border-color:#19b8a6}
+  .pill.idle{background:#f0f0f0;color:#888;border-color:#e2e2e2}
+  .chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:6px}
+  .chcard{text-align:left;cursor:pointer;background:#fff;border:1px solid #e6e8ef;border-radius:14px;
+    padding:13px 15px;transition:.15s;display:flex;flex-direction:column;gap:5px}
+  .chcard:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(25,184,166,.15);transform:translateY(-2px)}
+  .chcard .chn{font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.3px}
+  .chcard .cht{font-size:14px;font-weight:700;color:#1f2733;line-height:1.35;min-height:38px}
+  .chcard .chmeta{font-size:11.5px;color:var(--muted)}
+  .chbar{height:6px;border-radius:99px;background:#eef1f7;overflow:hidden}
+  .chbar>i{display:block;height:100%;background:var(--brand);border-radius:99px}
+  @media(max-width:560px){.chgrid{grid-template-columns:1fr 1fr;gap:9px}.chcard{padding:11px 12px}.chcard .cht{font-size:13px;min-height:34px}}
+  /* 学习方式选择 */
+  .moderow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+  .modecard{text-align:left;cursor:pointer;background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:18px 20px;transition:.15s;display:flex;flex-direction:column;gap:7px}
+  .modecard:hover{border-color:var(--brand);box-shadow:0 6px 18px rgba(79,110,247,.15);transform:translateY(-2px)}
+  .modecard .mi{font-size:30px;line-height:1}
+  .modecard .mn{font-size:17px;font-weight:800;color:#1f2733}
+  .modecard .md{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .countrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:6px}
+  .backbtn{margin-bottom:12px}
+  @media(max-width:560px){.moderow{grid-template-columns:1fr}}
+  @media(max-width:560px){.front .term{font-size:24px}.back .def{font-size:16px}.flip{height:260px}}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f2733;color:#fff;
+    padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .small{font-size:12px}
+  a.link{color:var(--brand);cursor:pointer}
+  /* 复习入口卡 */
+  .revopt{background:#fff;border:1px solid #e6e8ef;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  .revopt .rt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .revopt .rt .name{font-size:15px;font-weight:800;color:#1f2733}
+  .revopt .rt .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+  .revopt .rt .tag.auto{background:#e6f7f4;color:#0f9c8b}
+  .revopt .rt .tag.pick{background:#fff1e8;color:var(--warn)}
+  .revopt .desc{font-size:12.5px;color:var(--muted);margin:6px 0 10px;line-height:1.5}
+  .revopt .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+</style>
+<style>
+.chapGroup{border:1px solid #e6eaf2;border-radius:12px;margin-bottom:10px;overflow:hidden;background:#fff}
+.chapHead{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:#f6f8fc;font-weight:700}
+.chapHead:hover{background:#eef2fb}
+.chapRom{background:#4f6ef7;color:#fff;border-radius:6px;padding:2px 9px;font-size:13px;white-space:nowrap}
+.chapTit{flex:1}
+.chapCount{color:#8a93a6;font-size:13px;font-weight:600;white-space:nowrap}
+.chapArrow{transition:transform .2s;color:#8a93a6}
+.chapGroup.open .chapArrow{transform:rotate(90deg)}
+.chapSubs{display:none;padding:10px}
+.chapGroup.open .chapSubs{display:block}
+.chcard.sub{width:100%;text-align:left;margin-bottom:8px;border:1px solid #eef1f7;background:#fff}
+.chcard.sub:hover{border-color:#c9d2e6}
+.chcard.sub .chn{font-weight:700;color:#1f2733}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>AP宏观经济词汇闪卡</h1>
+    <div class="sub">AP Macroeconomics 核心词汇 · 英文术语 + 释义 · 共 <span id="totalN">0</span> 张单词卡</div>
+    <div class="sub" style="margin-top:3px;opacity:.8">制作：常亚菲 Donna</div>
+    <div class="toprow">
+      <div class="pill">今日 <b id="todayStr">-</b></div>
+      <div class="pill">连续打卡 <b id="streakN">0</b> 天</div>
+      <div class="pill">待复习 <b id="dueN">0</b> 张</div>
+      <div class="pill">已掌握 <b id="masterN">0</b> 张</div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="study">学习</button>
+    <button class="tab" data-tab="review">复习</button>
+    <button class="tab" data-tab="checkin">打卡</button>
+    <button class="tab" data-tab="stats">统计</button>
+    <button class="tab" data-tab="browse">词库</button>
+  </div>
+
+  <!-- STUDY — 两级导航：选方式 → 选章节/选个数 → 学习 -->
+  <section class="panel active" id="p-study">
+    <!-- 第 0 级：选择学习方式 -->
+    <div id="studyModeSel">
+      <div class="muted small" style="margin-bottom:10px">选择学习方式</div>
+      <div class="moderow">
+        <button class="modecard" data-mode="chapter">
+          <div class="mi">📚</div>
+          <div class="mn">按章节学习</div>
+          <div class="md">按教材章节一篇一篇背，适合系统过一遍；点开某个章节只显示该章闪卡</div>
+        </button>
+        <button class="modecard" data-mode="count">
+          <div class="mi">🔢</div>
+          <div class="mn">按个数学习</div>
+          <div class="md">自选本轮张数（20 / 30 / 40 / 50），系统优先抽取尚未掌握的单词</div>
+        </button>
+        <button class="modecard" data-mode="cloze">
+          <div class="mi">✏️</div>
+          <div class="mn">挖空练习</div>
+          <div class="md">定义里的重要术语被挖空，看上下文回忆该词；可按时/按章练习，进度独立记录</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 第 1 级：按章节 -->
+    <div id="studyChapter" style="display:none">
+      <button class="btn ghost backbtn" onclick="backToMode()">← 返回选择学习方式</button>
+      <div class="muted small" style="margin-bottom:10px">按章节学习 · 点击任意章节，学习该章全部单词（进度条=已学比例）</div>
+      <div class="chgrid" id="chapterGrid"></div>
+    </div>
+
+    <!-- 第 1 级：按个数 -->
+    <div id="studyCount" style="display:none">
+      <button class="btn ghost backbtn" onclick="backToMode()">← 返回选择学习方式</button>
+      <div class="muted small" style="margin-bottom:10px">按个数学习 · 选择本轮学习的张数，系统优先抽取尚未掌握的单词</div>
+      <div class="countrow">
+        <button class="modecard" data-count="20"><div class="mi">20</div><div class="mn">20 张</div><div class="md">随机抽 20 张</div></button>
+        <button class="modecard" data-count="30"><div class="mi">30</div><div class="mn">30 张</div><div class="md">随机抽 30 张</div></button>
+        <button class="modecard" data-count="40"><div class="mi">40</div><div class="mn">40 张</div><div class="md">随机抽 40 张</div></button>
+        <button class="modecard" data-count="50"><div class="mi">50</div><div class="mn">50 张</div><div class="md">随机抽 50 张</div></button>
+      </div>
+    </div>
+
+    <!-- 第 2 级：学习会话 -->
+    <div id="studyArea" style="display:none;margin-top:14px"></div>
+  </section>
+
+  <!-- REVIEW — 两级：复习选项菜单 → 会话 -->
+  <section class="panel" id="p-review">
+    <div id="reviewMenu">
+      <div class="grid" style="margin-bottom:14px">
+        <div class="stat"><div class="n" id="rDue">0</div><div class="l">今日待复习</div></div>
+        <div class="stat"><div class="n" id="rNew">0</div><div class="l">未学新词</div></div>
+        <div class="stat"><div class="n" id="rWeak">0</div><div class="l">薄弱词</div></div>
+      </div>
+      <!-- 复习待办：系统自动生成，全部做完 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">复习待办</span>
+          <span class="tag auto">系统自动安排</span>
+        </div>
+        <div class="desc">按艾宾浩斯遗忘曲线，把<b>今天到期的卡片</b>自动挑出来（<b id="revDueN">0</b> 张），<b>无需自己选个数，一次全部复习完</b>——这才是防遗忘的关键。做完今天就清零。</div>
+        <div class="actions">
+          <button class="btn" id="revDue">复习全部到期（<span id="revDueN2">0</span> 张）</button>
+        </div>
+      </div>
+
+      <!-- 专攻薄弱：主动加练，自选个数 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">专攻薄弱</span>
+          <span class="tag pick">主动加练 · 自选数量</span>
+        </div>
+        <div class="desc">在到期任务之外<b>额外加练</b>那些还没记牢的词（易错、掌握度低），<b>不管到没到期</b>。因为是主动补练，可自己定本轮做几张。</div>
+        <div class="actions">
+          <span class="muted small">本轮数量：</span>
+          <select id="sessionSize2">
+            <option value="10">10 张</option>
+            <option value="20" selected>20 张</option>
+            <option value="30">30 张</option>
+            <option value="40">40 张</option>
+            <option value="50">50 张</option>
+          </select>
+          <button class="btn soft" id="revWeak">开始专攻（<span id="revWeakN">0</span> 张薄弱）</button>
+        </div>
+      </div>
+
+      <!-- 全部过一遍：通盘复习，自选个数 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">全部过一遍</span>
+          <span class="tag pick">通盘复习 · 自选数量</span>
+        </div>
+        <div class="desc">不分到期与否，从<b>全部单词</b>里随机抽题通盘复习（如考前扫一遍）。数量沿用上面「本轮数量」的设置。</div>
+        <div class="actions">
+          <button class="btn ghost" id="revAll">开始通盘复习</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reviewArea" style="display:none;margin-top:14px"></div>
+  </section>
+
+  <!-- CHECKIN -->
+  <section class="panel" id="p-checkin">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div style="font-size:15px;font-weight:700">每日打卡</div>
+        <div class="muted small">完成学习后自动打卡，本页仅查看记录</div>
+      </div>
+      <div class="pill idle" id="todayChk">今日未打卡</div>
+    </div>
+    <div class="grid" style="margin:16px 0">
+      <div class="stat"><div class="n" id="cCur">0</div><div class="l">当前连续</div></div>
+      <div class="stat"><div class="n" id="cBest">0</div><div class="l">最长连续</div></div>
+      <div class="stat"><div class="n" id="cTot">0</div><div class="l">累计打卡</div></div>
+    </div>
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="btn ghost" style="font-size:12px;padding:6px 11px" onclick="calPrev()">‹ 上月</button>
+      <div class="row" style="gap:8px;align-items:center">
+        <div class="muted small" id="calTitle" style="font-weight:700;font-size:14px"></div>
+        <a class="link" style="font-size:12px" onclick="calToday()">回到本月</a>
+      </div>
+      <button class="btn ghost" style="font-size:12px;padding:6px 11px" onclick="calNext()">下月 ›</button>
+    </div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <!-- STATS -->
+  <section class="panel" id="p-stats">
+    <div class="grid">
+      <div class="stat"><div class="n" id="sNew">0</div><div class="l">新词</div></div>
+      <div class="stat"><div class="n" id="sLearn">0</div><div class="l">学习中</div></div>
+      <div class="stat"><div class="n" id="sMaster">0</div><div class="l">已掌握</div></div>
+      <div class="stat"><div class="n" id="sDue">0</div><div class="l">待复习</div></div>
+      <div class="stat"><div class="n" id="sRet">100%</div><div class="l">已学平均留存率</div></div>
+    </div>
+    <h3 style="margin:18px 0 6px">掌握度分布</h3>
+    <div class="donut-wrap">
+      <svg id="donut" width="140" height="140" viewBox="0 0 140 140"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <h3 style="margin:18px 0 6px">近 14 天学习量</h3>
+    <div class="bars" id="actBars"></div>
+    <h3 style="margin:20px 0 6px">记忆留存（艾宾浩斯遗忘曲线）</h3>
+    <div class="row" style="gap:18px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div class="muted small">系统按遗忘曲线排期：记忆随天数指数衰减，留存跌到约 90% 时（绿点）自动安排复习，记牢后间隔越拉越长。</div>
+      </div>
+      <div class="donut-wrap">
+        <svg id="retCurve" width="100%" style="max-width:340px"></svg>
+      </div>
+    </div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn ghost" id="exportBtn">导出进度</button>
+      <button class="btn ghost" id="importBtn">导入进度</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <button class="btn ghost" id="resetBtn">重置进度</button>
+    </div>
+    <div class="muted small" style="margin-top:8px">进度仅保存在本设备浏览器中；换设备请用“导出/导入”备份。</div>
+  </section>
+
+  <!-- BROWSE -->
+  <section class="panel" id="p-browse">
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="search" placeholder="搜索单词…" style="flex:1;min-width:160px">
+    </div>
+    <div class="filters" id="bFilters">
+      <button class="chip active" data-f="all">全部</button>
+      <button class="chip" data-f="new">新词</button>
+      <button class="chip" data-f="learn">学习中</button>
+      <button class="chip" data-f="master">已掌握</button>
+      <button class="chip" data-f="due">待复习</button>
+    </div>
+    <div class="list" id="bList"></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = [{"term":"Scarcity","def":"稀缺性","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0001","cloze":""},{"term":"Choice","def":"选择","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0002","cloze":""},{"term":"opportunity costs","def":"机会成本","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0003","cloze":""},{"term":"Production possibilities curve","def":"生产可能性曲线","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0004","cloze":""},{"term":"Production possibilities frontier","def":"生产可能性边界（与生产可能性曲线相同）","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0005","cloze":""},{"term":"Comparative advantage","def":"相对比较优势","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0006","cloze":""},{"term":"absolute advantage","def":"绝对比较优势","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0007","cloze":""},{"term":"specialization","def":"分工","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0008","cloze":""},{"term":"exchange","def":"交换","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0009","cloze":""},{"term":"Demand","def":"需求","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0010","cloze":""},{"term":"Supply","def":"供给","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0011","cloze":""},{"term":"market equilibrium","def":"市场均衡","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0012","cloze":""},{"term":"Deadweight/ Efficiency Loss","def":"无谓损失","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0013","cloze":""},{"term":"business cycle","def":"经济周期","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0014","cloze":""},{"term":"unemployment","def":"失业","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0015","cloze":""},{"term":"inflation","def":"通货膨胀","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0016","cloze":""},{"term":"growth","def":"增长","ch1":"I","ch1Title":"Basic economic concepts","ch2Title":"I. Basic economic concepts","chNum":"I / I. Basic economic concepts","id":"mac0017","cloze":""},{"term":"National income accounts","def":"国民收入账户","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0018","cloze":""},{"term":"Circular flow model","def":"循环模型","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0019","cloze":""},{"term":"Leakage","def":"流出, withdrawal from the flow, such as saving, tax, imports.","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0020","cloze":"流出, withdrawal from the [[flow]], such as [[saving, tax, imports]]."},{"term":"Injection","def":"流入，introduction of income into the flow, such as investment, government spending and exports.","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0021","cloze":"流入，[[introduction]] of [[income]] into the flow, such as [[investment]], government spending and exports."},{"term":"Gross domestic product","def":"国内生产总值（GDP），GDP=C+I+G+X-M","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0022","cloze":""},{"term":"Final goods and services","def":"最终商品，GDP只计算最终商品的价值","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0023","cloze":""},{"term":"Intermediate goods","def":"中间商品，如生产手机用的螺丝钉，GDP不计入","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0024","cloze":""},{"term":"Gross investment","def":"总投资","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0025","cloze":""},{"term":"Net investment","def":"净投资","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0026","cloze":""},{"term":"Depreciation","def":"折旧，=capital consumption","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","chNum":"II / 2.1 The Circular Flow and GDP + 2.2 Limitations of GDP","id":"mac0027","cloze":""},{"term":"Labor force","def":"劳动力","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0028","cloze":""},{"term":"Unemployment Rate","def":"The percent of people in the labor force who want a job but are not working.","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0029","cloze":"The percent of people in the [[labor force]] who want a [[job but]] are [[not working]]."},{"term":"Labor force participate rate","def":"The percent of population, aged 16 and older, that is in the labor force","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0030","cloze":"The [[percent]] of [[population, aged]] 16 and [[older]], that is in the labor force"},{"term":"Frictional Unemployment","def":"摩擦性失业，当工人在两个工作之间的短暂temporary的失业，如跳槽的人，正在换工作，刚毕业的大学生。","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0031","cloze":""},{"term":"Seasonal unemployment","def":"季节性失业，产品的需求随着一年的季节有淡季和旺季。例如夏天的泳池的救生员在冬天就失业。","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0032","cloze":""},{"term":"Structural Unemployment","def":"结构性失业，产品长期需求改变、生产方式发生变化，使工人能力和市场上需要的劳动力能力不相符","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0033","cloze":""},{"term":"Cyclical Unemployment","def":"周期性失业，因为经济萧条，需求下降，导致的失业率","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0034","cloze":""},{"term":"Full Employment","def":"充分就业，不代表0失业率。当社会上没有cyclical unemployment, 只有Frictional+structural unemployment的时候就是full employment","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0035","cloze":"充分就业，不代表0失业率。当社会上没有cyclical unemployment, 只有[[Frictional+structural unemployment的时候就是full]] employment"},{"term":"Natural rate of unemployment","def":"自然失业率, =Frictional+structural unemployment","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0036","cloze":""},{"term":"Discourage workers","def":"太久没有找到工作、失去找工作动力的员工，不愿意找工作了，所以不算在劳动力里面了","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0037","cloze":""},{"term":"Underemployed Workers","def":"part-timers because they cannot find full-time jobs","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.3 Unemployment","chNum":"II / 2.3 Unemployment","id":"mac0038","cloze":"part-timers because they [[cannot find full-time]] jobs"},{"term":"Inflation","def":"通货膨胀","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0039","cloze":""},{"term":"Disinflation","def":"通货膨胀率下降的通货膨胀","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0040","cloze":""},{"term":"Deflation","def":"通货紧缩","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0041","cloze":""},{"term":"Hyperinflation","def":"extraordinary rapid inflation","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0042","cloze":""},{"term":"Stagflation","def":"both high unemployment and inflation","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0043","cloze":"both [[high]] unemployment and [[inflation]]"},{"term":"Real gross domestic product","def":"实际GDP","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0044","cloze":""},{"term":"Nominal gross domestic product","def":"名义GDP","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0045","cloze":""},{"term":"Price index/indices","def":"价格指数, 包括GDP deflator和CPI","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0046","cloze":""},{"term":"Nominal","def":"名义的","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0047","cloze":""},{"term":"real","def":"实际的，Real value = (名义 value)/(价格水平) ×100。%△real value = % △nominal value -% △price level","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0048","cloze":"实际的，Real [[value]] = (名义 value)/(价格水平) ×100。%△real [[value = % △nominal value -% △price]] level"},{"term":"GDP deflator","def":"GDP平减指数，=nominal GDP/ real GDP*100","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0049","cloze":"GDP平减指数，=nominal [[GDP/ real GDP]]*100"},{"term":"Consumer Price Index","def":"消费者价格指数, =[pic]","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0050","cloze":""},{"term":"Inflation rate","def":"通货膨胀率，=(price index 2- price index 1)/ price index 1","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","chNum":"II / 2.4 Price Indices and Inflation + 2.5 Costs of Inflation + 2.6 Real v. Nominal GDP","id":"mac0051","cloze":"通货膨胀率，=(price index 2- [[price index 1)/ price]] index 1"},{"term":"Business Cycles","def":"经济周期","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0052","cloze":""},{"term":"Peak","def":"经济周期中真实产出的高点","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0053","cloze":""},{"term":"Trough","def":"经济周期中真实产出的低点","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0054","cloze":""},{"term":"Recession","def":"经济衰退，6 month period of decline in Real GDP.","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0055","cloze":"经济衰退，6 month period of [[decline]] in [[Real GDP]]."},{"term":"Recovery","def":"经济恢复","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0056","cloze":""},{"term":"actual output","def":"真实产出","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0057","cloze":""},{"term":"potential output","def":"潜在产出，also called full emplovment output, it is the level of GDP where unemployment is equal to the natural rate of unemployment","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0058","cloze":"潜在产出，also called [[full emplovment output]], it is the level of GDP where unemployment is [[equal]] to the [[natural rate of unemployment]]"},{"term":"output gap","def":"The difference between actual output and potential output is the output gap.","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0059","cloze":"The difference between [[actual output]] and [[potential output]] is the output gap."},{"term":"inflationary gap","def":"真实产出>潜在产出","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0060","cloze":""},{"term":"recessionary gap","def":"真实产出<潜在产出","ch1":"II","ch1Title":"Measurement of Economic Performance","ch2Title":"2.7 Business Cycles","chNum":"II / 2.7 Business Cycles","id":"mac0061","cloze":""},{"term":"Aggregate demand","def":"总需求, AD=GDP=C+I+G+X-M","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.1 Aggregate Demand (AD) + 3.2 Multipliers","chNum":"III / 3.1 Aggregate Demand (AD) + 3.2 Multipliers","id":"mac0062","cloze":""},{"term":"Multiplier","def":"乘数效应","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.1 Aggregate Demand (AD) + 3.2 Multipliers","chNum":"III / 3.1 Aggregate Demand (AD) + 3.2 Multipliers","id":"mac0063","cloze":""},{"term":"Marginal propensity to consume","def":"MPC=Change in Consumption/Change in Disposable Income, 边际消费倾向","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.1 Aggregate Demand (AD) + 3.2 Multipliers","chNum":"III / 3.1 Aggregate Demand (AD) + 3.2 Multipliers","id":"mac0064","cloze":"MPC=Change in Consumption/Change in [[Disposable Income]], 边际消费倾向"},{"term":"Marginal propensity to save","def":"MPS=Change in Savings/Change in Disposable Income=1-MPC, 边际储蓄倾向","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.1 Aggregate Demand (AD) + 3.2 Multipliers","chNum":"III / 3.1 Aggregate Demand (AD) + 3.2 Multipliers","id":"mac0065","cloze":"MPS=Change in Savings/Change in [[Disposable Income=1-MPC]], 边际储蓄倾向"},{"term":"Spending Multiplier","def":"= 1/MPS or 1/(1-MPC)","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.1 Aggregate Demand (AD) + 3.2 Multipliers","chNum":"III / 3.1 Aggregate Demand (AD) + 3.2 Multipliers","id":"mac0066","cloze":""},{"term":"Tax Multiplier","def":"== MPC/MPS","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.1 Aggregate Demand (AD) + 3.2 Multipliers","chNum":"III / 3.1 Aggregate Demand (AD) + 3.2 Multipliers","id":"mac0067","cloze":""},{"term":"Aggregate supply","def":"总供给","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","chNum":"III / 3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","id":"mac0068","cloze":""},{"term":"Short-run Aggregate Supply","def":"Wages and resource prices are sticky and WILL NOT change as price levels change.","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","chNum":"III / 3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","id":"mac0069","cloze":"[[Wages]] and resource [[prices]] are sticky and WILL NOT change as [[price]] levels change."},{"term":"Long-run Aggregate Supply","def":"Wages and resource prices are flexible and WILL change as price levels change","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","chNum":"III / 3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","id":"mac0070","cloze":"[[Wages]] and resource [[prices]] are flexible and WILL change as [[price]] levels change"},{"term":"Sticky","def":"黏性","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","chNum":"III / 3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","id":"mac0071","cloze":""},{"term":"Flexible","def":"自由伸缩性","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","chNum":"III / 3.3 Short-Run Aggregate Supply (SRAS) + 3.4 Long-Run Aggregate Supply (LRAS)","id":"mac0072","cloze":""},{"term":"Inflationary Gap (Positive Output Gap)","def":"Output is high and unemployment is less than NRU.","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","chNum":"III / 3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","id":"mac0073","cloze":"Output is [[high]] and [[unemployment]] is [[less]] than NRU."},{"term":"Recessionary Gap (Negative Output Gap)","def":"Output low and unemployment is greater than NRU","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","chNum":"III / 3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","id":"mac0074","cloze":"Output low and [[unemployment]] is [[greater]] than NRU"},{"term":"Stagflation","def":"滞胀, Stagnate Economy + Inflation","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","chNum":"III / 3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","id":"mac0075","cloze":""},{"term":"Demand-Pull Inflation (AD increases)","def":"AD pulls up prices. Consumers want goods and services so they bid up prices","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","chNum":"III / 3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","id":"mac0076","cloze":"[[AD pulls up prices]]. Consumers want goods and services so they [[bid up prices]]"},{"term":"Cost-Push Inflation (SRAS Decrease)","def":"Higher production costs increase prices.","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","chNum":"III / 3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","id":"mac0077","cloze":"[[Higher]] production [[costs]] increase [[prices]]."},{"term":"Capital Stock","def":"Machinery and tools purchased by businesses that increase their output.","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","chNum":"III / 3.5 Equilibrium in the Aggregate Demand-Aggregate Supply (AD-AS) Model + 3.6 Changes in the AD-AS Model in the Short Run + 3.7 Long-Run Self-Adjustment","id":"mac0078","cloze":"[[Machinery]] and [[tools purchased]] by businesses that increase their [[output]]."},{"term":"Fiscal Policy","def":"Actions by Congress to stabilize the econom，包括government spending and taxation","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.8 Fiscal Policy + 3.9 Automatic Stabilizers","chNum":"III / 3.8 Fiscal Policy + 3.9 Automatic Stabilizers","id":"mac0079","cloze":"[[Actions]] by [[Congress]] to stabilize the econom，包括government spending and [[taxation]]"},{"term":"Monetary Policy","def":"Actions by the Federal Reserve Bank（美联储，央行） to stabilize the economy，包括调整利率","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.8 Fiscal Policy + 3.9 Automatic Stabilizers","chNum":"III / 3.8 Fiscal Policy + 3.9 Automatic Stabilizers","id":"mac0080","cloze":"[[Actions]] by the [[Federal Reserve Bank]]（美联储，央行） to stabilize the economy，包括调整利率"},{"term":"Discretionary Fiscal Policy","def":"Congress creates a new bill that is designed to change AD through government spending or taxation 自由裁量财政政策：国会制定一项新法案，旨在通过政府支出或税收改变AD","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.8 Fiscal Policy + 3.9 Automatic Stabilizers","chNum":"III / 3.8 Fiscal Policy + 3.9 Automatic Stabilizers","id":"mac0081","cloze":"[[Congress creates]] a new bill that is designed to change AD through government spending or [[taxation 自由裁量财政政策：国会制定一项新法案，旨在通过政府支出或税收改变AD]]"},{"term":"Non-Discretionary Fiscal Policy (Automatic Stabilizers.): Permanent spending or taxation laws enacted to work counter cyclically to stabilize the economy. When GDP goes down, government spending automatically increases and taxes automatically fall. Examples: Welfare, Unemployment, Income Tax 非自由裁量财政政策（自动稳定器）","def":"制定永久性支出或税收法律，以逆周期稳定经济。当GDP下降时，政府支出会自动增加，税收也会自动下降。例子：福利、失业、所得税","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.8 Fiscal Policy + 3.9 Automatic Stabilizers","chNum":"III / 3.8 Fiscal Policy + 3.9 Automatic Stabilizers","id":"mac0082","cloze":""},{"term":"Contractionary Fiscal Policy","def":"紧缩的财政政策，目的是 reduce inflation, decrease GDP (Close an Inflationary Gap). 方法包括Decrease Government Spending和Increase Taxes","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.8 Fiscal Policy + 3.9 Automatic Stabilizers","chNum":"III / 3.8 Fiscal Policy + 3.9 Automatic Stabilizers","id":"mac0083","cloze":"紧缩的财政政策，目的是 [[reduce inflation]], decrease [[GDP (Close]] an [[Inflationary Gap]]). 方法包括Decrease Government Spending和Increase Taxes"},{"term":"Expansionary Fiscal Policy","def":"扩张的财政政策，目的是reduce unemployment and increase GDP (Close a Recessionary Gap). 方法包括Increase Government Spending和Decrease Taxes (Increasing disposable income).","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.8 Fiscal Policy + 3.9 Automatic Stabilizers","chNum":"III / 3.8 Fiscal Policy + 3.9 Automatic Stabilizers","id":"mac0084","cloze":"扩张的财政政策，目的是[[reduce unemployment]] and increase GDP (Close a [[Recessionary]] Gap). 方法包括Increase Government Spending和Decrease [[Taxes (Increasing disposable income]])."},{"term":"Time lag","def":"时间滞后性","ch1":"III","ch1Title":"National Income and Price Determination","ch2Title":"3.8 Fiscal Policy + 3.9 Automatic Stabilizers","chNum":"III / 3.8 Fiscal Policy + 3.9 Automatic Stabilizers","id":"mac0085","cloze":""},{"term":"Money","def":"货币","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.1 Financial Assets","chNum":"IV / 4.1 Financial Assets","id":"mac0086","cloze":""},{"term":"stock","def":"股票","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.1 Financial Assets","chNum":"IV / 4.1 Financial Assets","id":"mac0087","cloze":""},{"term":"stockholder","def":"股东","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.1 Financial Assets","chNum":"IV / 4.1 Financial Assets","id":"mac0088","cloze":""},{"term":"bond","def":"债券","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.1 Financial Assets","chNum":"IV / 4.1 Financial Assets","id":"mac0089","cloze":""},{"term":"Bank","def":"银行","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.1 Financial Assets","chNum":"IV / 4.1 Financial Assets","id":"mac0090","cloze":""},{"term":"financial markets","def":"金融市场","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.1 Financial Assets","chNum":"IV / 4.1 Financial Assets","id":"mac0091","cloze":""},{"term":"Liquidity","def":"the ease with which an asset can be converted to a medium of exchange. In general, the higher the liquidity the lower the rate of return 流动性：资产转换为交换媒介的便利性。一般来说，流动性越高，回报率越低","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.1 Financial Assets","chNum":"IV / 4.1 Financial Assets","id":"mac0092","cloze":"the ease with which an [[asset]] can be converted to a medium of [[exchange]]. In general, the higher the liquidity the lower the [[rate]] of return 流动性：资产转换为交换媒介的便利性。一般来说，流动性越高，回报率越低"},{"term":"interest rate","def":"利率","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.2 Nominal v. Real Interest Rates","chNum":"IV / 4.2 Nominal v. Real Interest Rates","id":"mac0093","cloze":""},{"term":"Nominal Interest Rates","def":"名义利率，the percentage increase in money that the borrower pays (not adjusted for inflation)，借款人支付的资金增加百分比（未调整通胀因素）。Nominal = Real interest rate + expected inflation","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.2 Nominal v. Real Interest Rates","chNum":"IV / 4.2 Nominal v. Real Interest Rates","id":"mac0094","cloze":"名义利率，the percentage increase in money that the borrower pays (not adjusted for [[inflation)，借款人支付的资金增加百分比（未调整通胀因素）。Nominal]] = [[Real interest rate + expected]] inflation"},{"term":"Real Interest Rates","def":"真实利率, the percentage increase in purchasing power that a borrower pays (adjusted for inflation), 借款人所支付的购买力提升百分比（已根据通货膨胀进行了调整）。Real = nominal interest rate - expected inflation","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.2 Nominal v. Real Interest Rates","chNum":"IV / 4.2 Nominal v. Real Interest Rates","id":"mac0095","cloze":"真实利率, the percentage increase in purchasing power that a borrower pays (adjusted for [[inflation]]), 借款人所支付的购买力提升百分比（已根据通货膨胀进行了调整）。[[Real = nominal interest rate]] - [[expected inflation]]"},{"term":"Time value of money","def":"货币的时间价值","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.2 Nominal v. Real Interest Rates","chNum":"IV / 4.2 Nominal v. Real Interest Rates","id":"mac0096","cloze":""},{"term":"The Barter System","def":"以物换物，goods and services are traded directly. There is no money exchanged.","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0097","cloze":"以物换物，goods and services are [[traded]] [[directly]]. There is [[no money exchanged]]."},{"term":"Double Coincidence of Wants","def":"需求的双重巧合","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0098","cloze":""},{"term":"creation of money","def":"货币的创造","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0099","cloze":""},{"term":"Money supply","def":"货币供给","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0100","cloze":""},{"term":"Money demand","def":"货币需求","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0101","cloze":""},{"term":"Money market","def":"货币市场","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0102","cloze":""},{"term":"Medium of Exchange","def":"Money can easily be used to buy goods and services with no complications of barter system.","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0103","cloze":"[[Money]] can [[easily]] be used to buy goods and services with [[no complications]] of barter system."},{"term":"A Unit of Account (Measure of Value)","def":"Money measures the value of all goods and services. Money acts as a measurement of value.","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0104","cloze":"[[Money]] measures the value of all goods and services. [[Money acts]] as a [[measurement]] of value."},{"term":"Store of Value","def":"Money allows you to store purchasing power for the future","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0105","cloze":"[[Money allows you]] to store purchasing power for the [[future]]"},{"term":"Reserve","def":"银行准备金","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0106","cloze":""},{"term":"Money base","def":"货币基础，即M0, M0= Currency in circulation + bank reserve (货币+银行准备金)","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0107","cloze":"货币基础，即M0, M0= Currency in [[circulation + bank reserve]] (货币+银行准备金)"},{"term":"Currency in circulation","def":"流通中的货币, 包括notes纸币和coins硬币等","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0108","cloze":""},{"term":"Checkable bank deposits (checking accounts)","def":"可核查的银行存款（即支票账户）","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0109","cloze":""},{"term":"Demand deposit","def":"活期存款，Money deposited in a commercial bank in a checking account.","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0110","cloze":"活期存款，[[Money]] deposited in a [[commercial bank]] in a [[checking]] account."},{"term":"Saving deposit","def":"储蓄存款","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0111","cloze":""},{"term":"Liquid deposit","def":"流动性存款","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0112","cloze":""},{"term":"M1","def":"= Currency in circulation+ Checkable bank deposits+ Demand deposit + Other Liquid deposit (包括saving deposit和其他checkable deposit)","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0113","cloze":"= Currency in [[circulation+ Checkable bank deposits]]+ Demand deposit + Other Liquid [[deposit (包括saving]] deposit和其他checkable deposit)"},{"term":"Time deposit","def":"定期存款","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0114","cloze":""},{"term":"Small-Denomination time deposit","def":"小额定期存款， 小于$100, 000","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0115","cloze":""},{"term":"Retail money market fund","def":"零售货币市场基金","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0116","cloze":""},{"term":"M2","def":"M1+ Small-Denomination time deposit+ retail money market fund","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0117","cloze":"M1+ Small-Denomination time deposit+ [[retail money market fund]]"},{"term":"Larger time deposit","def":"大额定期存款， 大于$100, 000","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0118","cloze":""},{"term":"Larger liquid funds","def":"大额流动性基金","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0119","cloze":""},{"term":"M3 = M2+ Larger time deposit","def":"+ Larger liquid funds","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0120","cloze":""},{"term":"Composition","def":"组成部分","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.3 Definition, Measurement, and Functions of Money","chNum":"IV / 4.3 Definition, Measurement, and Functions of Money","id":"mac0121","cloze":""},{"term":"Demand Deposits","def":"Money deposited in a commercial bank in a checking account.","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.4 Banking and the Expansion of the Money Supply","chNum":"IV / 4.4 Banking and the Expansion of the Money Supply","id":"mac0122","cloze":"[[Money]] deposited in a [[commercial bank]] in a checking account."},{"term":"Required Reserves","def":"The percent that banks must hold by law. 法定准备金：银行依法必须持有的资金比例。","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.4 Banking and the Expansion of the Money Supply","chNum":"IV / 4.4 Banking and the Expansion of the Money Supply","id":"mac0123","cloze":"The [[percent]] that [[banks]] must [[hold]] by law. 法定准备金：银行依法必须持有的资金比例。"},{"term":"Reserve Requirement (ratio)","def":"存款准备金率","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.4 Banking and the Expansion of the Money Supply","chNum":"IV / 4.4 Banking and the Expansion of the Money Supply","id":"mac0124","cloze":""},{"term":"The Money Multiplier","def":"=1/Reserve Requirement (ratio)","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.4 Banking and the Expansion of the Money Supply","chNum":"IV / 4.4 Banking and the Expansion of the Money Supply","id":"mac0125","cloze":""},{"term":"Excess Reserves- The amount that the bank can loan out. 超额准备金","def":"银行可以用于放贷的金额","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.4 Banking and the Expansion of the Money Supply","chNum":"IV / 4.4 Banking and the Expansion of the Money Supply","id":"mac0126","cloze":""},{"term":"Balance Sheet","def":"A record of a bank’s assets, liabilities, and net worth. 资产负债表：记录了一家银行的资产、负债及净资产的报表。","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.4 Banking and the Expansion of the Money Supply","chNum":"IV / 4.4 Banking and the Expansion of the Money Supply","id":"mac0127","cloze":"A record of a [[bank’s assets, liabilities]], and [[net worth]]. 资产负债表：记录了一家银行的资产、负债及净资产的报表。"},{"term":"Withdrawal","def":"取款","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.4 Banking and the Expansion of the Money Supply","chNum":"IV / 4.4 Banking and the Expansion of the Money Supply","id":"mac0128","cloze":""},{"term":"Transaction Demand for Money","def":"People hold money for everyday transactions.","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.5 The Money Market","chNum":"IV / 4.5 The Money Market","id":"mac0129","cloze":"[[People hold money]] for everyday transactions."},{"term":"Asset Demand for Money","def":"People hold money since it is less risky than other assets","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.5 The Money Market","chNum":"IV / 4.5 The Money Market","id":"mac0130","cloze":"[[People hold money since]] it is less risky than other assets"},{"term":"Quantity demanded of money","def":"和利率是反向关系。持有钱在口袋/支票账户的机会成本是利率（投资其他金融资产，如stocks/bonds/real estate的收入），所以利率越高，Qd of money越低。","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.5 The Money Market","chNum":"IV / 4.5 The Money Market","id":"mac0131","cloze":"和利率是反向关系。持有钱在口袋/支票账户的机会成本是利率（投资其他金融资产，如[[stocks]]/[[bonds/real estate的收入），所以利率越高，Qd]] of money越低。"},{"term":"Expansionary monetary policy","def":"扩张的货币政策","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0132","cloze":""},{"term":"Restrictive/contractionary Monetary Policy","def":"紧缩的货币政策","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0133","cloze":""},{"term":"Limited reserve system","def":"有限的储备金系统","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0134","cloze":""},{"term":"The reserve requirement (reserve ratio)","def":"the percent of deposits that banks must hold in reserve (the percent they can NOT loan out). 准备金要求（准备金率）：银行必须保留的存款百分比（即银行不能放贷出出的百分比）。减少准备金要求=》银行有更多的excess reserves可以借出去=》money supply上升=》利率下降=》AD上升。","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0135","cloze":"the percent of [[deposits]] that banks must hold in reserve (the percent they can [[NOT loan out]]). 准备金要求（准备金率）：银行必须保留的存款百分比（即银行不能放贷出出的百分比）。减少准备金要求=》银行有更多的excess [[reserves可以借出去=》money supply上升=》利率下降=》AD]]上升。"},{"term":"The Discount Rate the interest rate that the Fed charges commercial banks","def":"贴现率是指美联储向商业银行收取的利息率。减少贴现率=》鼓励银行借钱出去=》money supply上升=》利率下降=》AD上升。","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0136","cloze":""},{"term":"Open Market Operations(OMO)","def":"when the Fed buys or sells government bonds (securities). 公开市场操作，指美联储买或者卖政府债券。央行购买政府债券=》银行有更多excess reserves可以借出去=》money supply上升=》利率下降=》AD上升","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0137","cloze":"when the Fed buys or [[sells]] government [[bonds (securities]]). 公开市场操作，指美联储买或者卖政府债券。央行购买政府债券=》银行有更多excess [[reserves可以借出去=》money supply上升=》利率下降=》AD]]上升"},{"term":"The Money Multiplier","def":"=1/Reserve Requirement (ratio)","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0138","cloze":""},{"term":"Ample reserve system","def":"充足准备金系统。所需的储备比率为零，更改MS不再导致名义利率的变化","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0139","cloze":""},{"term":"Policy Rate: Overnight interbank lending rate，called the federal funds rate in the United States.政策利率","def":"隔夜银行间贷款利率，在美国称为联邦基金利率","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0140","cloze":""},{"term":"The Discount Rate（upper bound）","def":"the interest rate that commercial banks must pay to borrow from the central bank. It's the maximum interest rate that banks would be willing to pay for funds =》So it serves as a ceiling (upper bound) for the policy rate。贴现率（上限）：商业银行向中央银行借款时必须支付的利率。它是银行愿意为资金支付的最高利率=）因此它作为政策利率的上限","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0141","cloze":"the [[interest rate]] that commercial banks must pay to borrow from the [[central bank. It's]] the [[maximum interest rate]] that banks would be willing to pay for funds =》So it serves as a ceiling (upper bound) for the policy rate。贴现率（上限）：商业银行向中央银行借款时必须支付的利率。它是银行愿意为资金支付的最高利率=）因此它作为政策利率的上限"},{"term":"Interest on Reserves (lower bound): The interest rate commercial banks earn on the funds in their reserve balance accounts with the Fed. Serves as the Fed's primary monetary policy tool Increases (decreases) to IOR move up (down) the lower bound on the reserve market model graph. 准备金利息（下限）","def":"商业银行在其储备账户中赚取的利率。作为美联储的主要货币政策工具。利率上升（减少）进入储备市场模型的下限。","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0142","cloze":""},{"term":"Administered Interest Rates","def":"管制利率, 包括1. Interest on Reserves；2. Discount Rate","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.6 Monetary Policy","chNum":"IV / 4.6 Monetary Policy","id":"mac0143","cloze":"管制利率, 包括1. Interest on [[Reserves；2. Discount]] Rate"},{"term":"Loanable funds market","def":"可贷资金市场, shows the supply and demand of loans and shows the equilibrium real interest rate。This is NOT the same as the money market (supply is not vertical).","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.7 The Loanable Funds Market","chNum":"IV / 4.7 The Loanable Funds Market","id":"mac0144","cloze":"可贷资金市场, shows the supply and [[demand]] of loans and shows the [[equilibrium real interest rate]]。This is NOT the same as the [[money market (supply]] is not vertical)."},{"term":"Supply of loanable funds","def":"影响因素：1. A change in public or private saving；2. A change in net capital inflow","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.7 The Loanable Funds Market","chNum":"IV / 4.7 The Loanable Funds Market","id":"mac0145","cloze":"影响因素：1. A change in public or [[private saving]]；2. A change in [[net capital inflow]]"},{"term":"Capital Inflow","def":"the amount of money entering the country.","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.7 The Loanable Funds Market","chNum":"IV / 4.7 The Loanable Funds Market","id":"mac0146","cloze":"the amount of [[money entering]] the country."},{"term":"Capital Outflow","def":"the amount of money leaving the country.","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.7 The Loanable Funds Market","chNum":"IV / 4.7 The Loanable Funds Market","id":"mac0147","cloze":"the amount of [[money leaving]] the country."},{"term":"Net Capital Inflow","def":"inflow – outflow","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.7 The Loanable Funds Market","chNum":"IV / 4.7 The Loanable Funds Market","id":"mac0148","cloze":""},{"term":"Government Borrowing","def":"deficit spending when government spending is greater than tax revenue. 政府借贷：指当政府支出超过税收收入时出现的财政赤字现象","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.7 The Loanable Funds Market","chNum":"IV / 4.7 The Loanable Funds Market","id":"mac0149","cloze":"[[deficit spending]] when government spending is [[greater]] than [[tax revenue]]. 政府借贷：指当政府支出超过税收收入时出现的财政赤字现象"},{"term":"Real interest rate","def":"实际利率","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.7 The Loanable Funds Market","chNum":"IV / 4.7 The Loanable Funds Market","id":"mac0150","cloze":""},{"term":"nominal rate","def":"名义利率","ch1":"IV","ch1Title":"Financial Sector","ch2Title":"4.7 The Loanable Funds Market","chNum":"IV / 4.7 The Loanable Funds Market","id":"mac0151","cloze":""},{"term":"The Phillips Curve","def":"Shows the tradeoff between inflation and unemployment，there is an inverse relationship between unemployment and inflation. 菲利普斯曲线：显示通胀与失业之间的权衡，失业率与通胀呈反比关系","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.1 Fiscal and Monetary Policy Actions in the Short Run + 5.2 The Phillips Curve","chNum":"V / 5.1 Fiscal and Monetary Policy Actions in the Short Run + 5.2 The Phillips Curve","id":"mac0152","cloze":"Shows the tradeoff between [[inflation]] and [[unemployment]]，there is an inverse relationship between unemployment and [[inflation]]. 菲利普斯曲线：显示通胀与失业之间的权衡，失业率与通胀呈反比关系"},{"term":"The velocity of money","def":"the average times a dollar is spent and re-spent in a year.","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.3 Money Growth and Inflation","chNum":"V / 5.3 Money Growth and Inflation","id":"mac0153","cloze":"the [[average times]] a dollar is [[spent]] and [[re-spent]] in a year."},{"term":"Quantity Theory of Money","def":"MV=PY, (M = money supply, P = price level, V = velocity, Y = quantity of output)","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.3 Money Growth and Inflation","chNum":"V / 5.3 Money Growth and Inflation","id":"mac0154","cloze":"MV=PY, (M = [[money supply, P = price]] level, V = velocity, [[Y = quantity]] of output)"},{"term":"Budget Deficit","def":"when annual government spending and transfer payments are greater than tax revenue.","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.4 Government Deficits and the National Debt + 5.5 Crowding Out","chNum":"V / 5.4 Government Deficits and the National Debt + 5.5 Crowding Out","id":"mac0155","cloze":"when [[annual]] government spending and [[transfer payments]] are greater than [[tax revenue]]."},{"term":"Budget Surplus","def":"when annual government spending and transfer payments are less than tax revenue.","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.4 Government Deficits and the National Debt + 5.5 Crowding Out","chNum":"V / 5.4 Government Deficits and the National Debt + 5.5 Crowding Out","id":"mac0156","cloze":"when [[annual]] government spending and [[transfer payments]] are less than [[tax revenue]]."},{"term":"The National Debt","def":"the accumulation of all the budget deficits over time.","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.4 Government Deficits and the National Debt + 5.5 Crowding Out","chNum":"V / 5.4 Government Deficits and the National Debt + 5.5 Crowding Out","id":"mac0157","cloze":"the accumulation of all the [[budget deficits]] over [[time]]."},{"term":"Crowding Out: The adverse effect of government borrowing on interest-sensitive private sector spending,挤出","def":"政府借款对利息敏感私营部门支出的负面影响。","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.4 Government Deficits and the National Debt + 5.5 Crowding Out","chNum":"V / 5.4 Government Deficits and the National Debt + 5.5 Crowding Out","id":"mac0158","cloze":""},{"term":"Capital Stock","def":"Machinery and tools purchased by businesses that increase their output","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.6 Economic Growth + 5.7 Public Policy and Economic Growth","chNum":"V / 5.6 Economic Growth + 5.7 Public Policy and Economic Growth","id":"mac0159","cloze":"[[Machinery]] and [[tools purchased]] by businesses that increase their [[output]]"},{"term":"human capital","def":"人力资本投资","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.6 Economic Growth + 5.7 Public Policy and Economic Growth","chNum":"V / 5.6 Economic Growth + 5.7 Public Policy and Economic Growth","id":"mac0160","cloze":""},{"term":"Investment in human capital","def":"人力资本投资","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.6 Economic Growth + 5.7 Public Policy and Economic Growth","chNum":"V / 5.6 Economic Growth + 5.7 Public Policy and Economic Growth","id":"mac0161","cloze":""},{"term":"Investment in physical capital","def":"物质资本投资","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.6 Economic Growth + 5.7 Public Policy and Economic Growth","chNum":"V / 5.6 Economic Growth + 5.7 Public Policy and Economic Growth","id":"mac0162","cloze":""},{"term":"Research and development","def":"研发","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.6 Economic Growth + 5.7 Public Policy and Economic Growth","chNum":"V / 5.6 Economic Growth + 5.7 Public Policy and Economic Growth","id":"mac0163","cloze":""},{"term":"technological progress","def":"技术进步","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.6 Economic Growth + 5.7 Public Policy and Economic Growth","chNum":"V / 5.6 Economic Growth + 5.7 Public Policy and Economic Growth","id":"mac0164","cloze":""},{"term":"Supply-side Fiscal Policies","def":"government policies designed to increase production by reducing business taxes and/or regulations.","ch1":"V","ch1Title":"Long-Run Consequences of Stabilization Policies","ch2Title":"5.6 Economic Growth + 5.7 Public Policy and Economic Growth","chNum":"V / 5.6 Economic Growth + 5.7 Public Policy and Economic Growth","id":"mac0165","cloze":"government [[policies designed]] to increase production by reducing business [[taxes]] and/or [[regulations]]."},{"term":"Balance of trade","def":"贸易平衡","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0166","cloze":""},{"term":"Net export","def":"净出口, Net Exports (XN) = Exports – Imports","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0167","cloze":"净出口, Net Exports (XN) = [[Exports – Imports]]"},{"term":"Trade Surplus","def":"Exporting more than is imported.","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0168","cloze":"[[Exporting]] more than is imported."},{"term":"Trade Deficit (aka. trade gap)","def":"Exporting less than is imported","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0169","cloze":"[[Exporting]] [[less]] than is imported"},{"term":"Current account","def":"经常账户","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0170","cloze":""},{"term":"Capital and financial account","def":"资本和金融账户，measures the purchase and sale of financial assets abroad.","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0171","cloze":"资本和金融账户，measures the purchase and [[sale]] of [[financial assets abroad]]."},{"term":"Net Capital Outflow","def":"The difference between the purchase of foreign assets and domestic assets purchased by foreigners.","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0172","cloze":"The difference between the purchase of [[foreign assets]] and [[domestic assets purchased]] by foreigners."},{"term":"Financial Account Surplus","def":"= Inflow > Outflow","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0173","cloze":""},{"term":"Financial Account Deficit","def":"= Inflow < Outflow","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0174","cloze":""},{"term":"Balance of payments accounts（BOP）","def":"收支平衡账户，Summary of a country’s international trade. The balance of payments 包括 The current account (CA) 和 the capital and financial account (CFA)，","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0175","cloze":"收支平衡账户，Summary of a country’s [[international trade]]. The [[balance of payments 包括 The]] [[current account (CA]]) 和 the capital and financial account (CFA)，"},{"term":"CA + CFA = 0","def":"经常账户（CA）与资本和金融账户（CFA）余额之和为零，即一国国际收支总体平衡。","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0176","cloze":""},{"term":"Investment Income","def":"income from the factors of production including payments made to foreign investors. 投资收入, 生产要素收入，包括支付给外国投资者的款项","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0177","cloze":"income from the factors of production including [[payments]] made to [[foreign investors]]. 投资收入, 生产要素收入，包括支付给外国投资者的款项"},{"term":"Net Transfers: Money flows from the private or public sectors. Ex: donations, aids and grants, official assistance, and remittance 净转移","def":"资金来自私营或公共部门。例如：捐款、援助和资助、官方援助和汇款","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0178","cloze":""},{"term":"The Current Account","def":"=Trades in Goods and Services + Investment Income + Net Transfers","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0179","cloze":"=[[Trades]] in Goods and Services + [[Investment Income + Net]] Transfers"},{"term":"Capital flows","def":"资本流动","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.1 Balance of Payments Accounts","chNum":"VI / 6.1 Balance of Payments Accounts","id":"mac0180","cloze":""},{"term":"Exchange Rates","def":"汇率，= Price of one currency relative to another currency","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0181","cloze":"汇率，= [[Price]] of one [[currency relative]] to another currency"},{"term":"Foreign exchange market","def":"外汇市场","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0182","cloze":""},{"term":"Currency appreciation","def":"货币升值","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0183","cloze":""},{"term":"Currency depreciation","def":"货币贬值","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0184","cloze":""},{"term":"Demand for Dollars","def":"There is an inverse relationship between the exchange rate (price) and quantity demanded","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0185","cloze":"There is an inverse relationship between the [[exchange rate (price]]) and [[quantity demanded]]"},{"term":"Supply of Dollars","def":"There is a direct relationship between the exchange rate (price) and quantity supplied","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0186","cloze":"There is a direct relationship between the [[exchange rate (price]]) and [[quantity supplied]]"},{"term":"Shifters of foreign exchange market","def":"1. Changes in Tastes; 2. Change in relative income; 3. Change in relative price level; 4. Change in relative interest rate","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0187","cloze":"1. Changes in Tastes; 2. Change in [[relative income]]; 3. Change in [[relative price]] level; 4. Change in [[relative interest rate]]"},{"term":"Fixed Exchange Rate","def":"The government actively manages the country’s currency.","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0188","cloze":"The government actively manages the [[country’s currency]]."},{"term":"Floating Exchange Rate","def":"The market determines the value of the country’s currency","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0189","cloze":"The market determines the [[value]] of the [[country’s currency]]"},{"term":"Tariff","def":"A tax on imports","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0190","cloze":""},{"term":"Quota","def":"A limit on the quantity of imports","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","chNum":"VI / 6.2 Exchange Rates + 6.3 The Foreign Exchange Market + 6.4 Effect of Changes in Policies and Economic Conditions on the Foreign Exchange Market","id":"mac0191","cloze":"A [[limit]] on the [[quantity]] of imports"},{"term":"Currency and Net Exports","def":"A change in the international value of a country’s currency can drastically effect their exports and imports: Appreciation → Net Exports ↓；Depreciation → Net Exports ↑","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.5 Changes in the Foreign Exchange Market and Net Exports","chNum":"VI / 6.5 Changes in the Foreign Exchange Market and Net Exports","id":"mac0192","cloze":"A change in the international value of a [[country’s currency]] can [[drastically]] effect their exports and imports: [[Appreciation → Net Exports ↓；Depreciation]] → Net Exports ↑"},{"term":"Real Interest Rates and exchange rate","def":"Real Interest Rate in US fall↓ => Capital Flow↓ => International demand for dollars↓ => Value of the dollar↓ => depreciation of dollar","ch1":"VI","ch1Title":"Open Economy: International Trade and Finance","ch2Title":"6.6 Real Interest Rates and International Capital Flows","chNum":"VI / 6.6 Real Interest Rates and International Capital Flows","id":"mac0193","cloze":"Real Interest Rate in US fall↓ => [[Capital Flow↓ => International demand]] for dollars↓ => Value of the [[dollar↓ => depreciation]] of dollar"}];
+
+/* ============ FSRS 式记忆模型 ============
+ * 每张卡记录：state(状态) / S(稳定度，天，= 留存跌到 90% 所需天数) / D(难度 1-10) / reps / lapses / last / due
+ * 遗忘曲线（艾宾浩斯指数衰减）：R(t) = e^(-k·t/S)，其中 k = -ln(0.9) ≈ 0.1054
+ * 即 t = S 时 R ≈ 90%，所以“下次复习间隔 = S 天”。
+ */
+const R_TARGET = 0.9;
+const K_DECAY = -Math.log(R_TARGET); // ≈ 0.1053605
+const K_PROG="macrowords_progress_v1", K_CHK="macrowords_checkin_v1", K_STAT="macrowords_stats_v1", K_SESS="macrowords_session_v1";
+
+/* ---------- 存储 ---------- */
+function load(k,def){try{return JSON.parse(localStorage.getItem(k))??def}catch(e){return def}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+let PROG = load(K_PROG,{});
+let CHK  = load(K_CHK,[]);
+let STAT = load(K_STAT,{});
+
+/* ---------- 旧版 Leitner(盒子) 进度迁移到新模型（不丢已有学生进度） ---------- */
+function migrate(p){
+  if(!p) return null;
+  if(p.S!==undefined) return p;            // 已经是新模型
+  if(p.box===undefined && p.due===undefined) return p;
+  const box = p.box||0;
+  if(box===0) return {state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()};
+  const oldInt = {1:1,2:2,3:4,4:8,5:16}[Math.min(5,box)] || 1;
+  const D = clamp(5 + (p.lapses||0)*1.2 - (p.reps||0)*0.15, 1, 10);
+  const last = addDays(p.due||todayStr(), -oldInt);
+  return {state:"review", S:oldInt, D, reps:p.reps||0, lapses:p.lapses||0, last, due:p.due||todayStr()};
+}
+for(const id in PROG) PROG[id]=migrate(PROG[id]);
+
+/* ---------- 日期 ---------- */
+function todayStr(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDays(ds,n){let d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return todayStr(d)}
+function daysBetween(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+
+/* ---------- 状态 ---------- */
+function st(id){return PROG[id]||{state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()}}
+function isNew(id){return st(id).state==="new"}
+function isDue(id){const p=st(id);if(p.state==="new")return false;return p.due<=todayStr()}
+function statusOf(id){const p=st(id);
+  if(p.state==="new")return"new";
+  if(p.state==="relearning")return"learn";
+  if((p.S||0)>=21)return"master";
+  return"learn";
+}
+function levelLabel(id){const p=st(id);
+  if(p.state==="new")return["新词","n"];
+  if(p.state==="relearning")return["再学习","l"];
+  if(statusOf(id)==="master")return["已掌握","m"];
+  if((p.S||0)<=4)return["薄弱","l"];
+  return["学习",""];
+}
+function isWeak(id){const p=st(id);return p.state!=="new"&&(p.state==="relearning"||(p.S||0)<=4)}
+function retention(id){const p=st(id);if(p.state==="new"||!p.S)return 1;
+  const dt=Math.max(0,daysBetween(p.last,todayStr()));return Math.exp(-K_DECAY*dt/Math.max(0.1,p.S));}
+
+/* ---------- 评分 / 排期（FSRS 式） ---------- */
+function rate(id,grade){
+  const p=st(id);
+  let S=p.S||0, D=p.D||5, reps=p.reps||0, lapses=p.lapses||0;
+  const firstSuccess = (p.state==="new"||p.state==="learning"||p.state==="relearning");
+  let np;
+  if(grade==="again"){
+    lapses++;
+    S=Math.max(0.2,(S||1)*0.3);
+    D=clamp(D+1.2,1,10);
+    np={state:"relearning",S,D,reps:reps,lapses,last:todayStr(),due:addDays(todayStr(),1)};
+  } else {
+    if(firstSuccess){
+      const base = grade==="hard"?1.2:2.0;        // 首次间隔
+      S=base;
+      D=clamp(D+(grade==="hard"?0.6:-0.4),1,10);
+      reps=1;
+    } else {
+      const ease = grade==="hard"?1.3:2.1;
+      const diffFactor = 1 + (10-D)/10*0.3;        // 越难(D大)增长越慢
+      S=Math.min(365,Math.max(0.2,S*ease*diffFactor));
+      D=clamp(D+(grade==="hard"?0.3:-0.5),1,10);
+      reps++;
+    }
+    np={state:"review",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),Math.round(S))};
+  }
+  PROG[id]=np; save(K_PROG,PROG);
+  const t=todayStr(); STAT[t]=(STAT[t]||0)+1; save(K_STAT,STAT);
+}
+
+const K_CPROG="macrowords_cloze_v1";
+let CPROG=load(K_CPROG,{});
+const CLOZE_SET=new Set(DATA.filter(d=>d.cloze).map(d=>d.id));
+function cst(id){return CPROG[id]||{state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()}}
+function cisNew(id){return cst(id).state==="new"}
+function cisDue(id){const p=cst(id);if(p.state==="new")return false;return p.due<=todayStr()}
+function cstatusOf(id){const p=cst(id);if(p.state==="new")return"new";if(p.state==="relearning")return"learn";if((p.S||0)>=21)return"master";return"learn"}
+function cisWeak(id){const p=cst(id);return p.state!=="new"&&(p.state==="relearning"||(p.S||0)<=4)}
+function crate(id,grade){
+  const p=cst(id); let S=p.S||0,D=p.D||5,reps=p.reps||0,lapses=p.lapses||0;
+  const firstSuccess=(p.state==="new"||p.state==="learning"||p.state==="relearning");
+  let np;
+  if(grade==="again"){lapses++;S=Math.max(0.2,(S||1)*0.3);D=clamp(D+1.2,1,10);np={state:"relearning",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),1)};}
+  else{
+    if(firstSuccess){const base=grade==="hard"?1.2:2.0;S=base;D=clamp(D+(grade==="hard"?0.6:-0.4),1,10);reps=1;}
+    else{const ease=grade==="hard"?1.3:2.1;const diffFactor=1+(10-D)/10*0.3;S=Math.min(365,Math.max(0.2,S*ease*diffFactor));D=clamp(D+(grade==="hard"?0.3:-0.5),1,10);reps++;}
+    np={state:"review",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),Math.round(S))};
+  }
+  CPROG[id]=np; save(K_CPROG,CPROG);
+  const t=todayStr(); STAT[t]=(STAT[t]||0)+1; save(K_STAT,STAT);
+}
+
+/* ---------- 打卡（仅由完成学习自动触发，不可手动） ---------- */
+function autoCheckin(){return checkin()}
+function checkin(){
+  const t=todayStr();
+  let added=false;
+  if(!CHK.includes(t)){CHK.push(t);CHK.sort();save(K_CHK,CHK);added=true;}
+  refresh();
+  return added;
+}
+function streak(){
+  if(CHK.length===0)return{cur:0,best:0,tot:0};
+  let best=1,run=1;
+  const sorted=[...CHK].sort();
+  for(let i=1;i<sorted.length;i++){if(daysBetween(sorted[i-1],sorted[i])===1)run++;else run=1;best=Math.max(best,run)}
+  let cur=0;const t=todayStr();
+  if(CHK.includes(t)){cur=1;let d=addDays(t,-1);while(CHK.includes(d)){cur++;d=addDays(d,-1)}}
+  return{cur,best,tot:CHK.length};
+}
+
+/* ---------- 工具 ---------- */
+function toast(m){const el=document.getElementById("toast");el.textContent=m;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800)}
+function $(id){return document.getElementById(id)}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ---------- 本轮数量 ---------- */
+function getSessionSize(){const n=parseInt(load(K_SESS,"20"),10);return isNaN(n)?20:n}
+function setSessionSize(n){save(K_SESS,String(n));
+  const b=$("sessionSize2"); if(b)b.value=String(n);}
+
+/* ---------- 章节列表与渲染 ---------- */
+function chaptersList(){
+  const g1=new Map();
+  DATA.forEach(d=>{
+    if(!g1.has(d.ch1)) g1.set(d.ch1,{num:d.ch1,title:d.ch1Title,order:Math.floor(d.chSort||0),subs:new Map()});
+    const g=g1.get(d.ch1);
+    if(!g.subs.has(d.chNum)) g.subs.set(d.chNum,{key:d.chNum,title:d.ch2Title,order:d.chSort||0,ids:[]});
+    g.subs.get(d.chNum).ids.push(d.id);
+  });
+  const groups=[...g1.values()].sort((a,b)=>a.order-b.order);
+  groups.forEach(g=>{ g.subs=[...g.subs.values()].sort((a,b)=>a.order-b.order); });
+  return groups;
+}
+function renderChapters(){
+  const box=$("chapterGrid"); if(!box)return;
+  const isC = topMode==="cloze";
+  const newF = isC?cisNew:isNew;
+  const stF  = isC?cstatusOf:statusOf;
+  const groups=chaptersList();
+  box.innerHTML=groups.map(g=>{
+    const total=g.subs.reduce((a,s)=>a+s.ids.length,0);
+    const subs=g.subs.map(c=>{
+      const ids = isC ? c.ids.filter(id=>CLOZE_SET.has(id)) : c.ids;
+      const ct=ids.length;
+      const learned=ids.filter(id=>!newF(id)).length;
+      const mastered=ids.filter(id=>stF(id)==="master").length;
+      const pct=ct?Math.round(learned/ct*100):0;
+      return `<button class="chcard sub" data-ch="${esc(c.key)}">
+        <div class="chn">${esc(c.title)}</div>
+        <div class="chmeta">${ct} 词 · 已学 ${learned} · 掌握 ${mastered}</div>
+        <div class="chbar"><i style="width:${pct}%"></i></div>
+      </button>`;
+    }).join("");
+    return `<div class="chapGroup">
+      <div class="chapHead" onclick="this.parentElement.classList.toggle('open')">
+        <span class="chapRom">${esc(g.num)}</span>
+        <span class="chapTit">${esc(g.title)}</span>
+        <span class="chapCount">${total} 词</span>
+        <span class="chapArrow">▸</span>
+      </div>
+      <div class="chapSubs">${subs}</div>
+    </div>`;
+  }).join("");
+  box.querySelectorAll(".chcard.sub").forEach(b=>b.onclick=()=>{
+    if(topMode==="cloze"){
+      if(!DATA.some(d=>d.chNum===b.dataset.ch&&d.cloze)){alert("本小节暂无可挖空的卡片");return;}
+      startSession("cloze:ch:"+b.dataset.ch,"studyArea");
+    } else startSession("ch:"+b.dataset.ch,"studyArea");
+  });
+}
+
+/* ---------- 选择卡片 ---------- */
+function pickCards(mode){
+  // 挖空练习：cloze:ch:X / cloze:all / cloze:due —— 按源顺序（不随机），只取有 cloze 的卡，进度用 CPROG 独立存储
+  if(typeof mode==="string" && mode.indexOf("cloze:")===0){
+    const sub=mode.slice(6);
+    if(sub==="due") return DATA.filter(d=>d.cloze&&cisDue(d.id)).map(d=>d.id);
+    if(sub.indexOf("ch:")===0){const key=sub.slice(3);return DATA.filter(d=>d.chNum===key&&d.cloze).map(d=>d.id);}
+    return DATA.filter(d=>d.cloze).map(d=>d.id);
+  }
+  // 按章节学习：返回该章全部单词，不做数量裁剪
+    if(typeof mode==="string" && mode.indexOf("ch:")===0){
+    const key=mode.slice(3);
+    return DATA.filter(d=>d.chNum===key).map(d=>d.id);
+  }
+  // 按个数学习：优先未掌握词，不足再补已掌握，按选定张数裁剪
+  if(typeof mode==="string" && mode.indexOf("count:")===0){
+    const n=parseInt(mode.slice(6),10);
+    const need=DATA.filter(d=>statusOf(d.id)!=="master").map(d=>d.id);
+    const rest=DATA.filter(d=>statusOf(d.id)==="master").map(d=>d.id);
+    let ids=shuffle(need).concat(shuffle(rest));
+    if(n>0 && n<ids.length) ids=ids.slice(0,n);
+    return ids;
+  }
+  // 复习待办：系统按遗忘曲线自动生成的到期卡，全部返回（不掺新词、不按数量裁剪）
+  if(mode==="due"){
+    return shuffle(DATA.filter(d=>isDue(d.id)).map(d=>d.id));
+  }
+  // 专攻薄弱 / 全部过一遍：主动加练，按「本轮数量」裁剪
+  let ids;
+  if(mode==="new") ids=DATA.filter(d=>isNew(d.id)).map(d=>d.id);
+  else if(mode==="weak") ids=DATA.filter(d=>isWeak(d.id)).map(d=>d.id);
+  else if(mode==="all") ids=DATA.map(d=>d.id);
+  else ids=DATA.filter(d=>isDue(d.id)).map(d=>d.id);
+  if(mode!=="all") ids=shuffle(ids);
+  const n=getSessionSize();
+  if(n>0 && n<ids.length) ids=ids.slice(0,n);
+  return ids;
+}
+
+/* ---------- 学习会话 ---------- */
+let Q=[],QI=0,sessionDone=0,sessionMode="due",activeAreaId="",topMode="word";
+/* 学习区视图切换：mode=选方式 / chapter=选章节 / count=选个数 / session=学习中 */
+function showStudyView(v){
+  $("studyModeSel").style.display  = v==="mode"    ? "" : "none";
+  $("studyChapter").style.display = v==="chapter" ? "" : "none";
+  $("studyCount").style.display   = v==="count"   ? "" : "none";
+  $("studyArea").style.display    = v==="session" ? "" : "none";
+}
+function backToMode(){ showStudyView("mode"); }
+function backToChapters(){ showStudyView("chapter"); }
+function backToCount(){ showStudyView("count"); }
+function backFromSession(){
+  if(activeAreaId==="studyArea"){
+    if(typeof sessionMode==="string" && (sessionMode.indexOf("ch:")===0 || sessionMode.indexOf("cloze:ch:")===0)) showStudyView("chapter");
+    else if(typeof sessionMode==="string" && sessionMode.indexOf("count:")===0) showStudyView("count");
+    else showStudyView("mode");
+  }
+  activeAreaId="";
+}
+function backFromReview(){ const m=$("reviewMenu"); if(m)m.style.display=""; $("reviewArea").style.display="none"; $("reviewArea").innerHTML=""; refresh(); }
+function startSession(mode,areaId){
+  sessionMode=mode;
+  activeAreaId=areaId;
+  Q=pickCards(mode); QI=0; sessionDone=0;
+  if(Q.length===0){$(areaId).innerHTML='<div class="empty"><div class="big">🎉</div>暂时没有需要学习的卡片，去“词库”看看，或换个范围吧。</div>';return}
+  if(areaId==="studyArea") showStudyView("session");
+  if(areaId==="reviewArea"){const m=$("reviewMenu"); if(m)m.style.display="none"; $("reviewArea").style.display="";}
+  renderCard(areaId);
+}
+function renderCard(areaId){
+  const id=Q[QI];
+  const card=DATA.find(d=>d.id===id);
+  const total=Q.length, left=total-QI;
+  if(typeof sessionMode==="string" && sessionMode.indexOf("cloze:")===0){
+    renderClozeCard(areaId, id, card, left, total);
+    return;
+  }
+  const lv=levelLabel(id);
+  const p=st(id);
+  let retP, nextTxt;
+  if(p.state==="new"){retP="—"; nextTxt="首次学习";}
+  else if(p.state==="relearning"){retP="需巩固"; nextTxt="明天再练";}
+  else { retP=Math.round(retention(id)*100)+"%"; const nd=daysBetween(todayStr(),p.due); nextTxt = nd<=0?"今天":nd+"天后"; }
+  let topLine;
+  if(areaId==="studyArea"){
+    const isCh = typeof sessionMode==="string" && sessionMode.indexOf("ch:")===0;
+    const backText = isCh ? "← 返回选章节" : "← 返回选个数";
+    topLine = `<div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromSession()">${backText}</button>
+      <span class="muted small">剩余 ${left} / 共 ${total}</span>
+    </div>`;
+  } else if(areaId==="reviewArea"){
+    topLine = `<div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromReview()">← 返回复习选项</button>
+      <span class="muted small">剩余 ${left} / 共 ${total}</span>
+    </div>`;
+  } else {
+    topLine = `<div class="muted small" style="width:100%;text-align:right">剩余 ${left} / 共 ${total}</div>`;
+  }
+  $(areaId).innerHTML=`
+    <div class="progress"><i style="width:${Math.round(QI/total*100)}%"></i></div>
+    ${topLine}
+    <div class="stage">
+      <div class="flip" id="flip">
+        <div class="flip-in">
+          <div class="face front">
+            <div class="term">${esc(card.term)}</div>
+            <div class="hint">点击卡片 / 按空格 翻看释义（再点一次返回单词）</div>
+          </div>
+          <div class="face back">
+            <div class="tag">定义</div>
+            <div class="def">${esc(card.def)}</div>
+            <div class="meta">当前留存 ${retP} · 下次复习 ${nextTxt}</div>
+          </div>
+        </div>
+      </div>
+      <div class="ratings" id="ratings" style="visibility:hidden">
+        <button class="btn bad" data-q="again">不认识</button>
+        <button class="btn warn" data-q="hard">模糊</button>
+        <button class="btn good" data-q="good">认识</button>
+      </div>
+    </div>`;
+  const flip=$(areaId).querySelector("#flip");
+  if(flip){
+    flip.onclick=()=>{flip.classList.toggle("flipped");const r=$(areaId).querySelector("#ratings"); if(r)r.style.visibility=flip.classList.contains("flipped")?"visible":"hidden"};
+  }
+  const rt=$(areaId).querySelector("#ratings");
+  if(rt){
+    rt.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      rate(id,b.dataset.q);
+      if(b.dataset.q==="again"){Q.push(id);}   // 不认识 → 本轮稍后再现
+      QI++;
+      if(QI>=Q.length) finishSession(areaId);
+      else renderCard(areaId);
+    });
+  }
+}
+/* ---------- 挖空练习卡片渲染 ---------- */
+function renderClozeCard(areaId, id, card, left, total){
+  const cp=cst(id);
+  let retP, nextTxt;
+  if(cp.state==="new"){retP="—"; nextTxt="首次练习";}
+  else if(cp.state==="relearning"){retP="需巩固"; nextTxt="明天再练";}
+  else { const dt=Math.max(0,daysBetween(cp.last,todayStr())); retP=Math.round(Math.exp(-K_DECAY*dt/Math.max(0.1,cp.S||0.1))*100)+"%"; const nd=daysBetween(todayStr(),cp.due); nextTxt = nd<=0?"今天":nd+"天后"; }
+  const backText = (typeof sessionMode==="string" && sessionMode.indexOf("cloze:ch:")===0) ? "← 返回选章节" : "← 返回选择学习方式";
+  const clozeHtml = (card.cloze||card.def)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\[\[(.+?)\]\]/g,'<span class="cloze" data-w="$1">_____</span>');
+  $(areaId).innerHTML=`
+    <div class="progress"><i style="width:${Math.round(QI/total*100)}%"></i></div>
+    <div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromSession()">${backText}</button>
+      <span class="muted small">剩余 ${left} / 共 ${total}</span>
+    </div>
+    <div class="stage">
+      <div class="cloze-card cloze-face">
+        <div class="ctag">挖空练习 · 提示词</div>
+        <div class="cterm">${esc(card.term)}</div>
+        <div class="cloze-def">${clozeHtml}</div>
+        <div class="cmeta">当前留存 ${retP} · 下次复习 ${nextTxt}</div>
+        <div class="chint">读定义，回忆被遮住的词；点击卡片 / 按空格 揭示答案</div>
+      </div>
+      <div class="ratings" id="ratings">
+        <button class="btn bad" data-q="again">不认识</button>
+        <button class="btn warn" data-q="hard">模糊</button>
+        <button class="btn good" data-q="good">认识</button>
+      </div>
+    </div>`;
+  const face=$(areaId).querySelector(".cloze-face");
+  let revealed=false;
+  const reveal=()=>{
+    if(revealed) return;
+    revealed=true;
+    face.querySelectorAll(".cloze").forEach(s=>{ s.textContent=s.dataset.w; s.classList.add("revealed"); });
+    const r=$(areaId).querySelector("#ratings"); if(r) r.style.visibility="visible";
+  };
+  if(face){ face.onclick=(e)=>{ if(e.target.closest(".ratings")) return; reveal(); }; }
+  const rt=$(areaId).querySelector("#ratings");
+  if(rt){
+    rt.style.visibility="hidden";
+    rt.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      crate(id,b.dataset.q);
+      if(b.dataset.q==="again"){Q.push(id);}
+      QI++;
+      if(QI>=Q.length) finishSession(areaId);
+      else renderCard(areaId);
+    });
+  }
+}
+function finishSession(areaId){
+  const learned=Q.length;
+  const justChecked=autoCheckin();          // 完成学习 → 自动打卡（仅记录当天）
+  const s=streak();
+  const chkTxt=justChecked?"✅ 今日打卡已自动记录":"📅 今日已打卡";
+  const streakTxt=s.cur>0?` · 连续 ${s.cur} 天`:"";
+  let backBtns="";
+  if(areaId==="studyArea"){
+    const isCh = typeof sessionMode==="string" && (sessionMode.indexOf("ch:")===0 || sessionMode.indexOf("cloze:")===0);
+    backBtns = isCh
+      ? `<button class="btn soft" onclick="backToChapters()">返回选章节</button>`
+      : `<button class="btn soft" onclick="backToCount()">返回选个数</button>`;
+    backBtns += `<button class="btn ghost" onclick="backToMode()">返回选择学习方式</button>`;
+  } else if(areaId==="reviewArea"){
+    backBtns = `<button class="btn soft" onclick="backFromReview()">返回复习选项</button>`;
+  }
+  $(areaId).innerHTML=`<div class="sum">
+    <div class="big">本轮完成 🎉</div>
+    <p class="muted">已学习 ${learned} 张 · 进度已自动保存</p>
+    <div class="chkline">${chkTxt}${streakTxt}</div>
+    <div class="row" style="justify-content:center;margin-top:10px;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="startSession(sessionMode,'${areaId}')">再来一组</button>
+      ${backBtns}
+      <button class="btn ghost" onclick="switchTab('checkin')">查看打卡</button>
+    </div></div>`;
+  refresh();
+}
+function returnToChapters(){ showStudyView("chapter"); }
+let currentMode="due";
+
+/* ---------- 渲染：统计 ---------- */
+function refresh(){
+  $("totalN").textContent=DATA.length;
+  const due=DATA.filter(d=>isDue(d.id)).length;
+  const master=DATA.filter(d=>statusOf(d.id)==="master").length;
+  const s=streak();
+  $("streakN").textContent=s.cur;
+  $("dueN").textContent=due;
+  $("masterN").textContent=master;
+  $("todayStr").textContent=todayStr();
+  const weak=DATA.filter(d=>isWeak(d.id)).length;
+  $("rDue").textContent=due;
+  $("rNew").textContent=DATA.filter(d=>isNew(d.id)).length;
+  $("rWeak").textContent=weak;
+  ["revDueN","revDueN2"].forEach(k=>{const el=$(k);if(el)el.textContent=due;});
+  const rw=$("revWeakN"); if(rw)rw.textContent=weak;
+  $("cCur").textContent=s.cur; $("cBest").textContent=s.best; $("cTot").textContent=s.tot;
+  const tc=$("todayChk"); if(tc){ if(CHK.includes(todayStr())){tc.textContent="今日已打卡 ✓";tc.className="pill good";}else{tc.textContent="今日未打卡 · 去学习后自动记录";tc.className="pill idle";} }
+  renderChapters();
+  renderCal();
+  $("sNew").textContent=DATA.filter(d=>statusOf(d.id)==="new").length;
+  $("sLearn").textContent=DATA.filter(d=>statusOf(d.id)==="learn").length;
+  $("sMaster").textContent=master;
+  $("sDue").textContent=due;
+  renderDonut();
+  renderAct();
+  renderRet();
+  renderBrowse();
+}
+let calY=(new Date()).getFullYear(), calM=(new Date()).getMonth();
+function renderCal(){
+  const y=calY, m=calM;
+  $("calTitle").textContent=`${y} 年 ${m+1} 月`;
+  const first=new Date(y,m,1); const startD=first.getDay();
+  const days=new Date(y,m+1,0).getDate();
+  const wl=["日","一","二","三","四","五","六"];
+  let h=""; wl.forEach(w=>h+=`<div class="d h">${w}</div>`);
+  for(let i=0;i<startD;i++)h+=`<div class="d"></div>`;
+  const t=todayStr();
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const on=CHK.includes(ds)?" on":""; const tod=ds===t?" today":"";
+    h+=`<div class="d${on}${tod}">${d}</div>`;
+  }
+  $("cal").innerHTML=h;
+}
+function calPrev(){ calM--; if(calM<0){calM=11;calY--;} renderCal(); }
+function calNext(){ calM++; if(calM>11){calM=0;calY++;} renderCal(); }
+function calToday(){ const n=new Date(); calY=n.getFullYear(); calM=n.getMonth(); renderCal(); }
+function renderDonut(){
+  const n=DATA.filter(d=>statusOf(d.id)==="new").length;
+  const l=DATA.filter(d=>statusOf(d.id)==="learn").length;
+  const m=DATA.filter(d=>statusOf(d.id)==="master").length;
+  const segs=[["新词",n,"#c9d2e6"],["学习中",l,"#e8833a"],["已掌握",m,"#27a567"]];
+  const total=DATA.length||1; let acc=0,r=54,cx=70,cy=70;
+  let p="";
+  segs.forEach(([nm,v,col])=>{const a0=acc/total*2*Math.PI-Math.PI/2;acc+=v;
+    const a1=acc/total*2*Math.PI-Math.PI/2;
+    if(v>0){const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+      const large=(a1-a0)>Math.PI?1:0;
+      p+=`<path d="M${cx} ${cy} L${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${col}"/>`}});
+  p+=`<circle cx="${cx}" cy="${cy}" r="34" fill="#fff"/>`;
+  p+=`<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="20" font-weight="800" fill="#1f2733">${m}</text>`;
+  p+=`<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="11" fill="#6b7686">已掌握</text>`;
+  $("donut").innerHTML=p;
+  $("legend").innerHTML=segs.map(([nm,v,col])=>`<div><i style="background:${col}"></i>${nm}：${v}</div>`).join("");
+}
+function renderAct(){
+  const days=[];for(let i=13;i>=0;i--)days.push(addDays(todayStr(),-i));
+  const max=Math.max(1,...days.map(d=>STAT[d]||0));
+  $("actBars").innerHTML=days.map(d=>{const v=STAT[d]||0;const h=Math.round(v/max*100);
+    const on=CHK.includes(d)?"style='background:#19b8a6'":"";
+    return `<div class="b" ${on} style="height:${Math.max(3,h)}%"><span>${v||""}</span><small>${d.slice(5)}</small></div>`}).join("");
+}
+function renderRet(){
+  const S0=12, W=300,H=120, pad=26;
+  const maxT=30;
+  const X=t=> pad + t/maxT*(W-pad-10);
+  const Y=r=> H-pad - r*(H-pad-12);
+  let path="";
+  for(let t=0;t<=maxT;t+=0.5){const r=Math.exp(-K_DECAY*t/S0);path+=(t===0?"M":"L")+X(t).toFixed(1)+" "+Y(r).toFixed(1)+" ";}
+  const sx=X(S0), sy=Y(0.9);
+  $("retCurve").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:340px">
+    <line x1="${pad}" y1="${H-pad}" x2="${W-10}" y2="${H-pad}" stroke="#e6eaf2"/>
+    <line x1="${pad}" y1="10" x2="${pad}" y2="${H-pad}" stroke="#e6eaf2"/>
+    <path d="${path}" fill="none" stroke="#4f6ef7" stroke-width="2.5"/>
+    <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="4" fill="#19b8a6"/>
+    <text x="${(sx+4).toFixed(1)}" y="${(sy-6).toFixed(1)}" font-size="10" fill="#19b8a6">复习点(留存90%)</text>
+    <text x="${pad}" y="9" font-size="10" fill="#6b7686">留存率</text>
+    <text x="${W-30}" y="${H-8}" font-size="10" fill="#6b7686">天数</text>
+  </svg>`;
+  const rev=DATA.filter(d=>!isNew(d.id));
+  const avg= rev.length? Math.round(rev.reduce((a,d)=>a+retention(d.id),0)/rev.length*100):100;
+  $("sRet").textContent=avg+"%";
+}
+
+/* ---------- 词库 ---------- */
+let bFilter="all", bSearch="";
+function renderBrowse(){
+  let arr=DATA.slice();
+  if(bFilter==="new")arr=arr.filter(d=>statusOf(d.id)==="new");
+  else if(bFilter==="learn")arr=arr.filter(d=>statusOf(d.id)==="learn");
+  else if(bFilter==="master")arr=arr.filter(d=>statusOf(d.id)==="master");
+  else if(bFilter==="due")arr=arr.filter(d=>isDue(d.id));
+  if(bSearch)arr=arr.filter(d=>(d.term+" "+d.def).toLowerCase().includes(bSearch.toLowerCase()));
+  const el=$("bList");
+  if(arr.length===0){el.innerHTML='<div class="empty">没有匹配的卡片</div>';return}
+  el.innerHTML=arr.map(d=>{const lv=levelLabel(d.id);
+    return `<div class="item" onclick="this.classList.toggle('open')">
+      <div class="t"><span>${esc(d.term)}</span><span class="lvl ${lv[1]}">${lv[0]}</span></div>
+      <div class="dd">${esc(d.def)}</div></div>`}).join("");
+}
+
+/* ---------- 转义 ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ---------- Tab ---------- */
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="p-"+name));
+  if(name==="study") showStudyView("mode");   // 进入学习页 → 回到“选择学习方式”
+  if(name==="review"){ const m=$("reviewMenu"); if(m)m.style.display=""; const ra=$("reviewArea"); if(ra){ra.style.display="none"; ra.innerHTML="";} }
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
+
+/* ---------- 事件 ---------- */
+$("sessionSize2").onchange=e=>setSessionSize(parseInt(e.target.value,10));
+$("revDue").onclick=()=>startSession("due","reviewArea");
+$("revWeak").onclick=()=>startSession("weak","reviewArea");
+$("revAll").onclick=()=>startSession("all","reviewArea");
+// 学习方式选择
+document.querySelectorAll('#studyModeSel [data-mode]').forEach(b=>b.onclick=()=>{
+  const m=b.dataset.mode;
+  topMode = (m==="cloze") ? "cloze" : "word";
+  renderChapters();
+  showStudyView(m==="count" ? "count" : "chapter");
+});
+// 按个数学习
+document.querySelectorAll('#studyCount [data-count]').forEach(b=>b.onclick=()=>startSession("count:"+b.dataset.count,"studyArea"));
+$("search").oninput=e=>{bSearch=e.target.value;renderBrowse()};
+document.querySelectorAll("#bFilters .chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll("#bFilters .chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active");bFilter=c.dataset.f;renderBrowse();
+});
+$("exportBtn").onclick=()=>{
+  const blob=new Blob([JSON.stringify({PROG,CHK,STAT},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="macrowords_progress_"+todayStr()+".json";a.click();toast("已导出进度");
+};
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const o=JSON.parse(r.result);
+    if(o.PROG){PROG=o.PROG;for(const id in PROG)PROG[id]=migrate(PROG[id]);save(K_PROG,PROG);}
+    if(o.CHK){CHK=o.CHK;save(K_CHK,CHK);}
+    if(o.STAT){STAT=o.STAT;save(K_STAT,STAT);}
+    refresh();toast("进度已导入");}catch(err){toast("文件格式错误")}};
+  r.readAsText(f)};
+$("resetBtn").onclick=()=>{if(confirm("确定要清空所有学习进度和打卡记录吗？")){
+  PROG={};CHK=[];STAT={};save(K_PROG,PROG);save(K_CHK,CHK);save(K_STAT,STAT);refresh();toast("已重置");}};
+
+/* ---------- 键盘 ---------- */
+document.addEventListener("keydown",e=>{
+  const ps=$("p-study"), pr=$("p-review");
+  let panel=null;
+  if(ps&&ps.classList.contains("active"))panel=ps;
+  else if(pr&&pr.classList.contains("active"))panel=pr;
+  if(!panel)return;
+  const flip=panel.querySelector("#flip");
+  if(!flip){
+    const cf=panel.querySelector(".cloze-face"); if(!cf)return;
+    if(e.code==="Space"){e.preventDefault();cf.click();}
+    const rt=panel.querySelector("#ratings");
+    if(rt && rt.style.visibility==="visible"){
+      if(e.key==="1")rt.querySelector('[data-q=again]').click();
+      if(e.key==="2")rt.querySelector('[data-q=hard]').click();
+      if(e.key==="3")rt.querySelector('[data-q=good]').click();
+    }
+    return;
+  }
+  if(e.code==="Space"){e.preventDefault();flip.click();}
+  if(e.code==="Space"){e.preventDefault();flip.click();}
+  if(flip.classList.contains("flipped")){
+    const rt=panel.querySelector("#ratings"); if(!rt)return;
+    if(e.key==="1")rt.querySelector('[data-q=again]').click();
+    if(e.key==="2")rt.querySelector('[data-q=hard]').click();
+    if(e.key==="3")rt.querySelector('[data-q=good]').click();
+  }
+});
+
+/* ---------- 初始化 ---------- */
+$("sessionSize2").value=String(getSessionSize());
+refresh();
+</script>
+</body>
+</html>

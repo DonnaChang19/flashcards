@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDX-AS核心定义和单词卡</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1f2733; --muted:#6b7686;
+    --line:#e6eaf2; --brand:#4f6ef7; --brand2:#19b8a6;
+    --warn:#e8833a; --bad:#e0524e; --good:#27a567; --soft:#eef2ff;
+    --shadow:0 10px 30px rgba(31,39,51,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 16px 60px}
+  header.top{
+    background:linear-gradient(120deg,#4f6ef7,#19b8a6);color:#fff;border-radius:18px;
+    padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  header.top h1{margin:0;font-size:21px;letter-spacing:.3px}
+  header.top .sub{opacity:.9;font-size:13px;margin-top:4px}
+  .toprow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);
+    padding:6px 12px;border-radius:999px;font-size:13px;display:flex;align-items:center;gap:6px}
+  .pill b{font-size:15px}
+  .tabs{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap}
+  .tab{appearance:none;border:1px solid var(--line);background:#fff;color:var(--muted);
+    padding:9px 16px;border-radius:12px;font-size:14px;cursor:pointer;transition:.15s;font-weight:600}
+  .tab:hover{border-color:#c9d2e6}
+  .tab.active{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:0 6px 16px rgba(79,110,247,.3)}
+  .panel{display:none;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  .panel.active{display:block}
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{appearance:none;border:none;border-radius:12px;padding:11px 18px;font-size:14px;
+    font-weight:700;cursor:pointer;transition:.15s;background:var(--brand);color:#fff}
+  .btn:hover{filter:brightness(1.05)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid #c9d2e6}
+  .btn.soft{background:var(--soft);color:var(--brand)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.bad{background:var(--bad)} .btn.warn{background:var(--warn)} .btn.good{background:var(--good)}
+  select,input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink)}
+  /* flip card */
+  .stage{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+  .progress{width:100%;height:8px;background:#eef1f7;border-radius:99px;overflow:hidden}
+  .progress>i{display:block;height:100%;background:linear-gradient(90deg,#4f6ef7,#19b8a6);width:0;transition:.3s}
+  .flip{width:100%;max-width:620px;height:300px;perspective:1400px;cursor:pointer}
+  .flip-in{position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+  .flip.flipped .flip-in{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;
+    display:flex;align-items:center;justify-content:center;padding:26px;text-align:center;
+    box-shadow:var(--shadow);border:1px solid var(--line)}
+  .front{background:linear-gradient(135deg,#ffffff,#eef3ff)}
+  .front .term{font-size:30px;font-weight:800;color:var(--ink);letter-spacing:.3px}
+  .front .hint{position:absolute;bottom:14px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .back{background:linear-gradient(135deg,#ffffff,#eafff8);transform:rotateY(180deg)}
+  .back .def{font-size:18px;color:#243;line-height:1.7}
+  .back .tag{position:absolute;top:12px;left:14px;font-size:12px;color:var(--muted)}
+  .back .meta{position:absolute;bottom:12px;left:0;right:0;font-size:12px;color:var(--muted)}
+  /* 挖空练习 */
+  .cloze-card{width:100%;max-width:620px;min-height:300px;border-radius:18px;position:relative;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    padding:52px 26px 60px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--line);
+    background:linear-gradient(135deg,#ffffff,#fff7ea)}
+  .cloze-card .ctag{position:absolute;top:12px;left:14px;font-size:12px;color:var(--muted)}
+  .cloze-card .cterm{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:.3px}
+  .cloze-card .cloze-def{font-size:17px;color:#243;line-height:1.8}
+  .cloze-card .cmeta{position:absolute;bottom:32px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .cloze-card .chint{position:absolute;bottom:12px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .cloze{display:inline-block;min-width:64px;padding:0 6px;border-bottom:2px solid #e39a2d;
+    color:#e39a2d;font-weight:800;letter-spacing:2px;border-radius:4px;background:#fff3dd}
+  .cloze.revealed{color:#0f766e;background:#e3fff6;border-bottom-color:#19b8a6;letter-spacing:.3px}
+  @media(max-width:560px){.cloze-card .cloze-def{font-size:15px}.cloze-card .cterm{font-size:20px}}
+  .ratings{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .ratings .btn{min-width:120px}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+  .empty .big{font-size:40px;margin-bottom:8px}
+  /* stats */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:#fafbff;border:1px solid var(--line);border-radius:14px;padding:14px}
+  .stat .n{font-size:26px;font-weight:800}
+  .stat .l{font-size:13px;color:var(--muted)}
+  .donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .legend{display:flex;flex-direction:column;gap:8px;font-size:14px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:middle}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:10px}
+  .bars .b{flex:1;background:var(--brand);border-radius:6px 6px 0 0;min-height:3px;position:relative}
+  .bars .b span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
+  .bars .b small{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+  /* calendar */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-width:360px;margin-top:10px}
+  .cal .d{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;background:#f3f5fa;color:var(--muted);border:1px solid transparent}
+  .cal .d.on{background:var(--brand);color:#fff;font-weight:700}
+  .cal .d.today{outline:2px solid var(--brand2)}
+  .cal .h{background:none;color:var(--muted);font-weight:700;font-size:12px}
+  /* browse */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{appearance:none;border:1px solid var(--line);background:#fff;color:var(--muted);
+    padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+  .chip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;transition:.15s}
+  .item:hover{border-color:#c9d2e6}
+  .item .t{font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .item .dd{display:none;margin-top:8px;color:#334;font-size:14px;line-height:1.6}
+  .item.open .dd{display:block}
+  .lvl{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--brand);font-weight:700}
+  .lvl.m{background:#e7f8ef;color:var(--good)}
+  .lvl.l{background:#fff1e8;color:var(--warn)}
+  .lvl.n{background:#eef1f7;color:var(--muted)}
+  .sum{text-align:center;padding:24px}
+  .sum .big{font-size:34px;font-weight:800;color:var(--brand)}
+  .chkline{margin-top:8px;font-size:15px;color:var(--brand);font-weight:600}
+  .pill.good{background:#19b8a6;color:#fff;border-color:#19b8a6}
+  .pill.idle{background:#f0f0f0;color:#888;border-color:#e2e2e2}
+  .chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:6px}
+  .chcard{text-align:left;cursor:pointer;background:#fff;border:1px solid #e6e8ef;border-radius:14px;
+    padding:13px 15px;transition:.15s;display:flex;flex-direction:column;gap:5px}
+  .chcard:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(25,184,166,.15);transform:translateY(-2px)}
+  .chcard .chn{font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.3px}
+  .chcard .cht{font-size:14px;font-weight:700;color:#1f2733;line-height:1.35;min-height:38px}
+  .chcard .chmeta{font-size:11.5px;color:var(--muted)}
+  .chbar{height:6px;border-radius:99px;background:#eef1f7;overflow:hidden}
+  .chbar>i{display:block;height:100%;background:var(--brand);border-radius:99px}
+  @media(max-width:560px){.chgrid{grid-template-columns:1fr 1fr;gap:9px}.chcard{padding:11px 12px}.chcard .cht{font-size:13px;min-height:34px}}
+  /* 学习方式选择 */
+  .moderow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+  .modecard{text-align:left;cursor:pointer;background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:18px 20px;transition:.15s;display:flex;flex-direction:column;gap:7px}
+  .modecard:hover{border-color:var(--brand);box-shadow:0 6px 18px rgba(79,110,247,.15);transform:translateY(-2px)}
+  .modecard .mi{font-size:30px;line-height:1}
+  .modecard .mn{font-size:17px;font-weight:800;color:#1f2733}
+  .modecard .md{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .countrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:6px}
+  .backbtn{margin-bottom:12px}
+  @media(max-width:560px){.moderow{grid-template-columns:1fr}}
+  @media(max-width:560px){.front .term{font-size:24px}.back .def{font-size:16px}.flip{height:260px}}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f2733;color:#fff;
+    padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .small{font-size:12px}
+  a.link{color:var(--brand);cursor:pointer}
+  /* 复习入口卡 */
+  .revopt{background:#fff;border:1px solid #e6e8ef;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  .revopt .rt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .revopt .rt .name{font-size:15px;font-weight:800;color:#1f2733}
+  .revopt .rt .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+  .revopt .rt .tag.auto{background:#e6f7f4;color:#0f9c8b}
+  .revopt .rt .tag.pick{background:#fff1e8;color:var(--warn)}
+  .revopt .desc{font-size:12.5px;color:var(--muted);margin:6px 0 10px;line-height:1.5}
+  .revopt .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+</style>
+<script>window.DECK_SLUG = "edaswords";</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="cloudstore.js"></script>
+<script src="auth.js"></script>
+<script src="sync.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>EDX-AS核心定义和单词卡</h1>
+    <div class="sub">根据 EDX-AS 阶段核心定义整理 · 共 <span id="totalN">0</span> 张单词卡</div>
+    <div class="sub" style="margin-top:3px;opacity:.8">制作：常亚菲 Donna</div>
+    <div class="toprow">
+      <div class="pill">今日 <b id="todayStr">-</b></div>
+      <div class="pill">连续打卡 <b id="streakN">0</b> 天</div>
+      <div class="pill">待复习 <b id="dueN">0</b> 张</div>
+      <div class="pill">已掌握 <b id="masterN">0</b> 张</div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="study">学习</button>
+    <button class="tab" data-tab="review">复习</button>
+    <button class="tab" data-tab="checkin">打卡</button>
+    <button class="tab" data-tab="stats">统计</button>
+    <button class="tab" data-tab="browse">词库</button>
+  </div>
+
+  <!-- STUDY — 两级导航：选方式 → 选章节/选个数 → 学习 -->
+  <section class="panel active" id="p-study">
+    <!-- 第 0 级：选择学习方式 -->
+    <div id="studyModeSel">
+      <div class="muted small" style="margin-bottom:10px">选择学习方式</div>
+      <div class="moderow">
+        <button class="modecard" data-mode="chapter">
+          <div class="mi">📚</div>
+          <div class="mn">按章节学习</div>
+          <div class="md">按教材章节一篇一篇背，适合系统过一遍；点开某个章节只显示该章闪卡</div>
+        </button>
+        <button class="modecard" data-mode="count">
+          <div class="mi">🔢</div>
+          <div class="mn">按个数学习</div>
+          <div class="md">自选本轮张数（20 / 30 / 40 / 50），系统优先抽取尚未掌握的单词</div>
+        </button>
+        <button class="modecard" data-mode="cloze">
+          <div class="mi">✏️</div>
+          <div class="mn">挖空练习</div>
+          <div class="md">定义里的重要术语被挖空，看上下文回忆该词；可按时/按章练习，进度独立记录</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 第 1 级：按章节 -->
+    <div id="studyChapter" style="display:none">
+      <button class="btn ghost backbtn" onclick="backToMode()">← 返回选择学习方式</button>
+      <div class="muted small" style="margin-bottom:10px">按章节学习 · 点击任意章节，学习该章全部单词（进度条=已学比例）</div>
+      <div class="chgrid" id="chapterGrid"></div>
+    </div>
+
+    <!-- 第 1 级：按个数 -->
+    <div id="studyCount" style="display:none">
+      <button class="btn ghost backbtn" onclick="backToMode()">← 返回选择学习方式</button>
+      <div class="muted small" style="margin-bottom:10px">按个数学习 · 选择本轮学习的张数，系统优先抽取尚未掌握的单词</div>
+      <div class="countrow">
+        <button class="modecard" data-count="20"><div class="mi">20</div><div class="mn">20 张</div><div class="md">随机抽 20 张</div></button>
+        <button class="modecard" data-count="30"><div class="mi">30</div><div class="mn">30 张</div><div class="md">随机抽 30 张</div></button>
+        <button class="modecard" data-count="40"><div class="mi">40</div><div class="mn">40 张</div><div class="md">随机抽 40 张</div></button>
+        <button class="modecard" data-count="50"><div class="mi">50</div><div class="mn">50 张</div><div class="md">随机抽 50 张</div></button>
+      </div>
+    </div>
+
+    <!-- 第 2 级：学习会话 -->
+    <div id="studyArea" style="display:none;margin-top:14px"></div>
+  </section>
+
+  <!-- REVIEW — 两级：复习选项菜单 → 会话 -->
+  <section class="panel" id="p-review">
+    <div id="reviewMenu">
+      <div class="grid" style="margin-bottom:14px">
+        <div class="stat"><div class="n" id="rDue">0</div><div class="l">今日待复习</div></div>
+        <div class="stat"><div class="n" id="rNew">0</div><div class="l">未学新词</div></div>
+        <div class="stat"><div class="n" id="rWeak">0</div><div class="l">薄弱词</div></div>
+      </div>
+      <!-- 复习待办：系统自动生成，全部做完 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">复习待办</span>
+          <span class="tag auto">系统自动安排</span>
+        </div>
+        <div class="desc">按艾宾浩斯遗忘曲线，把<b>今天到期的卡片</b>自动挑出来（<b id="revDueN">0</b> 张），<b>无需自己选个数，一次全部复习完</b>——这才是防遗忘的关键。做完今天就清零。</div>
+        <div class="actions">
+          <button class="btn" id="revDue">复习全部到期（<span id="revDueN2">0</span> 张）</button>
+        </div>
+      </div>
+
+      <!-- 专攻薄弱：主动加练，自选个数 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">专攻薄弱</span>
+          <span class="tag pick">主动加练 · 自选数量</span>
+        </div>
+        <div class="desc">在到期任务之外<b>额外加练</b>那些还没记牢的词（易错、掌握度低），<b>不管到没到期</b>。因为是主动补练，可自己定本轮做几张。</div>
+        <div class="actions">
+          <span class="muted small">本轮数量：</span>
+          <select id="sessionSize2">
+            <option value="10">10 张</option>
+            <option value="20" selected>20 张</option>
+            <option value="30">30 张</option>
+            <option value="40">40 张</option>
+            <option value="50">50 张</option>
+          </select>
+          <button class="btn soft" id="revWeak">开始专攻（<span id="revWeakN">0</span> 张薄弱）</button>
+        </div>
+      </div>
+
+      <!-- 全部过一遍：通盘复习，自选个数 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">全部过一遍</span>
+          <span class="tag pick">通盘复习 · 自选数量</span>
+        </div>
+        <div class="desc">不分到期与否，从<b>全部单词</b>里随机抽题通盘复习（如考前扫一遍）。数量沿用上面「本轮数量」的设置。</div>
+        <div class="actions">
+          <button class="btn ghost" id="revAll">开始通盘复习</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reviewArea" style="display:none;margin-top:14px"></div>
+  </section>
+
+  <!-- CHECKIN -->
+  <section class="panel" id="p-checkin">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div style="font-size:15px;font-weight:700">每日打卡</div>
+        <div class="muted small">完成学习后自动打卡，本页仅查看记录</div>
+      </div>
+      <div class="pill idle" id="todayChk">今日未打卡</div>
+    </div>
+    <div class="grid" style="margin:16px 0">
+      <div class="stat"><div class="n" id="cCur">0</div><div class="l">当前连续</div></div>
+      <div class="stat"><div class="n" id="cBest">0</div><div class="l">最长连续</div></div>
+      <div class="stat"><div class="n" id="cTot">0</div><div class="l">累计打卡</div></div>
+    </div>
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="btn ghost" style="font-size:12px;padding:6px 11px" onclick="calPrev()">‹ 上月</button>
+      <div class="row" style="gap:8px;align-items:center">
+        <div class="muted small" id="calTitle" style="font-weight:700;font-size:14px"></div>
+        <a class="link" style="font-size:12px" onclick="calToday()">回到本月</a>
+      </div>
+      <button class="btn ghost" style="font-size:12px;padding:6px 11px" onclick="calNext()">下月 ›</button>
+    </div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <!-- STATS -->
+  <section class="panel" id="p-stats">
+    <div class="grid">
+      <div class="stat"><div class="n" id="sNew">0</div><div class="l">新词</div></div>
+      <div class="stat"><div class="n" id="sLearn">0</div><div class="l">学习中</div></div>
+      <div class="stat"><div class="n" id="sMaster">0</div><div class="l">已掌握</div></div>
+      <div class="stat"><div class="n" id="sDue">0</div><div class="l">待复习</div></div>
+      <div class="stat"><div class="n" id="sRet">100%</div><div class="l">已学平均留存率</div></div>
+    </div>
+    <h3 style="margin:18px 0 6px">掌握度分布</h3>
+    <div class="donut-wrap">
+      <svg id="donut" width="140" height="140" viewBox="0 0 140 140"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <h3 style="margin:18px 0 6px">近 14 天学习量</h3>
+    <div class="bars" id="actBars"></div>
+    <h3 style="margin:20px 0 6px">记忆留存（艾宾浩斯遗忘曲线）</h3>
+    <div class="row" style="gap:18px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div class="muted small">系统按遗忘曲线排期：记忆随天数指数衰减，留存跌到约 90% 时（绿点）自动安排复习，记牢后间隔越拉越长。</div>
+      </div>
+      <div class="donut-wrap">
+        <svg id="retCurve" width="100%" style="max-width:340px"></svg>
+      </div>
+    </div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn ghost" id="exportBtn">导出进度</button>
+      <button class="btn ghost" id="importBtn">导入进度</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <button class="btn ghost" id="resetBtn">重置进度</button>
+    </div>
+    <div class="muted small" style="margin-top:8px">进度仅保存在本设备浏览器中；换设备请用“导出/导入”备份。</div>
+  </section>
+
+  <!-- BROWSE -->
+  <section class="panel" id="p-browse">
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="search" placeholder="搜索单词…" style="flex:1;min-width:160px">
+    </div>
+    <div class="filters" id="bFilters">
+      <button class="chip active" data-f="all">全部</button>
+      <button class="chip" data-f="new">新词</button>
+      <button class="chip" data-f="learn">学习中</button>
+      <button class="chip" data-f="master">已掌握</button>
+      <button class="chip" data-f="due">待复习</button>
+    </div>
+    <div class="list" id="bList"></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = [{"id":"edas001","term":"ceteris paribus","def":"all things being equal.","chNum":1,"chTitle":"Economics as a Social Science","cloze":"all things being [[equal]]."},{"id":"edas002","term":"normative statements","def":"normative statement is based on the economist's opinion or value judgement and it cannot be proven. it is subjective.","chNum":1,"chTitle":"Economics as a Social Science","cloze":"normative statement is based on the [[economist's opinion]] or [[value judgement]] and it cannot be proven. it is [[subjective]]."},{"id":"edas003","term":"positive statements","def":"positive statement is based on facts or actual evidence and it can be tested or proven. it is objective.","chNum":1,"chTitle":"Economics as a Social Science","cloze":"positive statement is based on facts or [[actual evidence]] and it can be [[tested]] or proven. it is [[objective]]."},{"id":"edas004","term":"basic economic problem","def":"wants are infinite but resources are scarce.","chNum":2,"chTitle":"The Economic Problem","cloze":"wants are [[infinite but]] resources are [[scarce]]."},{"id":"edas005","term":"economic goods","def":"economic good is a product which requires resources to produce it and therefore has an opportunity cost. so they are scarce.","chNum":2,"chTitle":"The Economic Problem","cloze":"economic good is a product which [[requires]] resources to produce it and [[therefore]] has an [[opportunity cost. so]] they are scarce."},{"id":"edas006","term":"free goods","def":"free goods have no prices and, in the theory, because no factors of production are required to produce them, so they have no opportunity cost. they are unlimited in supply.","chNum":2,"chTitle":"The Economic Problem","cloze":"free goods have [[no prices]] and, in the theory, because [[no factors of production]] are required to produce them, so they have [[no opportunity cost]]. they are unlimited in supply."},{"id":"edas007","term":"factors of production","def":"the inputs to the production process:land, labour, capital and enterprise or entrepreneurship.","chNum":2,"chTitle":"The Economic Problem","cloze":"the [[inputs]] to the production process:[[land, labour, capital]] and [[enterprise]] or entrepreneurship."},{"id":"edas008","term":"human capital","def":"the value of the productive potential of an individual or group or workers;.","chNum":2,"chTitle":"The Economic Problem","cloze":"the [[value]] of the [[productive potential]] of an individual or group or [[workers]];."},{"id":"edas009","term":"non-renewable resources","def":"non-renewable resources are resources that are diminishing over time due to economic exploitation, such as coal, oil, gold, natural gas and nuclear power. They are once used and will never be replaced.","chNum":2,"chTitle":"The Economic Problem","cloze":"non-renewable resources are resources that are diminishing over time due to economic [[exploitation]], such as [[coal, oil, gold, natural]] gas and [[nuclear power]]. They are once used and will never be replaced."},{"id":"edas010","term":"renewable resources","def":"renewable resources would not be depleted by use and can be used again and again, such as hydroelectricity, biomass, wind ,solar, fish, forests or water.","chNum":2,"chTitle":"The Economic Problem","cloze":"renewable resources would not be [[depleted]] by use and can be used again and again, such as [[hydroelectricity, biomass, wind ,solar]], [[fish, forests]] or water."},{"id":"edas011","term":"opportunity cost","def":"the benefits of the next best alternativethat are given up.","chNum":2,"chTitle":"The Economic Problem","cloze":"the benefits of the [[next best alternativethat]] are given up."},{"id":"edas012","term":"capital goods","def":"capital goods are human-made goods used in production, such as buildings or machinery.","chNum":3,"chTitle":"Production Possibility Frontiers","cloze":"capital goods are [[human]]-made goods used in production, such as [[buildings]] or [[machinery]]."},{"id":"edas013","term":"consumer goods","def":"consumer goods are goods and services sold to individuals to satisfy their wants and needs, such as vegetables and clothes.","chNum":3,"chTitle":"Production Possibility Frontiers","cloze":"consumer goods are goods and services sold to individuals to satisfy their wants and [[needs]], such as [[vegetables]] and [[clothes]]."},{"id":"edas014","term":"production possibility frontier","def":"the maximum combinations of two goods which an economy can produce by using all available resources.","chNum":3,"chTitle":"Production Possibility Frontiers","cloze":"the [[maximum combinations of two]] goods which an economy can produce by using all [[available]] resources."},{"id":"edas015","term":"division of labour","def":"production is broken down into tasks and each worker specialises on one task.","chNum":4,"chTitle":"Specialisation and the Division of Labour","cloze":"production is [[broken down]] into tasks and each [[worker specialises]] on one [[task]]."},{"id":"edas016","term":"financial market","def":"financial market is any market where buyers and sellers can buy or trade a range of financial assets，such as shares, bonds and currencies.","chNum":4,"chTitle":"Specialisation and the Division of Labour","cloze":"financial market is any market where buyers and sellers can buy or [[trade]] a range of [[financial assets]]，such as [[shares, bonds]] and currencies."},{"id":"edas017","term":"specialisation","def":"the concentration on particular products or tasks.","chNum":4,"chTitle":"Specialisation and the Division of Labour","cloze":"the [[concentration]] on particular products or [[tasks]]."},{"id":"edas018","term":"command or planned economy","def":"an economic system where the government, through a planning progress, allocates resources in society.","chNum":5,"chTitle":"Types of Economy","cloze":"an economic system where the government, through a [[planning progress, allocates]] resources in [[society]]."},{"id":"edas019","term":"free market economy","def":"an economic system where price mechanism determines resource allocation and there is no government intervention.","chNum":5,"chTitle":"Types of Economy","cloze":"an economic system where [[price mechanism determines]] resource [[allocation]] and there is no government [[intervention]]."},{"id":"edas020","term":"mixed economy","def":"an economic system where resources are allocated by the price mechanism and government.","chNum":5,"chTitle":"Types of Economy","cloze":"an economic system where resources are [[allocated]] by the [[price mechanism]] and government."},{"id":"edas021","term":"rationality (rational behaviour of consumer)","def":"consumers aim to maximise utility.","chNum":6,"chTitle":"Rational Decision Making","cloze":"consumers aim to [[maximise]] [[utility]]."},{"id":"edas022","term":"irrationality (irrational behaviour of consumer)","def":"consumers do not always aim to maximise utility.","chNum":6,"chTitle":"Rational Decision Making","cloze":"consumers [[do not always aim]] to maximise utility."},{"id":"edas023","term":"consumer surplus","def":"the difference between the price a consumer is willing to pay for a product and its market price.","chNum":7,"chTitle":"Demand","cloze":"the [[difference]] between the [[price]] a consumer is willing to pay for a product and its market [[price]]."},{"id":"edas024","term":"demand or effective demand","def":"the quantity purchased of a good at any given price, given that other factors of demand remain unchanged.","chNum":7,"chTitle":"Demand","cloze":"the [[quantity purchased]] of a good at any given [[price]], given that other factors of [[demand remain unchanged]]."},{"id":"edas025","term":"Utility","def":"Satisfaction that a person gains from consuming a product.","chNum":7,"chTitle":"Demand","cloze":"[[Satisfaction]] that a person [[gains]] from [[consuming]] a product."},{"id":"edas026","term":"Marginal utility","def":"the change in utility after an increase in consumption of a good.","chNum":7,"chTitle":"Demand","cloze":"the change in utility after an increase in [[consumption]] of a [[good]]."},{"id":"edas027","term":"law of diminishing marginal utility","def":"the value or utility that consumers gain from the last product consumed. MU will fall as the quantity of consumption increases.","chNum":7,"chTitle":"Demand","cloze":"the value or utility that consumers gain from the last product [[consumed. MU]] will fall as the [[quantity]] of [[consumption increases]]."},{"id":"edas028","term":"elastic(demand)","def":"where the price elasticity of demand is greater than 1. when a change in price results in a greater percentage change in quantity demanded.","chNum":8,"chTitle":"Price Elasticity of Demand","cloze":"where the [[price elasticity of demand]] is greater than 1. when a change in [[price]] results in a greater percentage change in [[quantity demanded]]."},{"id":"edas029","term":"inelastic (demand)","def":"where the price elasticity of demand is less than 1. when a change in price results in a smaller percentage change in quantity demanded.","chNum":8,"chTitle":"Price Elasticity of Demand","cloze":"where the [[price elasticity of demand]] is less than 1. when a change in [[price]] results in a smaller percentage change in [[quantity demanded]]."},{"id":"edas030","term":"price elasticity of demand","def":"measures the responsiveness of the quantity demanded of a product following a change in the price of the product.","chNum":8,"chTitle":"Price Elasticity of Demand","cloze":"measures the [[responsiveness]] of the [[quantity demanded]] of a product following a change in the price of the product."},{"id":"edas031","term":"cross elasticity of demand","def":"a measure of the responsiveness of quantity demanded of one good to a change in price of another good.","chNum":9,"chTitle":"Income and Cross-elasticities","cloze":"a measure of the responsiveness of [[quantity demanded]] of one [[good]] to a change in [[price of another good]]."},{"id":"edas032","term":"income elasticity of demand","def":"a measure of the responsiveness of quantity demanded of a product to a change in income.","chNum":9,"chTitle":"Income and Cross-elasticities","cloze":"a measure of the [[responsiveness]] of [[quantity demanded]] of a product to a change in income."},{"id":"edas033","term":"inferior goods","def":"where the quantity demanded increases as income decreases. YED for inferior goods is negative.","chNum":9,"chTitle":"Income and Cross-elasticities","cloze":"where the [[quantity demanded]] increases as [[income decreases. YED]] for inferior goods is negative."},{"id":"edas034","term":"normal goods","def":"where the quantity demanded increases as income increases. YED for normal goods is positive.","chNum":9,"chTitle":"Income and Cross-elasticities","cloze":"where the [[quantity demanded]] increases as [[income increases. YED]] for normal goods is positive."},{"id":"edas035","term":"substitutes","def":"goods that can be replaced by another to satisfy a want. Substitutes have a positive cross elasticity of demand with each other.","chNum":9,"chTitle":"Income and Cross-elasticities","cloze":"goods that can be [[replaced]] by another to satisfy a [[want]]. Substitutes have a positive [[cross elasticity of demand]] with each other."},{"id":"edas036","term":"complements","def":"goods that are purchased with other goods to satisfy a want. Complements have a negative cross elasticity of demand with each other.","chNum":9,"chTitle":"Income and Cross-elasticities","cloze":"goods that are [[purchased]] with other goods to satisfy a [[want]]. Complements have a negative [[cross elasticity of demand]] with each other."},{"id":"edas037","term":"price elasticity of supply","def":"a measure of the responsiveness of quantity supplied of a product to a change in price.","chNum":10,"chTitle":"Supply and Price Elasticity of Supply","cloze":"a measure of the [[responsiveness]] of [[quantity supplied]] of a product to a change in price."},{"id":"edas038","term":"producer surplus","def":"the difference between the price a producer is willing to accept and what is actually paid by consumers.","chNum":10,"chTitle":"Supply and Price Elasticity of Supply","cloze":"the difference between the [[price]] a producer is willing to [[accept]] and what is [[actually paid]] by consumers."},{"id":"edas039","term":"supply","def":"the quantity of goods that suppliers are wiling to sell at any given price over a period of time.","chNum":10,"chTitle":"Supply and Price Elasticity of Supply","cloze":"the [[quantity]] of goods that [[suppliers]] are wiling to sell at any given [[price over a period]] of time."},{"id":"edas040","term":"market equilibrium","def":"the quantity supplied equals the quantity demanded, and there is no tendency for the price or quantity to change. market equilibrium leads to efficient allocation of resources.","chNum":11,"chTitle":"Market Equilibrium","cloze":"the [[quantity supplied equals]] the quantity demanded, and there is no tendency for the price or quantity to change. market [[equilibrium leads]] to [[efficient allocation]] of resources."},{"id":"edas041","term":"market disequilibrium","def":"the quantity supplied and the quantity demanded are not equal.","chNum":11,"chTitle":"Market Equilibrium","cloze":"the [[quantity supplied]] and the [[quantity]] demanded are not equal."},{"id":"edas042","term":"Excess demand","def":"where demand is greater than supply.","chNum":11,"chTitle":"Market Equilibrium","cloze":"where demand is [[greater]] than [[supply]]."},{"id":"edas043","term":"Excess supply","def":"where supply is greater than demand.","chNum":11,"chTitle":"Market Equilibrium","cloze":"where supply is [[greater]] than [[demand]]."},{"id":"edas044","term":"Incentive function","def":"when changes in price encourage buyers and sellers to change the quantity they buy and sell. A risein price encourages buyers to purchase less and sellers to produce more, and vice versa.","chNum":12,"chTitle":"Functions of the Price Mechanism","cloze":"when changes in [[price encourage buyers]] and sellers to change the [[quantity they buy]] and sell. A [[risein price encourages buyers]] to purchase less and sellers to produce more, and vice versa."},{"id":"edas045","term":"Rationing function","def":"when changes in price lead to more or less being produced, so increasing or limiting the quantity demanded by buyers.","chNum":12,"chTitle":"Functions of the Price Mechanism","cloze":"when changes in [[price lead]] to more or less being produced, so [[increasing]] or [[limiting the quantity demanded]] by buyers."},{"id":"edas046","term":"Signalling function","def":"when changes in price give information to buyers and sellers that influence their decisions to buy and sell.","chNum":12,"chTitle":"Functions of the Price Mechanism","cloze":"when changes in [[price give information]] to buyers and sellers that [[influence]] their [[decisions]] to buy and sell."},{"id":"edas047","term":"Ad valorem tax","def":"tax charged as a percentage of the value of the good.","chNum":13,"chTitle":"Indirect Taxes and Subsidies","cloze":"[[tax charged]] as a [[percentage]] of the value of the good."},{"id":"edas048","term":"Specific or unit tax","def":"tax charged on volume.","chNum":13,"chTitle":"Indirect Taxes and Subsidies","cloze":""},{"id":"edas049","term":"Subsidy","def":"subsidy is a grant given by government to encourage the production or consumption of a particular good or service.","chNum":13,"chTitle":"Indirect Taxes and Subsidies","cloze":"subsidy is a [[grant]] given by government to [[encourage]] the production or [[consumption]] of a particular good or service."},{"id":"edas050","term":"market failure","def":"where the market results in an inefficient allocation of resources.","chNum":14,"chTitle":"Sources of Market Failure","cloze":"where the market results in an [[inefficient allocation]] of resources."},{"id":"edas051","term":"external benefit","def":"positive impacts on third parties.","chNum":15,"chTitle":"Positive and Negative Externalities","cloze":"positive impacts on [[third parties]]."},{"id":"edas052","term":"private benefit","def":"The benefit received from those involved directly in the economic transaction.","chNum":15,"chTitle":"Positive and Negative Externalities","cloze":"The [[benefit received]] from those [[involved directly]] in the economic transaction."},{"id":"edas053","term":"social benefit","def":"The benefit to society as a result of the economic transaction made.","chNum":15,"chTitle":"Positive and Negative Externalities","cloze":"The benefit to [[society]] as a result of the economic [[transaction]] made."},{"id":"edas054","term":"external cost","def":"negative impacts on third parties.","chNum":15,"chTitle":"Positive and Negative Externalities","cloze":"negative impacts on [[third parties]]."},{"id":"edas055","term":"private cost","def":"The cost borne by either the producer or consumer directly involved in the economics transaction.","chNum":15,"chTitle":"Positive and Negative Externalities","cloze":"The [[cost borne]] by either the producer or consumer [[directly]] involved in the [[economics transaction]]."},{"id":"edas056","term":"social cost","def":"The cost to society as a result of the economic transaction made.","chNum":15,"chTitle":"Positive and Negative Externalities","cloze":"The [[cost to society]] as a result of the economic [[transaction]] made."},{"id":"edas057","term":"free rider problem","def":"the free rider problem means that people can benefit from using public goods without paying.","chNum":16,"chTitle":"Non-provision of Public Goods","cloze":"[[the free rider]] problem means that people can benefit from using [[public goods without paying]]."},{"id":"edas058","term":"non-excludability","def":"it is impossible to prevent anyone from benefitting from consuming it.","chNum":16,"chTitle":"Non-provision of Public Goods","cloze":"it is impossible to [[prevent anyone]] from [[benefitting]] from consuming it."},{"id":"edas059","term":"non-rivalry","def":"when one person benefits from consuming it , it does not reduce the benefit gained by other.","chNum":16,"chTitle":"Non-provision of Public Goods","cloze":"when one person [[benefits]] from consuming it , it [[does not reduce]] the [[benefit gained]] by other."},{"id":"edas060","term":"private goods","def":"goods which are rival and excludable.","chNum":16,"chTitle":"Non-provision of Public Goods","cloze":"goods which are [[rival]] and [[excludable]]."},{"id":"edas061","term":"public goods","def":"a good that is non-excludable and non-rival.","chNum":16,"chTitle":"Non-provision of Public Goods","cloze":"a good that is [[non-excludable]] and non-[[rival]]."},{"id":"edas062","term":"imperfect information","def":"where buyers or sellers or both lack information to make an informed decision.","chNum":17,"chTitle":"Imperfect Market","cloze":"where [[buyers]] or [[sellers or both lack]] information to make an [[informed]] decision."},{"id":"edas063","term":"information failure or information gap","def":"where buyers or sellers or both do not have the information that is available to make a decision.","chNum":17,"chTitle":"Imperfect Market","cloze":"where buyers or [[sellers or both do]] not have the information that is [[available]] to make a [[decision]]."},{"id":"edas064","term":"asymmetric information","def":"where buyers and sellers have different amounts of information, with one group having more information than the other.","chNum":18,"chTitle":"Moral Hazard, Speculation and Bubbles","cloze":"where [[buyers]] and [[sellers]] have different amounts of information, with one group having more information than the other."},{"id":"edas065","term":"market bubble","def":"A sustained rise in the prices of financial assets such as housing and equities where the value increases above the true value and rapid price rise will eventually be followed by a crash when prices fall significantly.","chNum":18,"chTitle":"Moral Hazard, Speculation and Bubbles","cloze":"A sustained rise in the [[prices]] of [[financial assets]] such as housing and equities where the value increases above the true value and [[rapid price]] rise will eventually be followed by a crash when prices fall significantly."},{"id":"edas066","term":"moral hazard","def":"when an economic agent makes a decision in their own best interest knowing that there are potential negative risks, and that if problems result, the cost will be partly paid by other economic agents.","chNum":18,"chTitle":"Moral Hazard, Speculation and Bubbles","cloze":"when an economic agent makes a decision in their [[own best interest knowing]] that there are [[potential negative risks]], and that if problems result, the [[cost]] will be partly paid by other economic agents."},{"id":"edas067","term":"speculation","def":"means buying or selling something in the expectation of a future price change and a profit.","chNum":18,"chTitle":"Moral Hazard, Speculation and Bubbles","cloze":"means buying or [[selling something]] in the expectation of a [[future price]] change and a [[profit]]."},{"id":"edas068","term":"trade pollution permit","def":"where firms are allowed to pollute up to limit. They can buy or sell permits as required.","chNum":19,"chTitle":"Purpose of Government Intervention","cloze":"where firms are [[allowed]] to [[pollute up]] to limit. They can buy or [[sell permits]] as required."},{"id":"edas069","term":"government failure","def":"occurs when government intervention leads to a net welfare loss.","chNum":20,"chTitle":"Government Failure","cloze":"occurs when government [[intervention leads]] to a net [[welfare]] loss."},{"id":"edas070","term":"balance of trade","def":"part of the current account. The balance of trade records the value of goods and services sold abroad (exports) and the value of goods and services bought from abroad (imports). A positive value shows a surplus, a negative value shows a deficit.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"part of the [[current account]]. The balance of [[trade records]] the value of goods and services sold abroad (exports) and the value of goods and services bought from abroad (imports). A positive value shows a [[surplus]], a negative value shows a deficit."},{"id":"edas071","term":"balance of trade deficit","def":"when the value of imports is greater than exports.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"when the value of [[imports]] is [[greater]] than [[exports]]."},{"id":"edas072","term":"balance of trade surplus","def":"when the value of exports is greater than the value of imports.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"when the value of [[exports]] is [[greater]] than the value of [[imports]]."},{"id":"edas073","term":"current account","def":"part of the balance of payments account. A major component of the current account is the balance of trade.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"part of the [[balance of payments account]]. A major component of the current account is the [[balance of trade]]."},{"id":"edas074","term":"exports","def":"goods and services sold abroad.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"goods and services [[sold abroad]]."},{"id":"edas075","term":"gross domestic product (GDP)","def":"a standard measure of the output of an economy, used by countries around the world. imports goods and services bought from abroad.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"a standard measure of the [[output]] of an economy, used by [[countries around]] the [[world. imports]] goods and services bought from abroad."},{"id":"edas076","term":"inflation","def":"a continuing and general rise in prices across an economy.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"a [[continuing]] and general rise in [[prices across]] an economy."},{"id":"edas077","term":"recession","def":"two quarters of negative economic growth in a row.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"two quarters of negative [[economic growth in]] a row."},{"id":"edas078","term":"unemployment","def":"occurs when individuals are without a job but are actively seeking work.","chNum":21,"chTitle":"Introduction to the Measures of Economic Performance","cloze":"occurs when individuals are without a [[job but]] are [[actively seeking work]]."},{"id":"edas079","term":"economic growth","def":"an increase in real GDP in an economy.","chNum":22,"chTitle":"Economic Growth and GDP/GNI","cloze":"an increase in [[real GDP]] in an economy."},{"id":"edas080","term":"gross domestic product (GDP)","def":"value of goods and services produced by a country in a year.","chNum":22,"chTitle":"Economic Growth and GDP/GNI","cloze":"[[value]] of goods and services produced by a [[country]] in a [[year]]."},{"id":"edas081","term":"gross national income (GNI)","def":"measures the final income earned by a country’s residents and businesses(regardless of where they located).","chNum":22,"chTitle":"Economic Growth and GDP/GNI","cloze":"measures the [[final income earned]] by a [[country’s residents]] and businesses([[regardless]] of where they located)."},{"id":"edas082","term":"national happiness and well- being","def":"the terms well-being, standard of living and quality of life are often used with the same meaning. However, the term ‘living standards’ tends to have a slightly narrower focus on material welfare. The term well-being covers every dimension of a person’s life.","chNum":22,"chTitle":"Economic Growth and GDP/GNI","cloze":"the terms well-being, standard of living and quality of life are often used with the same meaning. [[However]], the term ‘[[living standards’ tends]] to have a [[slightly narrower focus]] on material welfare. The term well-being covers every dimension of a person’s life."},{"id":"edas083","term":"purchasing power parities","def":"PPPs measure the total amount of goods and services that a single unit of a country’s currency can buy in another country.","chNum":22,"chTitle":"Economic Growth and GDP/GNI","cloze":"PPPs measure the [[total]] amount of goods and services that a [[single]] unit of a [[country’s currency]] can buy in another country."},{"id":"edas084","term":"recession","def":"two consecutive quarters of negative economic growth.","chNum":22,"chTitle":"Economic Growth and GDP/GNI","cloze":"two consecutive [[quarters]] of negative [[economic growth]]."},{"id":"edas085","term":"standard of living","def":"quality of life.","chNum":22,"chTitle":"Economic Growth and GDP/GNI","cloze":""},{"id":"edas086","term":"subjective happiness","def":"Value people place on wellbeing.","chNum":22,"chTitle":"Economic Growth and GDP/GNI","cloze":"[[Value people]] place on wellbeing."},{"id":"edas087","term":"inflation","def":"Increase in the general price level of the economy.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"Increase in the general [[price]] level of the economy."},{"id":"edas088","term":"deflation","def":"A decrease in the general price level in an economy. The rate of inflation is negative.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"A decrease in the general [[price]] level in an economy. The [[rate]] of [[inflation]] is negative."},{"id":"edas089","term":"disinflation","def":"Disinflation occurs when the average price level rises more slowly than previously. The rate of inflation falls but is still positive.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"Disinflation occurs when the [[average price]] level rises more slowly than previously. The [[rate]] of [[inflation falls but]] is still positive."},{"id":"edas090","term":"hyperinflation","def":"large increases in the price level.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"[[large]] increases in the [[price]] level."},{"id":"edas091","term":"consumer price index (CPI)","def":"a measure of weighted averageprices of a basket of goods and service.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"a measure of [[weighted averageprices]] of a [[basket]] of goods and service."},{"id":"edas092","term":"producer price index","def":"used to measure the change in the price of a typical basket of goods bought and sold by the manufacturers of an economy.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"used to measure the change in the [[price of a typical]] [[basket of goods bought]] and sold by the [[manufacturers]] of an economy."},{"id":"edas093","term":"employment","def":"those in paid work.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":""},{"id":"edas094","term":"employment rate","def":"the number of those in work divided by the population of working age.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"the number of those in [[work divided]] by the population of [[working age]]."},{"id":"edas095","term":"unemployment","def":"people of working age who are without work, but are able and available for work.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"people of [[working age]] who are without [[work, but]] are [[able]] and available for work."},{"id":"edas096","term":"unemployment rate","def":"The percentage of the workforce who are without work, willing and able to work but unable to find suitable employment.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"The percentage of the workforce who are without [[work, willing]] and able to [[work but unable]] to [[find suitable employment]]."},{"id":"edas097","term":"underemployment","def":"those underemployed are currently working, but in a job that they are overqualified for and where their skill set is not being fully utilized.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"those [[underemployed]] are [[currently working, but]] in a job that they are overqualified for and where their skill set is not being [[fully utilized]]."},{"id":"edas098","term":"labour force","def":"those in work or actively seeking work; also known as the active population.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"those in work or actively [[seeking work]]; also [[known]] as the [[active population]]."},{"id":"edas099","term":"population of working age","def":"total number of people aged between the state school leaving age and the state retirement age.","chNum":23,"chTitle":"Measuring Inflation and Unemployment","cloze":"[[total]] number of [[people aged]] between the [[state school leaving age]] and the state retirement age."},{"id":"edas100","term":"balance of payments account","def":"a record of a country’s economic transactions with the rest of the world over a year.","chNum":24,"chTitle":"Balance of Payments","cloze":"a [[record]] of a country’s economic [[transactions]] with the [[rest]] of the world over a year."},{"id":"edas101","term":"balance of trade","def":"the value of a country’s exports of goods and services minus the value of its imports of goods and services / (X-M).","chNum":24,"chTitle":"Balance of Payments","cloze":"the [[value]] of a [[country’s exports]] of goods and services minus the value of its [[imports]] of goods and services / (X-M)."},{"id":"edas102","term":"balance of trade deficit","def":"Value of imports of goods and services is greater than the value of exports of goods and services / (X<M).","chNum":24,"chTitle":"Balance of Payments","cloze":"[[Value]] of [[imports]] of goods and services is [[greater]] than the value of exports of goods and services / (X<M)."},{"id":"edas103","term":"balance of trade surplus","def":"Value of imports of goods and services is less than the value of exports of goods and services/ (X>M).","chNum":24,"chTitle":"Balance of Payments","cloze":"[[Value]] of [[imports]] of goods and services is [[less]] than the value of exports of goods and services/ (X>M)."},{"id":"edas104","term":"current account balance","def":"the overall balance of the trade in goods, trade in service, primary income and secondary income.","chNum":24,"chTitle":"Balance of Payments","cloze":"the overall balance of the trade in goods, trade in [[service, primary income]] and [[secondary income]]."},{"id":"edas105","term":"current account deficit","def":"Balance of the sum of trade in goods, trade in services, primary income and secondary income is negative.","chNum":24,"chTitle":"Balance of Payments","cloze":"Balance of the sum of [[trade]] in goods, trade in services, [[primary income]] and [[secondary income]] is negative."},{"id":"edas106","term":"current account surplus","def":"Balance of the sum of trade in goods, trade in services, primary income and secondary income is positive.","chNum":24,"chTitle":"Balance of Payments","cloze":"Balance of the sum of [[trade]] in goods, trade in services, [[primary income]] and [[secondary income]] is positive."},{"id":"edas107","term":"Public finances","def":"refer to tax revenues and public expenditure.","chNum":25,"chTitle":"Employment and Unemployment (Causes and Effects)","cloze":"refer to tax revenues and [[public expenditure]]."},{"id":"edas108","term":"cyclical or demand-deficient unemployment","def":"unemployment that results from a lack of aggregate demand.","chNum":25,"chTitle":"Employment and Unemployment (Causes and Effects)","cloze":"unemployment that results from a [[lack]] of [[aggregate demand]]."},{"id":"edas109","term":"frictional unemployment","def":"unemployment that is temporary and arises when workers are in-between jobs.","chNum":25,"chTitle":"Employment and Unemployment (Causes and Effects)","cloze":"[[unemployment that is temporary]] and arises when workers are in-between jobs."},{"id":"edas110","term":"real wage or classical unemployment","def":"when workers are unemployed because real wages are too high and inflexible downwards, leading to insufficient demand for workers from employers.","chNum":25,"chTitle":"Employment and Unemployment (Causes and Effects)","cloze":"when workers are unemployed because [[real wages]] are too high and [[inflexible downwards, leading]] to [[insufficient demand]] for workers from employers."},{"id":"edas111","term":"seasonal unemployment","def":"when workers are unemployed at certain times of the year, such as building workers or farm workers in winter.","chNum":25,"chTitle":"Employment and Unemployment (Causes and Effects)","cloze":"when workers are unemployed at certain times of the year, such as [[building workers]] or [[farm workers]] in [[winter]]."},{"id":"edas112","term":"structural unemployment","def":"when the pattern of demand and production changes, leaving workers unemployed in labour markets where demand has shrunk. Examples of structural unemployment are regional unemployment, sectoral unemployment or technological unemployment.","chNum":25,"chTitle":"Employment and Unemployment (Causes and Effects)","cloze":"when the pattern of demand and production changes, leaving workers [[unemployed in labour markets]] where demand has shrunk. Examples of structural unemployment are [[regional unemployment, sectoral unemployment]] or [[technological unemployment]]."},{"id":"edas113","term":"technological unemployment","def":"when developments in technology cause roles to become redundant.","chNum":25,"chTitle":"Employment and Unemployment (Causes and Effects)","cloze":"when developments in [[technology cause roles]] to [[become]] redundant."},{"id":"edas114","term":"cost-push inflation","def":"inflation caused by increases in costs of production.","chNum":26,"chTitle":"Inflation (Causes and Effects)","cloze":"[[inflation caused]] by increases in [[costs]] of production."},{"id":"edas115","term":"demand-pull inflation","def":"inflation that is caused by excess demand in the economy.","chNum":26,"chTitle":"Inflation (Causes and Effects)","cloze":"inflation that is [[caused]] by [[excess demand]] in the economy."},{"id":"edas116","term":"aggregate demand","def":"the total of all demand or expenditure in the economy at any given price.","chNum":27,"chTitle":"Characteristics of Aggregate Demand","cloze":"the [[total]] of all [[demand or expenditure]] in the economy at any given [[price]]."},{"id":"edas117","term":"wealth effect","def":"the change in consumption following a change in wealth.","chNum":27,"chTitle":"Characteristics of Aggregate Demand","cloze":"the change in [[consumption]] following a change in wealth."},{"id":"edas118","term":"consumption","def":"total expenditure by households on goods and services over a period of time.","chNum":28,"chTitle":"Consumption","cloze":"[[total expenditure]] by households on goods and services over a [[period]] of [[time]]."},{"id":"edas119","term":"savings ratio","def":"the proportion of total disposable income that is saved.","chNum":28,"chTitle":"Consumption","cloze":"the proportion of [[total disposable income]] that is saved."},{"id":"edas120","term":"(positive) wealth effect","def":"As the value of assets increases, consumer spending increases.","chNum":28,"chTitle":"Consumption","cloze":"As the value of [[assets increases]], consumer spending [[increases]]."},{"id":"edas121","term":"depreciation (of the capital stock) or capital consumption","def":"the value of the capital stock that has been used up or worn out.","chNum":29,"chTitle":"Investment","cloze":"the [[value of the capital]] stock that has been used up or [[worn out]]."},{"id":"edas122","term":"gross investment","def":"the addition to capital stock, both to replace the existing capital stock, which has been used up (depreciation), and the creation of additional capital.","chNum":29,"chTitle":"Investment","cloze":"the addition to capital [[stock, both to replace]] the [[existing capital stock]], which has been used [[up (depreciation]]), and the creation of additional capital."},{"id":"edas123","term":"investment","def":"Increase in the capital stock of the economy.","chNum":29,"chTitle":"Investment","cloze":"Increase in the [[capital stock]] of the economy."},{"id":"edas124","term":"net investment","def":"gross investment minus depreciation.","chNum":29,"chTitle":"Investment","cloze":"gross investment minus [[depreciation]]."},{"id":"edas125","term":"retained profit","def":"profit kept back by a firm for its own use that is not distributed to shareholders or used to pay taxation.","chNum":29,"chTitle":"Investment","cloze":"[[profit kept back]] by a firm for its own use that is not distributed to [[shareholders]] or used to [[pay taxation]]."},{"id":"edas126","term":"tax relief on investment","def":"where firms are charged a lower rate of taxation to encourage investment.","chNum":29,"chTitle":"Investment","cloze":"where firms are charged a [[lower rate]] of taxation to [[encourage investment]]."},{"id":"edas127","term":"business confidence","def":"Indicator of expectations of firms.","chNum":29,"chTitle":"Investment","cloze":""},{"id":"edas128","term":"budget deficit (or fiscal deficit)","def":"when government spending is greater than tax revenue.","chNum":30,"chTitle":"Government Expenditure and Net Trade","cloze":"when government spending is [[greater]] than [[tax revenue]]."},{"id":"edas129","term":"budget surplus (or fiscal surplus)","def":"when government spending is less than tax revenue.","chNum":30,"chTitle":"Government Expenditure and Net Trade","cloze":"when government spending is [[less]] than [[tax revenue]]."},{"id":"edas130","term":"Balanced budget","def":"when government spending is equal to tax revenue.","chNum":30,"chTitle":"Government Expenditure and Net Trade","cloze":"when government spending is [[equal]] to [[tax revenue]]."},{"id":"edas131","term":"exchange rate","def":"the price of one currency in terms of another currency.","chNum":30,"chTitle":"Government Expenditure and Net Trade","cloze":"the [[price]] of one [[currency]] in terms of another [[currency]]."},{"id":"edas132","term":"fiscal policy","def":"decisions about government spending, together with taxes and government borrowing, are called fiscal policy.","chNum":30,"chTitle":"Government Expenditure and Net Trade","cloze":"[[decisions about]] government spending, together with [[taxes]] and government [[borrowing, are called fiscal]] policy."},{"id":"edas133","term":"net exports or the net trade balance","def":"exports minus imports.","chNum":30,"chTitle":"Government Expenditure and Net Trade","cloze":""},{"id":"edas134","term":"Circular flow of income","def":"a model of the economy that shows the flow of goods, services and factors and their payments around the economy.","chNum":32,"chTitle":"Circular Flow of Income","cloze":"a [[model]] of the economy that [[shows]] the flow of goods, services and factors and their [[payments around]] the economy."},{"id":"edas135","term":"Closed economy","def":"an economy in which there is no foreign trade.","chNum":32,"chTitle":"Circular Flow of Income","cloze":"an economy in which there is [[no foreign trade]]."},{"id":"edas136","term":"Open economy","def":"an economy in which there is trade with other countries.","chNum":32,"chTitle":"Circular Flow of Income","cloze":"an economy in which there is [[trade]] with other [[countries]]."},{"id":"edas137","term":"Injections","def":"in the circular flow of income, spending that is not generated by households including investment, government spending and exports.","chNum":32,"chTitle":"Circular Flow of Income","cloze":"in the circular flow of [[income, spending]] that is [[not generated]] by households including [[investment]], government spending and exports."},{"id":"edas138","term":"Withdrawals or leakages","def":"in the circular flow of income, spending by households that does not flow back to domestic firms. It includes savings, taxes and imports.","chNum":32,"chTitle":"Circular Flow of Income","cloze":"in the circular flow of [[income, spending]] by households that [[does not flow back]] to domestic firms. It [[includes savings, taxes]] and imports."},{"id":"edas139","term":"net migration","def":"immigration minus emigration.","chNum":32,"chTitle":"Circular Flow of Income","cloze":""},{"id":"edas140","term":"equilibrium level of output","def":"the level of real national output (real GDP) when aggregate demand equals aggregate supply.","chNum":33,"chTitle":"Equilibrium Levels of Real National Output","cloze":"the level of real national output (real GDP) when [[aggregate demand equals aggregate]] [[supply]]."},{"id":"edas141","term":"MPC (marginal propensity to consume)","def":"the proportion of one additional unit of income that is spent by households.","chNum":34,"chTitle":"The Multiplier","cloze":"the [[proportion]] of one additional unit of [[income]] that is [[spent]] by households."},{"id":"edas142","term":"Multiplier (formula)","def":"（公式/图示类词条，无文字定义，详见原 PDF 表格）","chNum":34,"chTitle":"The Multiplier","cloze":""},{"id":"edas143","term":"Multiplier effect (or process)","def":"when the injection increases, the increment of national income is usually several times of the increment of the injection.","chNum":34,"chTitle":"The Multiplier","cloze":"when the [[injection increases]], the [[increment]] of national [[income is usually several]] times of the increment of the injection."},{"id":"edas144","term":"Export-led growth","def":"a rise in aggregate demand caused by a rise in exports.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"a rise in [[aggregate demand caused]] by a rise in exports."},{"id":"edas145","term":"foreign direct investment","def":"flows of money between countries where one firm buys or sets up another firm in another country.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"[[flows]] of [[money]] between countries where one firm buys or [[sets up]] another firm in another country."},{"id":"edas146","term":"GDP per capita","def":"the value of all goods and services produced within an economy in a period of time, divided by the economy’s population.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"the value of all goods and services produced within an economy in a [[period]] of [[time, divided]] by the economy’[[s population]]."},{"id":"edas147","term":"Real GDP","def":"Total output of goods and services produced in an economy in a given year adjusted for inflation.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"[[Total output]] of goods and services produced in an economy in a given [[year adjusted]] for [[inflation]]."},{"id":"edas148","term":"Nominal GDP","def":"Total output of goods and services produced in an economy in a given year unadjusted for inflation.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"[[Total output]] of goods and services produced in an economy in a given [[year unadjusted]] for [[inflation]]."},{"id":"edas149","term":"Output gap","def":"Actual output minus potential output.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"[[Actual output]] minus potential output."},{"id":"edas150","term":"negative output gap","def":"when actual GDP is less than potential GDP.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"when [[actual]] GDP is less than [[potential GDP]]."},{"id":"edas151","term":"positive output gap","def":"when actual GDP is larger than potential GDP.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"when actual GDP is [[larger]] than [[potential GDP]]."},{"id":"edas152","term":"Potential growth","def":"economic growth as measured by the changes in the productive potential of the economy over time.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"[[economic growth as measured]] by the changes in the [[productive]] potential of the economy over [[time]]."},{"id":"edas153","term":"Actual growth","def":"economic growth as measured by recorded changes in real GDP over time.","chNum":35,"chTitle":"Causes of Economic Growth and Output Gaps","cloze":"[[economic growth as measured]] by recorded changes in [[real]] GDP over time."},{"id":"edas154","term":"Income/wealth inequality","def":"when income/wealth is shared out unevenly between different groups in society.","chNum":36,"chTitle":"The Benefits and Costs of Economic Growth","cloze":"when [[income/wealth is shared]] [[out unevenly]] between different groups in society."},{"id":"edas155","term":"Short-run Phillips curve","def":"shows the relationship between the rate of unemployment and the rate of change of money wages (a proxy measure for inflation).","chNum":38,"chTitle":"Possible Conflicts Between Macroeconomic Objectives","cloze":"shows the relationship between the [[rate]] of [[unemployment]] and the rate of change of [[money wages]] (a proxy measure for inflation)."},{"id":"edas156","term":"Productivity","def":"output per unit of input employed.","chNum":39,"chTitle":"Macroeconomic Supply-side Policies","cloze":"[[output]] per unit of input [[employed]]."},{"id":"edas157","term":"Supply-side policies","def":"government policies designed to increase the productive potential of the economy and push the long-run aggregate supply curve to the right.","chNum":39,"chTitle":"Macroeconomic Supply-side Policies","cloze":"government [[policies designed]] to increase the productive potential of the economy and push the long-[[run aggregate supply curve]] to the [[right]]."},{"id":"edas158","term":"Free market policies or market-based policies","def":"government policies designed to promote economic growth by reducing barriers to the efficient working of free markets.","chNum":39,"chTitle":"Macroeconomic Supply-side Policies","cloze":"government policies designed to [[promote economic growth]] by reducing barriers to the efficient [[working of free markets]]."},{"id":"edas159","term":"Interventionist policies","def":"government policies designed to correct market failures that are reducing the growth rate of the economy.","chNum":39,"chTitle":"Macroeconomic Supply-side Policies","cloze":"government policies designed to [[correct market failures]] that are [[reducing]] the [[growth rate]] of the economy."},{"id":"edas160","term":"Deregulation","def":"the process of removing government controls from markets.","chNum":39,"chTitle":"Macroeconomic Supply-side Policies","cloze":"the process of [[removing]] government [[controls]] from markets."},{"id":"edas161","term":"Labour market flexibility","def":"the degree to which demand and supply in a labour market respond to external changes (such as changes in demand for a product or in population size) to return the market to equilibrium.","chNum":39,"chTitle":"Macroeconomic Supply-side Policies","cloze":"the degree to which demand and supply in a [[labour market respond]] to [[external]] changes (such as changes in demand for a product or in population size) to return the market to [[equilibrium]]."},{"id":"edas162","term":"Minimum wage","def":"the least amount an employer can pay one of its workers, usually expressed as an hourly wage rate.","chNum":39,"chTitle":"Macroeconomic Supply-side Policies","cloze":"the least amount an employer can pay one of its [[workers, usually expressed]] as an [[hourly wage rate]]."},{"id":"edas163","term":"Privatisation","def":"the sale of government organisations or assets to the private sector.","chNum":39,"chTitle":"Macroeconomic Supply-side Policies","cloze":"the [[sale]] of government organisations or [[assets]] to the [[private]] sector."},{"id":"edas164","term":"Rate of interest","def":"the return on saving/cost of borrowing.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"the [[return]] on [[saving/cost]] of borrowing."},{"id":"edas165","term":"Base rate of interest","def":"Cost of borrowing / Return received for saving money that the central bank charges.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"[[Cost]] of borrowing / Return received for [[saving money]] that the [[central bank charges]]."},{"id":"edas166","term":"Contractionary fiscal policy","def":"fiscal policy that leads to a fall in aggregate demand.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"fiscal policy that [[leads]] to a fall in [[aggregate demand]]."},{"id":"edas167","term":"Contractionary monetary policy","def":"monetary policy that leads to a fall in aggregate demand.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"monetary policy that [[leads]] to a fall in [[aggregate demand]]."},{"id":"edas168","term":"Demand-side policies","def":"policies used by the government or central bank to manipulate aggregate demand.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"policies used by the government or central [[bank]] to [[manipulate aggregate demand]]."},{"id":"edas169","term":"Expansionary fiscal policy","def":"fiscal policy that leads to an increase in aggregate demand.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"fiscal policy that [[leads]] to an increase in [[aggregate demand]]."},{"id":"edas170","term":"Expansionary monetary policy","def":"monetary policy that leads to a rise in aggregate demand.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"monetary policy that [[leads]] to a rise in [[aggregate demand]]."},{"id":"edas171","term":"Fiscal policy","def":"the use of taxation and government spending to influence aggregate demand in order to achieve the government’s macroeconomic aims.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"the use of [[taxation]] and government spending to [[influence aggregate demand]] in order to achieve the government’[[s macroeconomic aims]]."},{"id":"edas172","term":"Monetary policy","def":"government changes to monetary variables, e.g interest rates and the money supply, to achieve its objectives.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"government changes to [[monetary variables]], [[e.g interest rates]] and the [[money supply]], to achieve its objectives."},{"id":"edas173","term":"Quantitative easing","def":"a monetary policy instrument where the central bank buys financial assets in exchange for money in order to increase borrowing and lending in the economy.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"a [[monetary policy instrument]] where the [[central bank buys financial]] assets in [[exchange]] for money in order to increase borrowing and lending in the economy."},{"id":"edas174","term":"Reserve asset (liquidity) requirement","def":"a reserve asset ratio as a percentage of the bank’s total deposits that must be kept as reserves.","chNum":40,"chTitle":"Macroeconomic Demand-side Policies","cloze":"a [[reserve asset ratio]] as a percentage of the [[bank’s total deposits]] that must be kept as reserves."}];
+
+/* ============ FSRS 式记忆模型 ============
+ * 每张卡记录：state(状态) / S(稳定度，天，= 留存跌到 90% 所需天数) / D(难度 1-10) / reps / lapses / last / due
+ * 遗忘曲线（艾宾浩斯指数衰减）：R(t) = e^(-k·t/S)，其中 k = -ln(0.9) ≈ 0.1054
+ * 即 t = S 时 R ≈ 90%，所以“下次复习间隔 = S 天”。
+ */
+const R_TARGET = 0.9;
+const K_DECAY = -Math.log(R_TARGET); // ≈ 0.1053605
+const K_PROG="edaswords_progress_v1", K_CHK="edaswords_checkin_v1", K_STAT="edaswords_stats_v1", K_SESS="edaswords_session_v1";
+
+/* ---------- 存储 ---------- */
+function load(k,def){try{return JSON.parse(localStorage.getItem(k))??def}catch(e){return def}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+let PROG = load(K_PROG,{});
+// ---- Phase 3：进度云端同步访问器（供 sync.js 读写本地 PROG/CPROG）----
+window.__deckStore = {
+  deckSlug: DECK_SLUG,
+  getProg: function(){ return PROG; },
+  setProg: function(p){ PROG = p; save(K_PROG, PROG); },
+  hasCloze: function(){ return typeof CPROG !== 'undefined'; },
+  getCProg: function(){ return (typeof CPROG !== 'undefined') ? CPROG : null; },
+  setCProg: function(p){ if (typeof CPROG !== 'undefined') { CPROG = p; save(K_CPROG, CPROG); } }
+};
+let CHK  = load(K_CHK,[]);
+let STAT = load(K_STAT,{});
+
+/* ---------- 旧版 Leitner(盒子) 进度迁移到新模型（不丢已有学生进度） ---------- */
+function migrate(p){
+  if(!p) return null;
+  if(p.S!==undefined) return p;            // 已经是新模型
+  if(p.box===undefined && p.due===undefined) return p;
+  const box = p.box||0;
+  if(box===0) return {state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()};
+  const oldInt = {1:1,2:2,3:4,4:8,5:16}[Math.min(5,box)] || 1;
+  const D = clamp(5 + (p.lapses||0)*1.2 - (p.reps||0)*0.15, 1, 10);
+  const last = addDays(p.due||todayStr(), -oldInt);
+  return {state:"review", S:oldInt, D, reps:p.reps||0, lapses:p.lapses||0, last, due:p.due||todayStr()};
+}
+for(const id in PROG) PROG[id]=migrate(PROG[id]);
+
+/* ---------- 日期 ---------- */
+function todayStr(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDays(ds,n){let d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return todayStr(d)}
+function daysBetween(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+
+/* ---------- 状态 ---------- */
+function st(id){return PROG[id]||{state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()}}
+function isNew(id){return st(id).state==="new"}
+function isDue(id){const p=st(id);if(p.state==="new")return false;return p.due<=todayStr()}
+function statusOf(id){const p=st(id);
+  if(p.state==="new")return"new";
+  if(p.state==="relearning")return"learn";
+  if((p.S||0)>=21)return"master";
+  return"learn";
+}
+function levelLabel(id){const p=st(id);
+  if(p.state==="new")return["新词","n"];
+  if(p.state==="relearning")return["再学习","l"];
+  if(statusOf(id)==="master")return["已掌握","m"];
+  if((p.S||0)<=4)return["薄弱","l"];
+  return["学习",""];
+}
+function isWeak(id){const p=st(id);return p.state!=="new"&&(p.state==="relearning"||(p.S||0)<=4)}
+function retention(id){const p=st(id);if(p.state==="new"||!p.S)return 1;
+  const dt=Math.max(0,daysBetween(p.last,todayStr()));return Math.exp(-K_DECAY*dt/Math.max(0.1,p.S));}
+
+/* ---------- 评分 / 排期（FSRS 式） ---------- */
+function rate(id,grade){
+  const p=st(id);
+  let S=p.S||0, D=p.D||5, reps=p.reps||0, lapses=p.lapses||0;
+  const firstSuccess = (p.state==="new"||p.state==="learning"||p.state==="relearning");
+  let np;
+  if(grade==="again"){
+    lapses++;
+    S=Math.max(0.2,(S||1)*0.3);
+    D=clamp(D+1.2,1,10);
+    np={state:"relearning",S,D,reps:reps,lapses,last:todayStr(),due:addDays(todayStr(),1)};
+  } else {
+    if(firstSuccess){
+      const base = grade==="hard"?1.2:2.0;        // 首次间隔
+      S=base;
+      D=clamp(D+(grade==="hard"?0.6:-0.4),1,10);
+      reps=1;
+    } else {
+      const ease = grade==="hard"?1.3:2.1;
+      const diffFactor = 1 + (10-D)/10*0.3;        // 越难(D大)增长越慢
+      S=Math.min(365,Math.max(0.2,S*ease*diffFactor));
+      D=clamp(D+(grade==="hard"?0.3:-0.5),1,10);
+      reps++;
+    }
+    np={state:"review",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),Math.round(S))};
+  }
+  PROG[id]=np; save(K_PROG,PROG);
+  const t=todayStr(); STAT[t]=(STAT[t]||0)+1; save(K_STAT,STAT);
+  if(window.Sync)Sync.push();
+}
+
+const K_CPROG="edaswords_cloze_v1";
+let CPROG=load(K_CPROG,{});
+const CLOZE_SET=new Set(DATA.filter(d=>d.cloze).map(d=>d.id));
+function cst(id){return CPROG[id]||{state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()}}
+function cisNew(id){return cst(id).state==="new"}
+function cisDue(id){const p=cst(id);if(p.state==="new")return false;return p.due<=todayStr()}
+function cstatusOf(id){const p=cst(id);if(p.state==="new")return"new";if(p.state==="relearning")return"learn";if((p.S||0)>=21)return"master";return"learn"}
+function cisWeak(id){const p=cst(id);return p.state!=="new"&&(p.state==="relearning"||(p.S||0)<=4)}
+function crate(id,grade){
+  const p=cst(id); let S=p.S||0,D=p.D||5,reps=p.reps||0,lapses=p.lapses||0;
+  const firstSuccess=(p.state==="new"||p.state==="learning"||p.state==="relearning");
+  let np;
+  if(grade==="again"){lapses++;S=Math.max(0.2,(S||1)*0.3);D=clamp(D+1.2,1,10);np={state:"relearning",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),1)};}
+  else{
+    if(firstSuccess){const base=grade==="hard"?1.2:2.0;S=base;D=clamp(D+(grade==="hard"?0.6:-0.4),1,10);reps=1;}
+    else{const ease=grade==="hard"?1.3:2.1;const diffFactor=1+(10-D)/10*0.3;S=Math.min(365,Math.max(0.2,S*ease*diffFactor));D=clamp(D+(grade==="hard"?0.3:-0.5),1,10);reps++;}
+    np={state:"review",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),Math.round(S))};
+  }
+  CPROG[id]=np; save(K_CPROG,CPROG);
+  const t=todayStr(); STAT[t]=(STAT[t]||0)+1; save(K_STAT,STAT);
+  if(window.Sync)Sync.push();
+}
+
+/* ---------- 打卡（仅由完成学习自动触发，不可手动） ---------- */
+function autoCheckin(){return checkin()}
+function checkin(){
+  const t=todayStr();
+  let added=false;
+  if(!CHK.includes(t)){CHK.push(t);CHK.sort();save(K_CHK,CHK);added=true;}
+  refresh();
+  return added;
+}
+function streak(){
+  if(CHK.length===0)return{cur:0,best:0,tot:0};
+  let best=1,run=1;
+  const sorted=[...CHK].sort();
+  for(let i=1;i<sorted.length;i++){if(daysBetween(sorted[i-1],sorted[i])===1)run++;else run=1;best=Math.max(best,run)}
+  let cur=0;const t=todayStr();
+  if(CHK.includes(t)){cur=1;let d=addDays(t,-1);while(CHK.includes(d)){cur++;d=addDays(d,-1)}}
+  return{cur,best,tot:CHK.length};
+}
+
+/* ---------- 工具 ---------- */
+function toast(m){const el=document.getElementById("toast");el.textContent=m;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800)}
+function $(id){return document.getElementById(id)}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+// Phase5：错误次数加权复习 —— 错得越多的卡越优先进入复习队列（权重 = 1 + 错误次数）
+function wrongCount5(id){
+  const p=st(id);
+  return (p && typeof p.lapses==='number') ? p.lapses : 0;
+}
+// 指数加权洗牌：权重 w 越大越偏向排到队首（会话数量有限时优先保留易错卡）
+function weightedShuffle(ids, wfn){
+  return ids.map(function(id){
+    const w = 1 + (wfn ? wfn(id) : 0);
+    return { id: id, k: Math.pow(Math.random(), 1 / Math.max(0.0001, w)) };
+  }).sort(function(a,b){ return b.k - a.k; }).map(function(o){ return o.id; });
+}
+
+
+/* ---------- 本轮数量 ---------- */
+function getSessionSize(){const n=parseInt(load(K_SESS,"20"),10);return isNaN(n)?20:n}
+function setSessionSize(n){save(K_SESS,String(n));
+  const b=$("sessionSize2"); if(b)b.value=String(n);}
+
+/* ---------- 章节列表与渲染 ---------- */
+function chaptersList(){
+  const seen=new Map();
+  DATA.forEach(d=>{ if(!seen.has(d.chNum)) seen.set(d.chNum,{num:d.chNum,title:d.chTitle,ids:[]}); seen.get(d.chNum).ids.push(d.id); });
+  return [...seen.values()].sort((a,b)=>a.num-b.num);
+}
+function renderChapters(){
+  const box=$("chapterGrid"); if(!box)return;
+  const isC = topMode==="cloze";
+  const newF = isC?cisNew:isNew;
+  const stF  = isC?cstatusOf:statusOf;
+  box.innerHTML=chaptersList().map(c=>{
+    const ids = isC ? c.ids.filter(id=>CLOZE_SET.has(id)) : c.ids;
+    const total=ids.length;
+    const learned=ids.filter(id=>!newF(id)).length;
+    const mastered=ids.filter(id=>stF(id)==="master").length;
+    const pct=total?Math.round(learned/total*100):0;
+    return `<button class="chcard" data-ch="${c.num}">
+      <div class="chn">Chapter ${c.num}</div>
+      <div class="cht">${esc(c.title)}</div>
+      <div class="chmeta">${total} 词 · 已学 ${learned} · 掌握 ${mastered}</div>
+      <div class="chbar"><i style="width:${pct}%"></i></div>
+    </button>`;
+  }).join("");
+  box.querySelectorAll(".chcard").forEach(b=>b.onclick=()=>{
+    if(topMode==="cloze"){
+      if(!DATA.some(d=>String(d.chNum)===String(b.dataset.ch)&&d.cloze)){alert("本章暂无可挖空的卡片");return;}
+      startSession("cloze:ch:"+b.dataset.ch,"studyArea");
+    } else startSession("ch:"+b.dataset.ch,"studyArea");
+  });
+}
+
+/* ---------- 选择卡片 ---------- */
+function pickCards(mode){
+  // 挖空练习：cloze:ch:X / cloze:all / cloze:due —— 按源顺序（不随机），只取有 cloze 的卡，进度用 CPROG 独立存储
+  if(typeof mode==="string" && mode.indexOf("cloze:")===0){
+    const sub=mode.slice(6);
+    if(sub==="due") return DATA.filter(d=>d.cloze&&cisDue(d.id)).map(d=>d.id);
+    if(sub.indexOf("ch:")===0){const n=parseInt(sub.slice(3),10);return DATA.filter(d=>d.chNum===n&&d.cloze).map(d=>d.id);}
+    return DATA.filter(d=>d.cloze).map(d=>d.id);
+  }
+  // 按章节学习：返回该章全部单词，不做数量裁剪
+  if(typeof mode==="string" && mode.indexOf("ch:")===0){
+    const n=parseInt(mode.slice(3),10);
+    return DATA.filter(d=>d.chNum===n).map(d=>d.id);
+  }
+  // 按个数学习：优先未掌握词（Phase5 易错优先），不足再补已掌握，按选定张数裁剪
+  if(typeof mode==="string" && mode.indexOf("count:")===0){
+    const n=parseInt(mode.slice(6),10);
+    const need=DATA.filter(d=>statusOf(d.id)!=="master").map(d=>d.id);
+    const rest=DATA.filter(d=>statusOf(d.id)==="master").map(d=>d.id);
+    let ids=weightedShuffle(need, wrongCount5).concat(shuffle(rest));
+    if(n>0 && n<ids.length) ids=ids.slice(0,n);
+    return ids;
+  }
+  // 复习待办：系统按遗忘曲线自动生成的到期卡，全部返回（不掺新词）；Phase5 易错优先排序
+  if(mode==="due"){
+    return weightedShuffle(DATA.filter(d=>isDue(d.id)).map(d=>d.id), wrongCount5);
+  }
+  // 专攻薄弱 / 全部过一遍：主动加练，按「本轮数量」裁剪；Phase5 易错优先排序（all 保持源顺序）
+  let ids;
+  if(mode==="new") ids=DATA.filter(d=>isNew(d.id)).map(d=>d.id);
+  else if(mode==="weak") ids=DATA.filter(d=>isWeak(d.id)).map(d=>d.id);
+  else if(mode==="all") ids=DATA.map(d=>d.id);
+  else ids=DATA.filter(d=>isDue(d.id)).map(d=>d.id);
+  if(mode!=="all") ids=weightedShuffle(ids, wrongCount5);
+  const n=getSessionSize();
+  if(n>0 && n<ids.length) ids=ids.slice(0,n);
+  return ids;
+}
+
+/* ---------- 学习会话 ---------- */
+let Q=[],QI=0,sessionDone=0,sessionMode="due",activeAreaId="",topMode="word";
+
+/* ---------- 多轮重来（Anki 式：失误重排，最多 MAX_RETRY 轮） ---------- */
+let SESS_TOTAL=0, SESS_PASSED=0;
+const RETRY_MAP={}; const MAX_RETRY=3; const REQ_GAP=3;   // 失误后隔几张再出现
+function onGrade(areaId,id,grade){
+  // 认识 → 本轮通过
+  if(grade==="good"){
+    SESS_PASSED++;
+    if(SESS_PASSED>=SESS_TOTAL){ finishSession(areaId); return; }
+    QI++; if(SESS_PASSED>=SESS_TOTAL || QI>=Q.length) finishSession(areaId); else renderCard(areaId);
+    return;
+  }
+  // 不认识 / 模糊 → 没过，重来（最多 MAX_RETRY 轮）
+  RETRY_MAP[id]=(RETRY_MAP[id]||0)+1;
+  if(RETRY_MAP[id]<=MAX_RETRY){
+    Q.splice(Math.min(QI+1+REQ_GAP, Q.length), 0, id);   // 隔几张再出现，避免机械重复
+  } else {
+    // 超过上限：放弃本轮重来，标记待巩固（rate 已置 relearning），计入已处理
+    SESS_PASSED++;
+    if(SESS_PASSED>=SESS_TOTAL){ finishSession(areaId); return; }
+  }
+  QI++; if(SESS_PASSED>=SESS_TOTAL || QI>=Q.length) finishSession(areaId); else renderCard(areaId);
+}
+
+/* 学习区视图切换：mode=选方式 / chapter=选章节 / count=选个数 / session=学习中 */
+function showStudyView(v){
+  $("studyModeSel").style.display  = v==="mode"    ? "" : "none";
+  $("studyChapter").style.display = v==="chapter" ? "" : "none";
+  $("studyCount").style.display   = v==="count"   ? "" : "none";
+  $("studyArea").style.display    = v==="session" ? "" : "none";
+}
+function backToMode(){ showStudyView("mode"); }
+function backToChapters(){ showStudyView("chapter"); }
+function backToCount(){ showStudyView("count"); }
+function backFromSession(){
+  if(activeAreaId==="studyArea"){
+    if(typeof sessionMode==="string" && (sessionMode.indexOf("ch:")===0 || sessionMode.indexOf("cloze:ch:")===0)) showStudyView("chapter");
+    else if(typeof sessionMode==="string" && sessionMode.indexOf("count:")===0) showStudyView("count");
+    else showStudyView("mode");
+  }
+  activeAreaId="";
+}
+function backFromReview(){ const m=$("reviewMenu"); if(m)m.style.display=""; $("reviewArea").style.display="none"; $("reviewArea").innerHTML=""; refresh(); }
+function startSession(mode,areaId){
+  sessionMode=mode;
+  activeAreaId=areaId;
+  Q=pickCards(mode); QI=0; sessionDone=0; SESS_TOTAL=Q.length; SESS_PASSED=0; for(const k in RETRY_MAP) delete RETRY_MAP[k];
+  if(Q.length===0){$(areaId).innerHTML='<div class="empty"><div class="big">🎉</div>暂时没有需要学习的卡片，去“词库”看看，或换个范围吧。</div>';return}
+  if(areaId==="studyArea") showStudyView("session");
+  if(areaId==="reviewArea"){const m=$("reviewMenu"); if(m)m.style.display="none"; $("reviewArea").style.display="";}
+  renderCard(areaId);
+}
+function renderCard(areaId){
+  const id=Q[QI];
+  const card=DATA.find(d=>d.id===id);
+  const total=SESS_TOTAL, left=SESS_TOTAL-SESS_PASSED;
+  if(typeof sessionMode==="string" && sessionMode.indexOf("cloze:")===0){
+    renderClozeCard(areaId, id, card, left, total);
+    return;
+  }
+  const lv=levelLabel(id);
+  const p=st(id);
+  let retP, nextTxt;
+  if(p.state==="new"){retP="—"; nextTxt="首次学习";}
+  else if(p.state==="relearning"){retP="需巩固"; nextTxt="明天再练";}
+  else { retP=Math.round(retention(id)*100)+"%"; const nd=daysBetween(todayStr(),p.due); nextTxt = nd<=0?"今天":nd+"天后"; }
+  let topLine;
+  if(areaId==="studyArea"){
+    const isCh = typeof sessionMode==="string" && sessionMode.indexOf("ch:")===0;
+    const backText = isCh ? "← 返回选章节" : "← 返回选个数";
+    topLine = `<div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromSession()">${backText}</button>
+      <span class="muted small">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</span>
+    </div>`;
+  } else if(areaId==="reviewArea"){
+    topLine = `<div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromReview()">← 返回复习选项</button>
+      <span class="muted small">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</span>
+    </div>`;
+  } else {
+    topLine = `<div class="muted small" style="width:100%;text-align:right">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</div>`;
+  }
+  $(areaId).innerHTML=`
+    <div class="progress"><i style="width:${Math.round(SESS_PASSED/SESS_TOTAL*100)}%"></i></div>
+    ${topLine}
+    <div class="stage">
+      <div class="flip" id="flip">
+        <div class="flip-in">
+          <div class="face front">
+            <div class="term">${esc(card.term)}</div>
+            <div class="hint">点击卡片 / 按空格 翻看定义（再点一次返回单词）</div>
+          </div>
+          <div class="face back">
+            <div class="tag">定义</div>
+            <div class="def">${esc(card.def)}</div>
+            <div class="meta">当前留存 ${retP} · 下次复习 ${nextTxt}</div>
+          </div>
+        </div>
+      </div>
+      <div class="ratings" id="ratings" style="visibility:hidden">
+        <button class="btn bad" data-q="again">不认识</button>
+        <button class="btn warn" data-q="hard">模糊</button>
+        <button class="btn good" data-q="good">认识</button>
+      </div>
+    </div>`;
+  const flip=$(areaId).querySelector("#flip");
+  if(flip){
+    flip.onclick=()=>{const f=flip.classList.toggle("flipped");const r=$(areaId).querySelector("#ratings"); if(r)r.style.visibility=f?"visible":"hidden"};
+  }
+  const rt=$(areaId).querySelector("#ratings");
+  if(rt){
+    rt.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      rate(id,b.dataset.q);
+      onGrade(areaId,id,b.dataset.q);
+    });
+  }
+}
+/* ---------- 挖空练习卡片渲染 ---------- */
+function renderClozeCard(areaId, id, card, left, total){
+  const cp=cst(id);
+  let retP, nextTxt;
+  if(cp.state==="new"){retP="—"; nextTxt="首次练习";}
+  else if(cp.state==="relearning"){retP="需巩固"; nextTxt="明天再练";}
+  else { const dt=Math.max(0,daysBetween(cp.last,todayStr())); retP=Math.round(Math.exp(-K_DECAY*dt/Math.max(0.1,cp.S||0.1))*100)+"%"; const nd=daysBetween(todayStr(),cp.due); nextTxt = nd<=0?"今天":nd+"天后"; }
+  const backText = (typeof sessionMode==="string" && sessionMode.indexOf("cloze:ch:")===0) ? "← 返回选章节" : "← 返回选择学习方式";
+  const clozeHtml = (card.cloze||card.def)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\[\[(.+?)\]\]/g,'<span class="cloze" data-w="$1">_____</span>');
+  $(areaId).innerHTML=`
+    <div class="progress"><i style="width:${Math.round(SESS_PASSED/SESS_TOTAL*100)}%"></i></div>
+    <div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromSession()">${backText}</button>
+      <span class="muted small">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</span>
+    </div>
+    <div class="stage">
+      <div class="cloze-card cloze-face">
+        <div class="ctag">挖空练习 · 提示词</div>
+        <div class="cterm">${esc(card.term)}</div>
+        <div class="cloze-def">${clozeHtml}</div>
+        <div class="cmeta">当前留存 ${retP} · 下次复习 ${nextTxt}</div>
+        <div class="chint">读定义，回忆被遮住的词；点击卡片 / 按空格 揭示答案</div>
+      </div>
+      <div class="ratings" id="ratings">
+        <button class="btn bad" data-q="again">不认识</button>
+        <button class="btn warn" data-q="hard">模糊</button>
+        <button class="btn good" data-q="good">认识</button>
+      </div>
+    </div>`;
+  const face=$(areaId).querySelector(".cloze-face");
+  let revealed=false;
+  const reveal=()=>{
+    if(revealed) return;
+    revealed=true;
+    face.querySelectorAll(".cloze").forEach(s=>{ s.textContent=s.dataset.w; s.classList.add("revealed"); });
+    const r=$(areaId).querySelector("#ratings"); if(r) r.style.visibility="visible";
+  };
+  if(face){ face.onclick=(e)=>{ if(e.target.closest(".ratings")) return; reveal(); }; }
+  const rt=$(areaId).querySelector("#ratings");
+  if(rt){
+    rt.style.visibility="hidden";
+    rt.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      crate(id,b.dataset.q);
+      onGrade(areaId,id,b.dataset.q);
+    });
+  }
+}
+function sessionChName(mode){
+  if(typeof mode!=="string") return "未选择章节";
+  let chPart="";
+  if(mode.indexOf("cloze:ch:")===0) chPart=mode.slice(9);
+  else if(mode.indexOf("ch:")===0) chPart=mode.slice(3);
+  if(!chPart) return "全库模式";
+  const n=Number(chPart);
+  if(!isNaN(n)){
+    const c=chaptersList().find(x=>x.num===n);
+    return (c && c.title) ? c.title : `Chapter ${chPart}`;
+  }
+  const groups=chaptersList();
+  for(const g of groups){
+    if(g.subs){
+      for(const s of g.subs){
+        if(String(s.key)===chPart) return (s.title) ? s.title : chPart;
+      }
+    }
+  }
+  return chPart;
+}
+function finishSession(areaId){
+  const learned=(SESS_TOTAL>0)?SESS_TOTAL:Q.length;
+  const reReview=Object.keys(RETRY_MAP).filter(k=>RETRY_MAP[k]>0).length;
+  const chName=sessionChName(sessionMode);
+  const justChecked=autoCheckin();          // 完成学习 → 自动打卡（仅记录当天）
+  const s=streak();
+  const chkTxt=justChecked?"✅ 今日打卡已自动记录":"📅 今日已打卡";
+  const streakTxt=s.cur>0?` · 连续 ${s.cur} 天`:"";
+  let backBtns="";
+  if(areaId==="studyArea"){
+    const isCh = typeof sessionMode==="string" && (sessionMode.indexOf("ch:")===0 || sessionMode.indexOf("cloze:")===0);
+    backBtns = isCh
+      ? `<button class="btn soft" onclick="backToChapters()">返回选章节</button>`
+      : `<button class="btn soft" onclick="backToCount()">返回选个数</button>`;
+    backBtns += `<button class="btn ghost" onclick="backToMode()">返回选择学习方式</button>`;
+  } else if(areaId==="reviewArea"){
+    backBtns = `<button class="btn soft" onclick="backFromReview()">返回复习选项</button>`;
+  }
+  $(areaId).innerHTML=`<div class="sum">
+    <div class="big">本轮完成 🎉</div>
+    <p class="muted">章节：${chName}</p>
+    <p class="muted">已学习 ${learned} 张 · ${todayStr()} · 进度已自动保存</p>
+    ${reReview>0?`<p class="muted" style="color:#c0392b">其中 ${reReview} 张需多练几轮，已加入待巩固</p>`:""}
+    <div class="chkline">${chkTxt}${streakTxt}</div>
+    <div class="row" style="justify-content:center;margin-top:10px;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="startSession(sessionMode,'${areaId}')">再来一组</button>
+      ${backBtns}
+      <button class="btn ghost" onclick="switchTab('checkin')">查看打卡</button>
+    </div></div>`;
+  if(window.Sync)Sync.push();
+  refresh();
+}
+function returnToChapters(){ showStudyView("chapter"); }
+let currentMode="due";
+
+/* ---------- 渲染：统计 ---------- */
+function refresh(){
+  $("totalN").textContent=DATA.length;
+  const due=DATA.filter(d=>isDue(d.id)).length;
+  const master=DATA.filter(d=>statusOf(d.id)==="master").length;
+  const s=streak();
+  $("streakN").textContent=s.cur;
+  $("dueN").textContent=due;
+  $("masterN").textContent=master;
+  $("todayStr").textContent=todayStr();
+  const weak=DATA.filter(d=>isWeak(d.id)).length;
+  $("rDue").textContent=due;
+  $("rNew").textContent=DATA.filter(d=>isNew(d.id)).length;
+  $("rWeak").textContent=weak;
+  ["revDueN","revDueN2"].forEach(k=>{const el=$(k);if(el)el.textContent=due;});
+  const rw=$("revWeakN"); if(rw)rw.textContent=weak;
+  $("cCur").textContent=s.cur; $("cBest").textContent=s.best; $("cTot").textContent=s.tot;
+  const tc=$("todayChk"); if(tc){ if(CHK.includes(todayStr())){tc.textContent="今日已打卡 ✓";tc.className="pill good";}else{tc.textContent="今日未打卡 · 去学习后自动记录";tc.className="pill idle";} }
+  renderChapters();
+  renderCal();
+  $("sNew").textContent=DATA.filter(d=>statusOf(d.id)==="new").length;
+  $("sLearn").textContent=DATA.filter(d=>statusOf(d.id)==="learn").length;
+  $("sMaster").textContent=master;
+  $("sDue").textContent=due;
+  renderDonut();
+  renderAct();
+  renderRet();
+  renderBrowse();
+}
+let calY=(new Date()).getFullYear(), calM=(new Date()).getMonth();
+function renderCal(){
+  const y=calY, m=calM;
+  $("calTitle").textContent=`${y} 年 ${m+1} 月`;
+  const first=new Date(y,m,1); const startD=first.getDay();
+  const days=new Date(y,m+1,0).getDate();
+  const wl=["日","一","二","三","四","五","六"];
+  let h=""; wl.forEach(w=>h+=`<div class="d h">${w}</div>`);
+  for(let i=0;i<startD;i++)h+=`<div class="d"></div>`;
+  const t=todayStr();
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const on=CHK.includes(ds)?" on":""; const tod=ds===t?" today":"";
+    h+=`<div class="d${on}${tod}">${d}</div>`;
+  }
+  $("cal").innerHTML=h;
+}
+function calPrev(){ calM--; if(calM<0){calM=11;calY--;} renderCal(); }
+function calNext(){ calM++; if(calM>11){calM=0;calY++;} renderCal(); }
+function calToday(){ const n=new Date(); calY=n.getFullYear(); calM=n.getMonth(); renderCal(); }
+function renderDonut(){
+  const n=DATA.filter(d=>statusOf(d.id)==="new").length;
+  const l=DATA.filter(d=>statusOf(d.id)==="learn").length;
+  const m=DATA.filter(d=>statusOf(d.id)==="master").length;
+  const segs=[["新词",n,"#c9d2e6"],["学习中",l,"#e8833a"],["已掌握",m,"#27a567"]];
+  const total=DATA.length||1; let acc=0,r=54,cx=70,cy=70;
+  let p="";
+  segs.forEach(([nm,v,col])=>{const a0=acc/total*2*Math.PI-Math.PI/2;acc+=v;
+    const a1=acc/total*2*Math.PI-Math.PI/2;
+    if(v>0){const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+      const large=(a1-a0)>Math.PI?1:0;
+      p+=`<path d="M${cx} ${cy} L${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${col}"/>`}});
+  p+=`<circle cx="${cx}" cy="${cy}" r="34" fill="#fff"/>`;
+  p+=`<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="20" font-weight="800" fill="#1f2733">${m}</text>`;
+  p+=`<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="11" fill="#6b7686">已掌握</text>`;
+  $("donut").innerHTML=p;
+  $("legend").innerHTML=segs.map(([nm,v,col])=>`<div><i style="background:${col}"></i>${nm}：${v}</div>`).join("");
+}
+function renderAct(){
+  const days=[];for(let i=13;i>=0;i--)days.push(addDays(todayStr(),-i));
+  const max=Math.max(1,...days.map(d=>STAT[d]||0));
+  $("actBars").innerHTML=days.map(d=>{const v=STAT[d]||0;const h=Math.round(v/max*100);
+    const on=CHK.includes(d)?"style='background:#19b8a6'":"";
+    return `<div class="b" ${on} style="height:${Math.max(3,h)}%"><span>${v||""}</span><small>${d.slice(5)}</small></div>`}).join("");
+}
+function renderRet(){
+  const S0=12, W=300,H=120, pad=26;
+  const maxT=30;
+  const X=t=> pad + t/maxT*(W-pad-10);
+  const Y=r=> H-pad - r*(H-pad-12);
+  let path="";
+  for(let t=0;t<=maxT;t+=0.5){const r=Math.exp(-K_DECAY*t/S0);path+=(t===0?"M":"L")+X(t).toFixed(1)+" "+Y(r).toFixed(1)+" ";}
+  const sx=X(S0), sy=Y(0.9);
+  $("retCurve").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:340px">
+    <line x1="${pad}" y1="${H-pad}" x2="${W-10}" y2="${H-pad}" stroke="#e6eaf2"/>
+    <line x1="${pad}" y1="10" x2="${pad}" y2="${H-pad}" stroke="#e6eaf2"/>
+    <path d="${path}" fill="none" stroke="#4f6ef7" stroke-width="2.5"/>
+    <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="4" fill="#19b8a6"/>
+    <text x="${(sx+4).toFixed(1)}" y="${(sy-6).toFixed(1)}" font-size="10" fill="#19b8a6">复习点(留存90%)</text>
+    <text x="${pad}" y="9" font-size="10" fill="#6b7686">留存率</text>
+    <text x="${W-30}" y="${H-8}" font-size="10" fill="#6b7686">天数</text>
+  </svg>`;
+  const rev=DATA.filter(d=>!isNew(d.id));
+  const avg= rev.length? Math.round(rev.reduce((a,d)=>a+retention(d.id),0)/rev.length*100):100;
+  $("sRet").textContent=avg+"%";
+}
+
+/* ---------- 词库 ---------- */
+let bFilter="all", bSearch="";
+function renderBrowse(){
+  let arr=DATA.slice();
+  if(bFilter==="new")arr=arr.filter(d=>statusOf(d.id)==="new");
+  else if(bFilter==="learn")arr=arr.filter(d=>statusOf(d.id)==="learn");
+  else if(bFilter==="master")arr=arr.filter(d=>statusOf(d.id)==="master");
+  else if(bFilter==="due")arr=arr.filter(d=>isDue(d.id));
+  if(bSearch)arr=arr.filter(d=>(d.term+" "+d.def).toLowerCase().includes(bSearch.toLowerCase()));
+  const el=$("bList");
+  if(arr.length===0){el.innerHTML='<div class="empty">没有匹配的卡片</div>';return}
+  el.innerHTML=arr.map(d=>{const lv=levelLabel(d.id);
+    return `<div class="item" onclick="this.classList.toggle('open')">
+      <div class="t"><span>${esc(d.term)}</span><span class="lvl ${lv[1]}">${lv[0]}</span></div>
+      <div class="dd">${esc(d.def)}</div></div>`}).join("");
+}
+
+/* ---------- 转义 ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ---------- Tab ---------- */
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="p-"+name));
+  if(name==="study") showStudyView("mode");   // 进入学习页 → 回到“选择学习方式”
+  if(name==="review"){ const m=$("reviewMenu"); if(m)m.style.display=""; const ra=$("reviewArea"); if(ra){ra.style.display="none"; ra.innerHTML="";} }
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
+
+/* ---------- 事件 ---------- */
+$("sessionSize2").onchange=e=>setSessionSize(parseInt(e.target.value,10));
+$("revDue").onclick=()=>startSession("due","reviewArea");
+$("revWeak").onclick=()=>startSession("weak","reviewArea");
+$("revAll").onclick=()=>startSession("all","reviewArea");
+// 学习方式选择
+document.querySelectorAll('#studyModeSel [data-mode]').forEach(b=>b.onclick=()=>{
+  const m=b.dataset.mode;
+  topMode = (m==="cloze") ? "cloze" : "word";
+  renderChapters();
+  showStudyView(m==="count" ? "count" : "chapter");
+});
+// 按个数学习
+document.querySelectorAll('#studyCount [data-count]').forEach(b=>b.onclick=()=>startSession("count:"+b.dataset.count,"studyArea"));
+$("search").oninput=e=>{bSearch=e.target.value;renderBrowse()};
+document.querySelectorAll("#bFilters .chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll("#bFilters .chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active");bFilter=c.dataset.f;renderBrowse();
+});
+$("exportBtn").onclick=()=>{
+  const blob=new Blob([JSON.stringify({PROG,CHK,STAT},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="edaswords_progress_"+todayStr()+".json";a.click();toast("已导出进度");
+};
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const o=JSON.parse(r.result);
+    if(o.PROG){PROG=o.PROG;for(const id in PROG)PROG[id]=migrate(PROG[id]);save(K_PROG,PROG);}
+    if(o.CHK){CHK=o.CHK;save(K_CHK,CHK);}
+    if(o.STAT){STAT=o.STAT;save(K_STAT,STAT);}
+    refresh();toast("进度已导入");}catch(err){toast("文件格式错误")}};
+  r.readAsText(f)};
+$("resetBtn").onclick=()=>{if(confirm("确定要清空所有学习进度和打卡记录吗？")){
+  PROG={};CHK=[];STAT={};save(K_PROG,PROG);save(K_CHK,CHK);save(K_STAT,STAT);refresh();toast("已重置");}};
+
+/* ---------- 键盘 ---------- */
+document.addEventListener("keydown",e=>{
+  const ps=$("p-study"), pr=$("p-review");
+  let panel=null;
+  if(ps&&ps.classList.contains("active"))panel=ps;
+  else if(pr&&pr.classList.contains("active"))panel=pr;
+  if(!panel)return;
+  const flip=panel.querySelector("#flip");
+  if(!flip){
+    const cf=panel.querySelector(".cloze-face"); if(!cf)return;
+    if(e.code==="Space"){e.preventDefault();cf.click();}
+    const rt=panel.querySelector("#ratings");
+    if(rt && rt.style.visibility==="visible"){
+      if(e.key==="1")rt.querySelector('[data-q=again]').click();
+      if(e.key==="2")rt.querySelector('[data-q=hard]').click();
+      if(e.key==="3")rt.querySelector('[data-q=good]').click();
+    }
+    return;
+  }
+  if(e.code==="Space"){e.preventDefault();flip.click();}
+  if(e.code==="Space"){e.preventDefault();flip.click();}
+  if(flip.classList.contains("flipped")){
+    const rt=panel.querySelector("#ratings"); if(!rt)return;
+    if(e.key==="1")rt.querySelector('[data-q=again]').click();
+    if(e.key==="2")rt.querySelector('[data-q=hard]').click();
+    if(e.key==="3")rt.querySelector('[data-q=good]').click();
+  }
+});
+
+/* ---------- 初始化 ---------- */
+if (typeof AuthGate !== "undefined") {
+  AuthGate.start({
+    deck: DECK_SLUG,
+    onSuccess: function(){
+      var after = function(){ $("sessionSize2").value=String(getSessionSize()); refresh(); };
+      if (window.Sync) { Sync.init(DECK_SLUG); Sync.pull().finally(after); }
+      else after();
+    }
+  });
+} else {
+  // 登录脚本未加载时（如 CDN 失败或本地调试），降级为原有本地模式
+  $("sessionSize2").value=String(getSessionSize());
+  refresh();
+}
+</script>
+<script>
+// Phase5：复习页提示「易错优先」
+(function(){
+  var rm=document.getElementById('reviewMenu');
+  if(rm && !document.getElementById('p5hint')){
+    var d=document.createElement('div');
+    d.id='p5hint'; d.className='pill idle';
+    d.style.margin='0 0 14px'; d.style.fontSize='13px';
+    d.textContent='\u2696 \u6613\u9519\u4f18\u5148\uff1a\u9519\u5f97\u8d8a\u591a\u7684\u8bcd\u8d8a\u6392\u5230\u524d\u9762\u3001\u88ab\u4f18\u5148\u62bd\u5230\uff08\u6309\u4f60\u7684\u9519\u8bef\u6b21\u6570\u52a0\u6743\uff09\u3002';
+    rm.insertBefore(d, rm.firstChild);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP微观词汇闪卡</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1f2733; --muted:#6b7686;
+    --line:#e6eaf2; --brand:#4f6ef7; --brand2:#19b8a6;
+    --warn:#e8833a; --bad:#e0524e; --good:#27a567; --soft:#eef2ff;
+    --shadow:0 10px 30px rgba(31,39,51,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 16px 60px}
+  header.top{
+    background:linear-gradient(120deg,#4f6ef7,#19b8a6);color:#fff;border-radius:18px;
+    padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  header.top h1{margin:0;font-size:21px;letter-spacing:.3px}
+  header.top .sub{opacity:.9;font-size:13px;margin-top:4px}
+  .toprow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);
+    padding:6px 12px;border-radius:999px;font-size:13px;display:flex;align-items:center;gap:6px}
+  .pill b{font-size:15px}
+  .tabs{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap}
+  .tab{appearance:none;border:1px solid var(--line);background:#fff;color:var(--muted);
+    padding:9px 16px;border-radius:12px;font-size:14px;cursor:pointer;transition:.15s;font-weight:600}
+  .tab:hover{border-color:#c9d2e6}
+  .tab.active{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:0 6px 16px rgba(79,110,247,.3)}
+  .panel{display:none;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  .panel.active{display:block}
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{appearance:none;border:none;border-radius:12px;padding:11px 18px;font-size:14px;
+    font-weight:700;cursor:pointer;transition:.15s;background:var(--brand);color:#fff}
+  .btn:hover{filter:brightness(1.05)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid #c9d2e6}
+  .btn.soft{background:var(--soft);color:var(--brand)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.bad{background:var(--bad)} .btn.warn{background:var(--warn)} .btn.good{background:var(--good)}
+  select,input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink)}
+  /* flip card */
+  .stage{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+  .progress{width:100%;height:8px;background:#eef1f7;border-radius:99px;overflow:hidden}
+  .progress>i{display:block;height:100%;background:linear-gradient(90deg,#4f6ef7,#19b8a6);width:0;transition:.3s}
+  .flip{width:100%;max-width:620px;height:300px;perspective:1400px;cursor:pointer}
+  .flip-in{position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+  .flip.flipped .flip-in{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;
+    display:flex;align-items:center;justify-content:center;padding:26px;text-align:center;
+    box-shadow:var(--shadow);border:1px solid var(--line)}
+  .front{background:linear-gradient(135deg,#ffffff,#eef3ff)}
+  .front .term{font-size:30px;font-weight:800;color:var(--ink);letter-spacing:.3px}
+  .front .hint{position:absolute;bottom:14px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .back{background:linear-gradient(135deg,#ffffff,#eafff8);transform:rotateY(180deg)}
+  .back .def{font-size:18px;color:#243;line-height:1.7}
+  .back .tag{position:absolute;top:12px;left:14px;font-size:12px;color:var(--muted)}
+  .back .meta{position:absolute;bottom:12px;left:0;right:0;font-size:12px;color:var(--muted)}
+  .ratings{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .ratings .btn{min-width:120px}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+  .empty .big{font-size:40px;margin-bottom:8px}
+  /* stats */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:#fafbff;border:1px solid var(--line);border-radius:14px;padding:14px}
+  .stat .n{font-size:26px;font-weight:800}
+  .stat .l{font-size:13px;color:var(--muted)}
+  .donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .legend{display:flex;flex-direction:column;gap:8px;font-size:14px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:middle}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:10px}
+  .bars .b{flex:1;background:var(--brand);border-radius:6px 6px 0 0;min-height:3px;position:relative}
+  .bars .b span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
+  .bars .b small{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+  /* calendar */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-width:360px;margin-top:10px}
+  .cal .d{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;background:#f3f5fa;color:var(--muted);border:1px solid transparent}
+  .cal .d.on{background:var(--brand);color:#fff;font-weight:700}
+  .cal .d.today{outline:2px solid var(--brand2)}
+  .cal .h{background:none;color:var(--muted);font-weight:700;font-size:12px}
+  /* browse */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{appearance:none;border:1px solid var(--line);background:#fff;color:var(--muted);
+    padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+  .chip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;transition:.15s}
+  .item:hover{border-color:#c9d2e6}
+  .item .t{font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .item .dd{display:none;margin-top:8px;color:#334;font-size:14px;line-height:1.6}
+  .item.open .dd{display:block}
+  .lvl{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--brand);font-weight:700}
+  .lvl.m{background:#e7f8ef;color:var(--good)}
+  .lvl.l{background:#fff1e8;color:var(--warn)}
+  .lvl.n{background:#eef1f7;color:var(--muted)}
+  .sum{text-align:center;padding:24px}
+  .sum .big{font-size:34px;font-weight:800;color:var(--brand)}
+  .chkline{margin-top:8px;font-size:15px;color:var(--brand);font-weight:600}
+  .pill.good{background:#19b8a6;color:#fff;border-color:#19b8a6}
+  .pill.idle{background:#f0f0f0;color:#888;border-color:#e2e2e2}
+  .chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:6px}
+  .chcard{text-align:left;cursor:pointer;background:#fff;border:1px solid #e6e8ef;border-radius:14px;
+    padding:13px 15px;transition:.15s;display:flex;flex-direction:column;gap:5px}
+  .chcard:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(25,184,166,.15);transform:translateY(-2px)}
+  .chcard .chn{font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.3px}
+  .chcard .cht{font-size:14px;font-weight:700;color:#1f2733;line-height:1.35;min-height:38px}
+  .chcard .chmeta{font-size:11.5px;color:var(--muted)}
+  .chbar{height:6px;border-radius:99px;background:#eef1f7;overflow:hidden}
+  .chbar>i{display:block;height:100%;background:var(--brand);border-radius:99px}
+  @media(max-width:560px){.chgrid{grid-template-columns:1fr 1fr;gap:9px}.chcard{padding:11px 12px}.chcard .cht{font-size:13px;min-height:34px}}
+  /* 学习方式选择 */
+  .moderow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+  .modecard{text-align:left;cursor:pointer;background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:18px 20px;transition:.15s;display:flex;flex-direction:column;gap:7px}
+  .modecard:hover{border-color:var(--brand);box-shadow:0 6px 18px rgba(79,110,247,.15);transform:translateY(-2px)}
+  .modecard .mi{font-size:30px;line-height:1}
+  .modecard .mn{font-size:17px;font-weight:800;color:#1f2733}
+  .modecard .md{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .countrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:6px}
+  .backbtn{margin-bottom:12px}
+  @media(max-width:560px){.moderow{grid-template-columns:1fr}}
+  @media(max-width:560px){.front .term{font-size:24px}.back .def{font-size:16px}.flip{height:260px}}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f2733;color:#fff;
+    padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .small{font-size:12px}
+  a.link{color:var(--brand);cursor:pointer}
+  /* 复习入口卡 */
+  .revopt{background:#fff;border:1px solid #e6e8ef;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  .revopt .rt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .revopt .rt .name{font-size:15px;font-weight:800;color:#1f2733}
+  .revopt .rt .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+  .revopt .rt .tag.auto{background:#e6f7f4;color:#0f9c8b}
+  .revopt .rt .tag.pick{background:#fff1e8;color:var(--warn)}
+  .revopt .desc{font-size:12.5px;color:var(--muted);margin:6px 0 10px;line-height:1.5}
+  .revopt .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+  .back.ap{text-align:left}
+  .ap-back{max-height:100%;overflow:auto;width:100%}
+  .ap-back .zh{font-size:21px;font-weight:800;color:#1f2733;text-align:center;margin-bottom:10px;line-height:1.4}
+  .ap-back .note{font-size:15px;color:#334;line-height:1.75;text-align:left}
+  .bz{color:var(--brand);font-weight:700}
+</style>
+<script>window.DECK_SLUG = "apmicrowords";</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="cloudstore.js"></script>
+<script src="auth.js"></script>
+<script src="sync.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>AP微观词汇闪卡</h1>
+    <div class="sub">AP Microeconomics 核心词汇 · 英文术语 + 中文释义 + 笔记 · 共 <span id="totalN">0</span> 张单词卡</div>
+    <div class="sub" style="margin-top:3px;opacity:.8">制作：常亚菲 Donna</div>
+    <div class="toprow">
+      <div class="pill">今日 <b id="todayStr">-</b></div>
+      <div class="pill">连续打卡 <b id="streakN">0</b> 天</div>
+      <div class="pill">待复习 <b id="dueN">0</b> 张</div>
+      <div class="pill">已掌握 <b id="masterN">0</b> 张</div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="study">学习</button>
+    <button class="tab" data-tab="review">复习</button>
+    <button class="tab" data-tab="checkin">打卡</button>
+    <button class="tab" data-tab="stats">统计</button>
+    <button class="tab" data-tab="browse">词库</button>
+  </div>
+
+  <!-- STUDY — 两级导航：选方式 → 选章节/选个数 → 学习 -->
+  <section class="panel active" id="p-study">
+    <!-- 第 0 级：选择学习方式 -->
+    <div id="studyModeSel">
+      <div class="muted small" style="margin-bottom:10px">选择学习方式</div>
+      <div class="moderow">
+        <button class="modecard" data-mode="chapter">
+          <div class="mi">📚</div>
+          <div class="mn">按章节学习</div>
+          <div class="md">按教材章节一篇一篇背，适合系统过一遍；点开某个章节只显示该章闪卡</div>
+        </button>
+        <button class="modecard" data-mode="count">
+          <div class="mi">🔢</div>
+          <div class="mn">按个数学习</div>
+          <div class="md">自选本轮张数（20 / 30 / 40 / 50），系统优先抽取尚未掌握的单词</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 第 1 级：按章节 -->
+    <div id="studyChapter" style="display:none">
+      <button class="btn ghost backbtn" onclick="backToMode()">← 返回选择学习方式</button>
+      <div class="muted small" style="margin-bottom:10px">按章节学习 · 点击任意章节，学习该章全部单词（进度条=已学比例）</div>
+      <div class="chgrid" id="chapterGrid"></div>
+    </div>
+
+    <!-- 第 1 级：按个数 -->
+    <div id="studyCount" style="display:none">
+      <button class="btn ghost backbtn" onclick="backToMode()">← 返回选择学习方式</button>
+      <div class="muted small" style="margin-bottom:10px">按个数学习 · 选择本轮学习的张数，系统优先抽取尚未掌握的单词</div>
+      <div class="countrow">
+        <button class="modecard" data-count="20"><div class="mi">20</div><div class="mn">20 张</div><div class="md">随机抽 20 张</div></button>
+        <button class="modecard" data-count="30"><div class="mi">30</div><div class="mn">30 张</div><div class="md">随机抽 30 张</div></button>
+        <button class="modecard" data-count="40"><div class="mi">40</div><div class="mn">40 张</div><div class="md">随机抽 40 张</div></button>
+        <button class="modecard" data-count="50"><div class="mi">50</div><div class="mn">50 张</div><div class="md">随机抽 50 张</div></button>
+      </div>
+    </div>
+
+    <!-- 第 2 级：学习会话 -->
+    <div id="studyArea" style="display:none;margin-top:14px"></div>
+  </section>
+
+  <!-- REVIEW — 两级：复习选项菜单 → 会话 -->
+  <section class="panel" id="p-review">
+    <div id="reviewMenu">
+      <div class="grid" style="margin-bottom:14px">
+        <div class="stat"><div class="n" id="rDue">0</div><div class="l">今日待复习</div></div>
+        <div class="stat"><div class="n" id="rNew">0</div><div class="l">未学新词</div></div>
+        <div class="stat"><div class="n" id="rWeak">0</div><div class="l">薄弱词</div></div>
+      </div>
+      <!-- 复习待办：系统自动生成，全部做完 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">复习待办</span>
+          <span class="tag auto">系统自动安排</span>
+        </div>
+        <div class="desc">按艾宾浩斯遗忘曲线，把<b>今天到期的卡片</b>自动挑出来（<b id="revDueN">0</b> 张），<b>无需自己选个数，一次全部复习完</b>——这才是防遗忘的关键。做完今天就清零。</div>
+        <div class="actions">
+          <button class="btn" id="revDue">复习全部到期（<span id="revDueN2">0</span> 张）</button>
+        </div>
+      </div>
+
+      <!-- 专攻薄弱：主动加练，自选个数 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">专攻薄弱</span>
+          <span class="tag pick">主动加练 · 自选数量</span>
+        </div>
+        <div class="desc">在到期任务之外<b>额外加练</b>那些还没记牢的词（易错、掌握度低），<b>不管到没到期</b>。因为是主动补练，可自己定本轮做几张。</div>
+        <div class="actions">
+          <span class="muted small">本轮数量：</span>
+          <select id="sessionSize2">
+            <option value="10">10 张</option>
+            <option value="20" selected>20 张</option>
+            <option value="30">30 张</option>
+            <option value="40">40 张</option>
+            <option value="50">50 张</option>
+          </select>
+          <button class="btn soft" id="revWeak">开始专攻（<span id="revWeakN">0</span> 张薄弱）</button>
+        </div>
+      </div>
+
+      <!-- 全部过一遍：通盘复习，自选个数 -->
+      <div class="revopt">
+        <div class="rt">
+          <span class="name">全部过一遍</span>
+          <span class="tag pick">通盘复习 · 自选数量</span>
+        </div>
+        <div class="desc">不分到期与否，从<b>全部单词</b>里随机抽题通盘复习（如考前扫一遍）。数量沿用上面「本轮数量」的设置。</div>
+        <div class="actions">
+          <button class="btn ghost" id="revAll">开始通盘复习</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reviewArea" style="display:none;margin-top:14px"></div>
+  </section>
+
+  <!-- CHECKIN -->
+  <section class="panel" id="p-checkin">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div style="font-size:15px;font-weight:700">每日打卡</div>
+        <div class="muted small">完成学习后自动打卡，本页仅查看记录</div>
+      </div>
+      <div class="pill idle" id="todayChk">今日未打卡</div>
+    </div>
+    <div class="grid" style="margin:16px 0">
+      <div class="stat"><div class="n" id="cCur">0</div><div class="l">当前连续</div></div>
+      <div class="stat"><div class="n" id="cBest">0</div><div class="l">最长连续</div></div>
+      <div class="stat"><div class="n" id="cTot">0</div><div class="l">累计打卡</div></div>
+    </div>
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="btn ghost" style="font-size:12px;padding:6px 11px" onclick="calPrev()">‹ 上月</button>
+      <div class="row" style="gap:8px;align-items:center">
+        <div class="muted small" id="calTitle" style="font-weight:700;font-size:14px"></div>
+        <a class="link" style="font-size:12px" onclick="calToday()">回到本月</a>
+      </div>
+      <button class="btn ghost" style="font-size:12px;padding:6px 11px" onclick="calNext()">下月 ›</button>
+    </div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <!-- STATS -->
+  <section class="panel" id="p-stats">
+    <div class="grid">
+      <div class="stat"><div class="n" id="sNew">0</div><div class="l">新词</div></div>
+      <div class="stat"><div class="n" id="sLearn">0</div><div class="l">学习中</div></div>
+      <div class="stat"><div class="n" id="sMaster">0</div><div class="l">已掌握</div></div>
+      <div class="stat"><div class="n" id="sDue">0</div><div class="l">待复习</div></div>
+      <div class="stat"><div class="n" id="sRet">100%</div><div class="l">已学平均留存率</div></div>
+    </div>
+    <h3 style="margin:18px 0 6px">掌握度分布</h3>
+    <div class="donut-wrap">
+      <svg id="donut" width="140" height="140" viewBox="0 0 140 140"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <h3 style="margin:18px 0 6px">近 14 天学习量</h3>
+    <div class="bars" id="actBars"></div>
+    <h3 style="margin:20px 0 6px">记忆留存（艾宾浩斯遗忘曲线）</h3>
+    <div class="row" style="gap:18px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div class="muted small">系统按遗忘曲线排期：记忆随天数指数衰减，留存跌到约 90% 时（绿点）自动安排复习，记牢后间隔越拉越长。</div>
+      </div>
+      <div class="donut-wrap">
+        <svg id="retCurve" width="100%" style="max-width:340px"></svg>
+      </div>
+    </div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn ghost" id="exportBtn">导出进度</button>
+      <button class="btn ghost" id="importBtn">导入进度</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <button class="btn ghost" id="resetBtn">重置进度</button>
+    </div>
+    <div class="muted small" style="margin-top:8px">进度仅保存在本设备浏览器中；换设备请用“导出/导入”备份。</div>
+  </section>
+
+  <!-- BROWSE -->
+  <section class="panel" id="p-browse">
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="search" placeholder="搜索单词…" style="flex:1;min-width:160px">
+    </div>
+    <div class="filters" id="bFilters">
+      <button class="chip active" data-f="all">全部</button>
+      <button class="chip" data-f="new">新词</button>
+      <button class="chip" data-f="learn">学习中</button>
+      <button class="chip" data-f="master">已掌握</button>
+      <button class="chip" data-f="due">待复习</button>
+    </div>
+    <div class="list" id="bList"></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = [{"term": "Scarce (adj.)", "zh": "稀有的，匮乏的", "note": "同义词：limited\n名词：scarcity\n经济学基本原理中，提到资源是有限的，稀缺的。", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0001"}, {"term": "Scarcity (n.)", "zh": "稀缺性", "note": "形容词：scarce\nA situation in which wants and needs are in excess of the resources available.", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0002"}, {"term": "Fundamental Economic problem", "zh": "基本经济问题", "note": "资源稀缺性问题\n（资源稀缺－无限欲望）\nFundamental economic problem is scarce resources relative to unlimited wants.", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0003"}, {"term": "Fundamental (adj.)", "zh": "基本的", "note": "同义词：basic", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0004"}, {"term": "Need (n.)", "zh": "必需品, 必要之物", "note": "- Water, food, shelter, clothing\n“need” vs. “want” 核心区别：\n- 是否影响生存。", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0005"}, {"term": "Want (n.)", "zh": "欲望之物，想要之物", "note": "- Mobile phone, cars, holidays\n“need” vs. “want” 核心区别：\n- 是否影响生存。", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0006"}, {"term": "Unlimited (adj.)", "zh": "无限的", "note": "反义词：limited\n经济学重要假设：人的欲望是无限的。\n- Wants are unlimited", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0007"}, {"term": "Factor", "zh": "要素", "note": "同义词：input, element", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0008"}, {"term": "Factor of production", "zh": "生产要素", "note": "生产四要素：\n- Land, labor, capital, entrepreneur\n掌握生产四要素各自的定义及例子", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0009"}, {"term": "Resource (n.)", "zh": "资源", "note": "资源是有限的，欲望是无限的\nanything that can be used to produce a good or service\nfactor of production都是resources\nScarce resources = limited resources", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0010"}, {"term": "Labor", "zh": "劳动力", "note": "所有具有生产力的人类活动all human activity that is productive", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0011"}, {"term": "Land", "zh": "土地/自然资源", "note": "all-natural resources", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0012"}, {"term": "Capital (n.)", "zh": "资本", "note": "经济学中，资本主要包括：机器、设备、及资金 productive equipment or machinery", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0013"}, {"term": "Economics", "zh": "经济学", "note": "a social science that studies how resources are used and is often concerned with how resources can be used to their fullest potential\n一门研究资源如何使用的社会科学，经常关注如何充分利用资源的潜力", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0014"}, {"term": "Macroeconomics (n.)", "zh": "宏观经济学", "note": "宏观经济学，研究一国经济整体表现及经济政策。\n国家总需求与总供给\n国民收入总量", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0015"}, {"term": "Microeconomics (n.)", "zh": "微观经济学", "note": "微观经济学，研究社会中单个经济单位的经济行为及决策。也称个体经济学。\n市场需求与供给\n市场价格理论", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0016"}, {"term": "Normative Economics", "zh": "规范经济学", "note": "经济理论涉及好坏，建立在一定的价值判断的基础上，则为规范经济学\neconomics involving value judgments", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0017"}, {"term": "Positive Economics", "zh": "实证经济学", "note": "不涉及好坏，仅仅是就事论事，那么就是实证经济学。“实证”，就是实例证明。\neconomic analysis that draws conclusions based on logical deduction or induction; value judgments are avoided", "chNum": 1, "chTitle": "1.1 Scarcity", "id": "apm0018"}, {"term": "Ceteris paribus", "zh": "其他条件不变的情况下", "note": "经济学假设其他条件不变的情况下，研究两个变量的关系。通常为了简化模型。\nOther things remain unchanged", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0019"}, {"term": "Consumer (n.)", "zh": "消费者, 用户", "note": "同义词：buyer, customer, purchaser", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0020"}, {"term": "Producer (n.)", "zh": "生产者，供应商", "note": "同义词：seller, supplier", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0021"}, {"term": "Government (n.)", "zh": "政府", "note": "政府干预：government intervention\n在微观经济学中，有三个重要角色扮演者：consumer, producer, government", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0022"}, {"term": "Market", "zh": "市场", "note": "一种允许买卖双方交换商品或服务的机制\na mechanism that allows buyers and sellers to exchange a good or service", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0023"}, {"term": "Circular Flow Diagram (Model)", "zh": "循环流动模型", "note": "家庭和企业如何以不同的形式参与资源市场和产品市场\ndiagram that shows how households and firms are related by the exchange of resources and products", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0024"}, {"term": "Capitalism", "zh": "资本主义", "note": "供求决定价格的经济体系\nan economic system where supply and demand determine prices", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0025"}, {"term": "Command Economy", "zh": "指令性经济", "note": "政府决定一切的经济体系\neconomy in which the central government dictates what will or will not be produced and who gets what", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0026"}, {"term": "Mixed Economy", "zh": "混合经济", "note": "指令性经济和资本主义的混合体，现在世界上大多数国家都是这样。\na blend of government commands and capitalism", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0027"}, {"term": "Law of Demand", "zh": "需求定律", "note": "其他条件不变的情况下，价格越高，需求量越少\nlaw that states that when the price of a product increases, the quantity demanded decreases, ceteris paribus", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0028"}, {"term": "Law of Supply", "zh": "供给定律", "note": "其他条件不变的情况下，价格越高，供给量越多\nlaw that states that when the price of a product increases, the quantity supplied increases, ceteris paribus", "chNum": 2, "chTitle": "1.2 Resource Allocation and Economic Systems", "id": "apm0029"}, {"term": "Production Possibilities Frontier (curve)", "zh": "生产可能性边界", "note": "很多时候简称PPC或者PPF，用一条线代表了固定资源下生产两种产品的所有组合\nthe combinations of two goods that can be produced if the economy uses all of its resources fully and efficiently", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0030"}, {"term": "Goods (n.)", "zh": "商品", "note": "同义词：product\n特指有形商品，可以触摸，可以看见的物品。它是生产成果。", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0031"}, {"term": "Service (n.)", "zh": "服务", "note": "Service特指无形“商品”，不可触摸，一般运用在服务行业。例如银行理财顾问为客户提供理财规划，教育，这是一种服务。", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0032"}, {"term": "Production (n.)", "zh": "生产", "note": "制造商品或进行服务的过程", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0033"}, {"term": "Consumption (n.)", "zh": "消费", "note": "利用商品来满足消费者需要的过程", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0034"}, {"term": "Labor productivity", "zh": "劳动生产率", "note": "劳动者在一定时期内创造的劳动成果与其相适应的劳动投入量的比值\nLabor productivity =\ntotal output / number of production workers", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0035"}, {"term": "Cost of production", "zh": "生产成本", "note": "生产成本，也称制造成本，即企业为生产产品而产生的费用。比如材料成本、人员工资、维修费、制造费用等", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0036"}, {"term": "Efficient (adj.)", "zh": "有效率的", "note": "名词efficiency: using resources to their maximum potential 最大限度地利用资源", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0037"}, {"term": "Process (n.)", "zh": "过程，流程", "note": "Production process 生产环节，生产流程", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0038"}, {"term": "Law of Increasing Costs", "zh": "成本递增规律", "note": "Law that states that when more of a product is initially being produced, the higher the opportunity cost will be to produce still more\n当生产一个东西越来越多的时候，它的机会成本也会越来越高", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0039"}, {"term": "Productive efficiency", "zh": "生产有效", "note": "Production of maximum output for a given level of technology and resources. All points on the PPF are productively efficient.\n当我们用所有的资源生产到极致就是生产有效,PPF上面所有的点都是生产有效", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0040"}, {"term": "Allocative efficiency", "zh": "分配有效", "note": "Production of the combination of goods and services that provides the most net benefit to society. The optimal quantity of a good is achieved when the MB = MC of the next unit. This only occurs at one point on the PPF\n在这里生产社会的总效益是最大的，一般选择MB=MC的地方，是PPF上某一个特定的点", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0041"}, {"term": "Economic growth", "zh": "经济增长", "note": "经济增长时PPF向右移动。导致经济增长的原因：资源数量的增加，资源质量的增加，科技的改变都可能影响经济增长。\nThis occurs when an economy’s production possibilities increase. It can be a result of more resources, better resources, or improvement sin technology.", "chNum": 3, "chTitle": "1.3 Production Possibilities Curve", "id": "apm0042"}, {"term": "Choice (n.)", "zh": "选择", "note": "同义词：option, alternative", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0043"}, {"term": "Decision (n.)", "zh": "决策", "note": "动词：decide", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0044"}, {"term": "Alternative (adj.)", "zh": "供选择的", "note": "同义词：optional", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0045"}, {"term": "Opportunity cost", "zh": "机会成本", "note": "经济学核心概念之一：\n机会成本是为了得到某种东西而所要放弃另一些东西的最大价值\n- The cost of a choice in terms of the best alternative forgone.", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0046"}, {"term": "Absolute Advantage", "zh": "绝对优势", "note": "绝对优势是指某一生产方生产某种产品的效率比另一生产方高。比如，A生产一辆汽车需要2天，B生产同样的一辆汽车需要3天，则A的生产效率比B高。\nthe ability to produce something more efficiently", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0047"}, {"term": "Comparative Advantage", "zh": "相对优势/比较优势", "note": "相对优势指的是某一生产方生产某种产品的机会成本要低于另一方。\nthe ability to produce something with a lower opportunity cost", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0048"}, {"term": "Trade (v.)", "zh": "贸易, 商品交换", "note": "同义词：exchange", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0049"}, {"term": "Terms of Trade", "zh": "贸易条件；进出口交换比率", "note": "the amount of one good a country is willing and able to trade for another\n两个国家愿意贸易产品数量的比例", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0050"}, {"term": "Specialization (n.) Specialisation", "zh": "专业化", "note": "动词：specialize (specialize)\n专业化是个体或企业专注于其最擅长的方面，以提高效率。", "chNum": 4, "chTitle": "1.4 Comparative Advantage and Trade", "id": "apm0051"}, {"term": "Margin (n.)", "zh": "边际，边界", "note": "同义词：additional。经济学在考虑一个决策时，重要的是考虑边际量，要运用边际分析法。理性人通过边际利益与边际成本做出决策。", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0052"}, {"term": "Marginal cost", "zh": "边际成本", "note": "多做某件事给我带来的成本\nThe additional cost incurred from the consumption of the next unit of a good or service.\nMarginal benefit＞Marginal cost: Do it!\nMarginal cost＞Marginal cost: Don’t do it!\nMarginal cost =Marginal benefit: stop at here", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0053"}, {"term": "Marginal benefit", "zh": "边际收益", "note": "多做某件事给我带来的收益\nThe additional benefit received from the consumption of the next unit of a good or service.\nMarginal benefit＞Marginal cost: Do it!\nMarginal cost＞Marginal cost: Don’t do it!\nMarginal cost =Marginal benefit: stop at here", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0054"}, {"term": "Marginal analysis", "zh": "边际分析", "note": "Making decisions based upon weighing the marginal benefits and costs of that action. The rational decision maker chooses an action if the MB ≥ MC.\n根据对比MB和MC做决策，理性的抉择者只会在MB大于等于MC的时候选择继续做。", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0055"}, {"term": "Total cost", "zh": "总成本", "note": "所有的边际成本相加", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0056"}, {"term": "Total benefit", "zh": "总收益", "note": "所有的边际收益相加", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0057"}, {"term": "Utility", "zh": "效用", "note": "其实就是对于顾客的benefit，也是顾客购买商品时，幸福感和满足感的体现。\nHappiness, benefit, satisfaction, or enjoyment gained from consumption.", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0058"}, {"term": "Total utility", "zh": "总效用", "note": "在特定数量的消费中获取的总满足感\nTotal happiness received from consumption of a number of units of a good.", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0059"}, {"term": "Marginal utility", "zh": "边际效益", "note": "Consumer的marginal benefit，当消费者增加一单位商品的消费时，所增加的幸福感。\nThe incremental happiness received, or lost, when the consumer increases consumption of a good by one unit.", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0060"}, {"term": "Utils", "zh": "（单位）", "note": "经济学家用来测量utility的工具。昨天我开心程度90 utils，今天100 utils，说明我今天比昨天开心。", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0061"}, {"term": "Law of diminishing marginal utility", "zh": "递减的边际效用", "note": "当你购买越来越多的某一个产品的时候，它给你带来的额外收益会越来越少\nIn a given time period, the marginal(additional) utility from consumption of more and more of that item falls.", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0062"}, {"term": "Utility maximizing rule", "zh": "效用最大化法则", "note": "把固定收入分配在两个产品上的原则，符合 Mux/Px = MUy/Py。我们在x上花的最后一块钱给我的utility 要等于在y上花的最后一块钱给我的utility。\nThe consumer maximizes utility when they choose amounts of goods X and Y, with their limited income, so that the marginal utility per dollar spent is equal for both goods. Mathematically: MUx/Px = MUy/Py, or MUx/MUy = Px/Py.", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0063"}, {"term": "Budget constraint", "zh": "预算限制", "note": "你不是土豪当然不能想买啥就买啥", "chNum": 5, "chTitle": "1.5 Marginal Analysis and Consumer Choice", "id": "apm0064"}, {"term": "Law of Demand", "zh": "需求定律", "note": "law that states that when the price of a product increases, the quantity demanded decreases, ceteris paribus\n其他条件不变的情况下，价格越高，需求量越少", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0065"}, {"term": "Absolute (or money) prices", "zh": "货币价格", "note": "the price of a good measured in units of currency.\n就是一个商品的标价，直接用货币单位来衡量", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0066"}, {"term": "Relative prices", "zh": "相对价格", "note": "The number of units of any other good Y that must be sacrificed to acquire the first good X. Only relative prices matter.\n经济学中一般看相对价格，其实也就是机会成本，你购买一个X要放弃多少个Y。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0067"}, {"term": "Substitution effect", "zh": "替代效应", "note": "The change in quantity demanded resulting from a change in the price of one good relative to the price of other goods.\n由于商品价格改变，导致相对价格产生变化，因此需求量产生改变。这个过程称为替代效应。比如可口可乐货币价格上升，百事可乐货币价格不变，但是百事可乐相对价格更低。因此对可口可乐的需求量就会减少。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0068"}, {"term": "Income effect", "zh": "收入效应", "note": "The change in quantity demanded that results from a change in the consumer’s purchasing power (or real income).\n当购买能力发生改变导致需求量发生的改变，称为收入效应。例如棒棒糖1块一个，你可以买十个，棒棒糖涨到了2块一个，你只能买五个了。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0069"}, {"term": "Demand schedule", "zh": "需求表格", "note": "A table showing quantity demanded for a good at various prices.\n一个记录了商品在不同价格下的需求量的表格。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0070"}, {"term": "Demand curve", "zh": "需求曲线", "note": "A graphical depiction of the demand schedule. The demand curve is downward sloping, reflecting the law of demand.\n用图像的形式把demand schedule画出来，纵坐标为价格，横坐标为需求量，会是一个向下倾斜的线，反映了我们的需求定律。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0071"}, {"term": "Determinants of demand", "zh": "决定需求的因素", "note": "The external factors that shift demand to the left or right.\n导致需求曲线移动的因素\nThe factors that cause consumers to buy more or less at the same price; these are substitutes, preferences, population, income, complements, and expectations.\n影响的因素包括流行趋势和喜好，消费者的数量，收入，替代品和互补品的价格，还有对未来的期望。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0072"}, {"term": "Normal goods", "zh": "普通商品/正常商品", "note": "当你的收入增加，对这种产品的需求会增加\nA good for which higher income increases demand.", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0073"}, {"term": "Inferior goods", "zh": "低档货/劣等物品", "note": "当你收入增加，对这种产品的需求会减少\nA good for which higher income decreases demand.", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0074"}, {"term": "Substitute goods", "zh": "替代品", "note": "Two goods are consumer substitutes if they provide essentially the same utility to the consumer. A Honda Accord and a Toyota Camry might be substitutes for many consumers.\n如果两种产品具有相同的功能或者效用，可以完全替代对方，这种产品叫做替代品。如可口可乐和百事可乐。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0075"}, {"term": "Complementary goods", "zh": "互补商品", "note": "Two goods are consumer complements if they provide more utility when consumed together than when consumed separately. Cars and gasoline are complementary goods.\n其实就是要放在一起用的商品。如果两种商品一起消费时比单独消费时提供更多效用，那么它们就是互补产品。 比如汽车和汽油，牙膏和牙刷，乒乓球和乒乓球拍是互补商品。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0076"}, {"term": "Law of Supply", "zh": "供给定律", "note": "law that states that when the price of a product increases, the quantity supplied increases, ceteris paribus\n其他条件不变的情况下，价格越高，供给量越多", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0077"}, {"term": "Supply schedule", "zh": "供给表格", "note": "A table showing quantity demanded for a good at various prices.\n一个记录了商品在不同价格下的供给量的表格。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0078"}, {"term": "Supply curve", "zh": "供给曲线", "note": "A graphical depiction of the supply schedule. The supply curve is upward sloping, reflecting the law of supply.\n用图像的形式把supply schedule画出来，纵坐标为价格，横坐标为需求量，会是一个向上升的线，反映了我们的供给定律。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0079"}, {"term": "Determinants of supply", "zh": "决定供给的因素", "note": "External factors that influence supply. When these variables change, the entire supply curve shifts to the left or right. 影响供给的外部因素之一。 当这些变量改变时，整个供给曲线会向左或向右平移。\nthe factors that cause sellers to offer more or less for sale at the same price; these are cost of inputs, other goods’ prices, technology, taxes and subsidies, expectations, and number of sellers.\n在同一价格下导致供给量增加或者减少，影响供给的因素有投入资源的价格，其他产品的价格，科技，税收和补贴，生产者预期和生产者数量。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0080"}, {"term": "Market", "zh": "市场", "note": "市场由买方和卖方组成，一种允许买卖双方交换商品或服务的机制。", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0081"}, {"term": "Quantity Demanded", "zh": "需求量", "note": "这个特别注意，一般说quantity demanded的改变指的是一条demand curve内部点的移动，而demand的改变指的是curve的shift.", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0082"}, {"term": "Quantity Supplied", "zh": "供给量", "note": "同上，quantity supplied的改变指的是一条supply curve内部点的移动，而supply改变指的是supply curve的移动.", "chNum": 6, "chTitle": "2.1-2.2 Demand and Supply", "id": "apm0083"}, {"term": "Elasticity", "zh": "弹性", "note": "读起来是“以来丝踢西体”，这个是说当外部条件发生了一定变化的时候，你的敏感程度，或者响应的程度。在经济学中你可以把它直接翻译成敏感度。\nMeasures the sensitivity, or responsiveness, of a choice to a change in an external factor.", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0084"}, {"term": "Price elasticity of demand (Ed)", "zh": "价格需求弹性", "note": "Measures the sensitivity of consumer quantity demanded for good X when the price of good X changes.\n经济学中通常用Ed或者PED来表示，代表的是当商品X的价格变化时，消费者对商品X需求量的改变幅度，从而体现消费者对价格的敏感性。\nPrice elasticity formula(价格弹性公式)：\nEd = (%Δ Q d)/(%Δ P).\n忽略正负号。Ignore the negative sign.", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0085"}, {"term": "Price Elastic demand", "zh": "需求价格相对弹性", "note": "算出来Ed > 1 或者 (%Δ Qd) > (%Δ P)，称作需求价格相对弹性，消费者对价格改变敏感。", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0086"}, {"term": "Price inelastic demand", "zh": "需求价格相对刚性", "note": "算出来Ed < 1 或者 (%Δ Qd) < (%Δ P)，称作需求价格相对刚性，消费者对价格改变没那么敏感。", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0087"}, {"term": "Unit elastic demand", "zh": "需求单位弹性", "note": "算出来Ed=1 或者Qd和P的改变量相等，既不算敏感也不算不敏感，称作单位弹性。\nEd = 1 meaning the (%Δ Qd) = (%Δ P).", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0088"}, {"term": "Perfectly inelastic", "zh": "完全没有弹性", "note": "Ed = 0。 在这种特殊情况下，需求线是垂直的，人们对这种货物的需求量是与价格无关的。比如吸毒的人对毒品的需求，糖尿病人对胰岛素的需求。再贵你也要买啊！\nEd = 0.  In this special case, the demand curve is vertical and there is absolutely no response to a price change.", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0089"}, {"term": "Perfectly elastic", "zh": "完全弹性", "note": "完全竞争市场中每个firm所面对的demand就是这样的，也就是人们只愿意在一个价位上买，需求线是水平的，价格变一点就没人要了，敏感度爆表。\n𝐸𝐷=∞. In this special case, the demand curve is horizontal meaning consumers have an instantaneous and infinite response to a price change.", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0090"}, {"term": "Slope and elasticity", "zh": "斜率与弹性", "note": "一般来说，一种商品的需求曲线越垂直，该商品的需求就越无弹性。 一种商品的需求曲线越水平，该商品的需求就越有弹性。", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0091"}, {"term": "Determinants of elasticity", "zh": "决定弹性的因素", "note": "替代品越多，越有弹性。奢侈品相比必需品，奢侈品更有弹性(luxuries vs. necessities)。占收入比例越大，越有弹性。时间越多越有弹性。", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0092"}, {"term": "Total revenue", "zh": "总收入", "note": "TR = P × Qd （总收入等于产品价格乘以产品数量）", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0093"}, {"term": "Total revenue test", "zh": "销售额与弹性测试", "note": "可以用于判断弹性，当价格上升，总收入也上升，代表消费者弹性较小。\n当价格上升，总收入下降，代表消费者弹性较大。\n注意Total revenue test只用于demand curve，supply curve没有。\nTotal revenue rises with a price increase if demand is price inelastic and falls with a price increase if demand is price elastic.", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0094"}, {"term": "Income elasticity (Ei)", "zh": "收入弹性", "note": "很多时候用EI表示，当你的收入变化时，你对商品X需求量的敏感性。\n这是用来判断产品是普通产品还是劣质品的时候使用的。算这种弹性是要看正负号的。\nIncome elasticity formula(收入弹性公式)：\nEI = (%Δ Qd good X)/(%Δ income)", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0095"}, {"term": "Luxury", "zh": "奢侈品", "note": "A good for which the income elasticity is greater than one.当收入弹性算出来大于1的时候，这种产品属于奢侈品。\nValues of Income Elasticity:\nIf EI > 1, the good is normal and a luxury.\nIf 1 >EI > 0, the good is normal and income inelastic (necessity).\nIf EI < 0, the good is inferior", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0096"}, {"term": "Necessity", "zh": "必需品", "note": "A good for which the income elasticity is above zero but less than one. 当收入弹性算出来大于1小于0的时候，我们说这种产品叫必需品，或者normal goods（普通产品）\nValues of Income Elasticity:\nIf EI > 1, the good is normal and a luxury.\nIf 1 >EI > 0, the good is normal and income inelastic (necessity).\nIf EI < 0, the good is inferior", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0097"}, {"term": "Inferior goods", "zh": "低档货/劣等物品", "note": "同2.1-2.2第10个单词，因为收入上升对这种产品的需求量会下降，所以收入弹性算出来会小于0。\nValues of Income Elasticity:\nIf EI > 1, the good is normal and a luxury.\nIf 1 >EI > 0, the good is normal and income inelastic (necessity).\nIf EI < 0, the good is inferior", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0098"}, {"term": "Cross-price elasticity of demand", "zh": "需求交叉价格弹性", "note": "简称“交叉弹性”，代表的是当商品X的价格变化时，消费者对商品Y需求量改变幅度的敏感性。", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0099"}, {"term": "Price elasticity of supply (Es)", "zh": "价格供给弹性", "note": "Measures the sensitivity of quantity supplied for\ngood X when the price of good X changes.\n经济学中通常用Es或者PES来表示，代表的是当商品X的价格变化时，生产者对商品X生产量的改变幅度，代表了生产者对价格的敏感性。\nPrice elasticity of supply formula:\nEs = (%Δ Q s)/(%Δ P)", "chNum": 7, "chTitle": "2.3-2.5 Elasticity", "id": "apm0100"}, {"term": "Market equilibrium", "zh": "市场均衡", "note": "Exists at the only price where the quantity supplied equals the quantity demanded. Or it is the only quantity where the price consumers are willing to pay is exactly the price producers are willing to accept.\n就是supply和demand curve的交点，在这个指定的价位上，卖家愿意提供的量和买家想要的量完全一样，大家都嗨皮。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0101"}, {"term": "Shortage", "zh": "短缺，经济学里指“供不应求”", "note": "Also known as excess demand, a shortage exists at a market price when the quantity demanded exceeds the quantity supplied. The price rises to eliminate a shortage.\nShortage drives price up.\n当市场上需求量大于供给量时，就处于供不应求的状态。短缺的价格在均衡价格下方，出现短缺市场会自动调整，价格会回升到均衡点。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0102"}, {"term": "Disequilibrium", "zh": "非均衡状态", "note": "Any price where quantity demanded is not equal to quantity supplied. 任何quantity demanded不等于quantity supplied的价格下，都属于非均衡状态。比如shortage和surplus的时候都属于这种情况。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0103"}, {"term": "Surplus", "zh": "剩余，经济学里指“供过于求”", "note": "Also known as excess supply, a surplus exists at a market price when the quantity supplied exceeds the quantity demanded. The price falls to eliminate a surplus.\n当市场上供给量大于需求量时，就处于供过于求的状态。供过于求时，价格在均衡价格上方，出现剩余时，市场也会自动调整，价格会下降到均衡点从而消除产品过剩。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0104"}, {"term": "Consumer surplus (CS)", "zh": "消费者盈余", "note": "The difference between your willingness to pay and the price you actually pay. It is the area below the demand curve and above the price.\n消费者愿意支付的价格和实际支付价格的差。图像上是demand curve之下price之上的面积，一般是三角形，如果出现了deadweight loss就会变成梯形。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0105"}, {"term": "Producer surplus (PS)", "zh": "生产者剩余", "note": "The difference between the price received and the marginal cost of producing the good. It is the area above the supply curve and under the price.\n生产者产品的市场价格和产品边际成本的差。图像上是supply curve之上price之下的面积，也是一般是三角形，如果出现了deadweight loss就会变成梯形。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0106"}, {"term": "Total welfare", "zh": "社会总福利", "note": "The sum of consumer surplus and producer surplus. The free-market equilibrium provides maximum combined gain to society.\n一般指消费者剩余和生产者盈余的和。一个自由市场均衡上的total welfare是最大的，没有deadweight loss。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0107"}, {"term": "Deadweight Loss (DWL)", "zh": "无谓损失", "note": "The lost net benefit to society caused by a movement away from the competitive market equilibrium. Policies like excise taxes create lost welfare to society.\n有时候也叫efficiency loss，还有些时候叫welfare loss。当market没有生产最优的output就会出现这个。也可以理解成最大化Total welfare损失的那一部分。图像表现出来一般是一个小三角形。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0108"}, {"term": "overproduction", "zh": "生产过剩", "note": "too much production or more than optimal output。这种情况下生产的太多了，社会不需要这么多，但是被生产出来了。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0109"}, {"term": "Underproduction", "zh": "生产不足", "note": "inadequate production or less than optimal output. 现在生产的太少了，没有达到社会需要的生产量。", "chNum": 8, "chTitle": "2.6-2.7 Market Equilibrium and Consumer and Producer Surplus", "id": "apm0110"}, {"term": "Excise tax", "zh": "消费税", "note": "per unit tax on production results in a vertical shift upward in the supply curve by the amount of the tax.\n这是一种单位税收，AP考试中都会对生产者征收，所以导致supply向左向上移动，向上移动的幅度等于单位税收的amount", "chNum": 9, "chTitle": "2.8 The Effects of Government Intervention in Markets", "id": "apm0111"}, {"term": "Incidence of Tax", "zh": "[税收] 纳税负担", "note": "The proportion of the tax paid by consumers in the form of a higher price for the taxed good is greater if demand for the good is inelastic and supply is elastic.\n税收一般都是由消费者和生产者共同承担的，这个指的是消费者和生产者分别承受税收的比例。谁的弹性小，谁承担的税收多。谁的弹性大，谁承担的税收少。", "chNum": 9, "chTitle": "2.8 The Effects of Government Intervention in Markets", "id": "apm0112"}, {"term": "Subsidy", "zh": "补贴，补助金", "note": "Has the opposite effect of an excise tax, as it lowers the marginal cost of production, resulting in a downward vertical shift in the supply curve for good X.\nAP当中，补贴一般也是给生产者（但实际上可以给消费者，而且影响也是一样的），产生的结果和税收广告相反，supply向下移动补贴amount的那么多个单位。", "chNum": 9, "chTitle": "2.8 The Effects of Government Intervention in Markets", "id": "apm0113"}, {"term": "Price floor", "zh": "价格地板", "note": "市场上价格太低，政府为了保护生产者，所以设定的一个最低价格，市场上交易的价格不能低于此价格。一般情况设定在原来的market equilibrium上方（如果设定在下方则是一个无效的价格地板），这种政策会产生surplus，很多产品卖不出去。\nlegal minimum price below which the product cannot be sold.\nIf a floor is installed at some level above the equilibrium price, it creates a permanent surplus.", "chNum": 9, "chTitle": "2.8 The Effects of Government Intervention in Markets", "id": "apm0114"}, {"term": "Price ceiling", "zh": "价格天花板", "note": "市场上价格太高，政府为了保护消费者，所以设定的一个最高价格，市场上交易的价格不能高于此价格。一般情况设定在原来的market equilibrium下方（如果设定在上方则是一个无效的价格天花板），这种政策会产生shortage，很多想买的消费者买不到。\nA legal maximum price above which the product cannot be sold.\nIf a ceiling is installed at a level below the equilibrium price, it creates a permanent shortage.", "chNum": 9, "chTitle": "2.8 The Effects of Government Intervention in Markets", "id": "apm0115"}, {"term": "Trade Barrier", "zh": "贸易壁垒", "note": "any regulation or policy that restricts international trade ,同import barrier. To protect domestic jobs, nations can impose trade barriers. Tariffs and quotas are among the most common of barriers.\n其实就是任何对贸易进行限制的政策，最常见的就是关税和配额。", "chNum": 10, "chTitle": "2.9 International Trade and Public Policy", "id": "apm0116"}, {"term": "Tariff", "zh": "关税", "note": "A tariff is a tax on imports or exports，其实就是一种对进口产品征收的per unit tax，你收多少税，国内这个产品的价格就会上升多少。", "chNum": 10, "chTitle": "2.9 International Trade and Public Policy", "id": "apm0117"}, {"term": "Revenue Tariff", "zh": "财政关税", "note": "指以增加国家的财政收入为主要目的而征收的关税", "chNum": 10, "chTitle": "2.9 International Trade and Public Policy", "id": "apm0118"}, {"term": "Protective Tariff", "zh": "保护性关税", "note": "An excise tax levied on a good that is produced in the domestic market so that it may be protected from foreign competition. 对这种产品征收关税主要是为了保护国内相同行业企业的发展。", "chNum": 10, "chTitle": "2.9 International Trade and Public Policy", "id": "apm0119"}, {"term": "Import quota", "zh": "进口配额", "note": "A limitation on the amount of a good that can be imported into the domestic market.对进口商品实行一个进口数量的限制，不能超过这个数量。", "chNum": 10, "chTitle": "2.9 International Trade and Public Policy", "id": "apm0120"}, {"term": "The firm", "zh": "公司", "note": "An organization that employs factors of production to produce a good or service that it hopes to profitably sell.\n一个想要通过购买资源，生产商品或者服务来赚取利润的组织", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0121"}, {"term": "Production function", "zh": "生产函数", "note": "The mechanism for combining production resources, with existing technology, into finished goods and services.  Inputs are turned into outputs.\n一种把投入资源转化为商品和服务的进程。", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0122"}, {"term": "Fixed inputs", "zh": "固定投入", "note": "Production inputs that cannot be changed in the short run. Inputs that do not vary in quantity with an additional unit of output, such as equipment and machinery, building.\n短期内不能被改变的一些投入要素，随着产量的增加这种投入也不会增加，比如机器设备，还有你的工厂。", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0123"}, {"term": "Variable Inputs", "zh": "可变动投入", "note": "Inputs that vary in quantity with each addition unit of output, such as labor, fuel, and raw materials.\n这种投入要素短期会随着产量的增加而增加，比如劳动力，燃料，原材料，都属于可变动投入", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0124"}, {"term": "Total Product of Labor (TPL):", "zh": "劳动总产出", "note": "就是一定劳动力下所生产一种产品的所有数量", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0125"}, {"term": "Marginal Product of Labor (MPL)", "zh": "劳动边际产出", "note": "The change in total product resulting from a change in the labor input. MPL = ΔTPL/ΔL, or the slope of total product.\n是Total product的改变量，或者是total product的斜率。公式是MPL=total product的改变量除以labor的改变量。\n图像画出来MP穿过AP的最高点", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0126"}, {"term": "Average Product of Labor (APL)", "zh": "劳动力平均产量", "note": "Total product divided by labor employed: APL = TPL/L. 每个工人的平均产出等于总产出除以劳动力数量。\n图像画出来MP穿过AP的最高点", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0127"}, {"term": "Law of diminishing marginal returns", "zh": "边际收益递减规律", "note": "在某一阶段内，可变动投入越来越多导致每个投入带来的额外产出越来越少。其实就是当你雇佣的人越来越多的时候，过了某个点，每个工人给你带来的额外产量会减少。\nthe range of output over which smaller and smaller additional units of output are produced as successive equal increments of a variable input are added to fixed quantities of other inputs in the short run", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0128"}, {"term": "Total fixed costs (TFC)", "zh": "总固定成本", "note": "对应的是固定投入上花的钱，这种是不随着产量变化而变化的成本，即使你不生产你也要支付这一部分的钱。\nCosts that do not vary with changes in short-run output. They must be paid even when output is zero.", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0129"}, {"term": "Total variable costs (TVC)", "zh": "总可变动成本", "note": "对应的是variable input上面花的钱。会随着产量的改变而改变，如果你没有生产，这部分的成本也是0\nCosts that change with the level of output. If output is zero, so are total variable costs.", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0130"}, {"term": "Total cost (TC)", "zh": "总成本", "note": "The sum of total fixed and total variable costs at each level of output: TC = TVC + TFC.\n总成本是所有的固定成本和可变动成本相加", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0131"}, {"term": "Average fixed cost (AFC)", "zh": "平均固定成本", "note": "Total fixed cost divided by output: AFC = TFC/Q.\n等于总固定成本除以生产的产品数量。因为TFC永远不变，所以AFC会随着产量的增加而不断减少。\nMC穿过ATC和AVC的最低点，AFC是一直下降的", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0132"}, {"term": "Average variable cost (AVC)", "zh": "平均可变动成本", "note": "Total variable cost divided by output: AVC =TVC/Q.\n等于总可变动成本除以产品数量。图像是先下降后上升的\nMC穿过ATC和AVC的最低点，AFC是一直下降的", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0133"}, {"term": "Average total cost (ATC)", "zh": "平均总成本", "note": "Average total cost (ATC): Total cost divided by output. ATC = TC/Q = AFC+ AVC.\n等于总成本除以产品数量，同时也等于平均固定成本和平均可变动成本相加。\nMC穿过ATC和AVC的最低点，AFC是一直下降的", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0134"}, {"term": "Marginal cost (MC)", "zh": "边际成本", "note": "The additional cost of producing one more unit of output. MC = ΔTC/Δ Q = ΔTVC/Δ Q or the slope of total cost and total variable cost.\n在这一章中，marginal cost指的是你多生产一个产品的额外成本。等于TC和TVC的变量，也是它们的斜率，公式是MC = ΔTC/ΔQ = ΔTVC/ΔQ\nMC穿过ATC和AVC的最低点，AFC是一直下降的", "chNum": 11, "chTitle": "3.1-3.3 The Production Function. Short-run and Long-run Production Costs33..11--", "id": "apm0135"}, {"term": "Accounting profit", "zh": "会计利润", "note": "The difference between total revenue and total explicit costs.\n你的总收益 Total revenue减去你所有的显性成本total explicit costs，就是会计利润。\n会计利润一定大于经济利润，因为Economic profit= Accounting profit – Implicit cost", "chNum": 12, "chTitle": "3.4 Types of Profit", "id": "apm0136"}, {"term": "Economic profit", "zh": "经济利润", "note": "The difference between total revenue and total explicit and implicit costs.\n你的总收益 Total revenue减去你所有的隐形成本街上显性成本total explicit and implicit costs，就是经济利润。\n会计利润一定大于经济利润，因为Economic profit= Accounting profit – Implicit cost", "chNum": 12, "chTitle": "3.4 Types of Profit", "id": "apm0137"}, {"term": "Explicit costs", "zh": "显性成本", "note": "Direct, purchased, out-of-pocket costs paid to resource suppliers outside the firm. Also referred to as accounting costs. Such as labor wages, materials costs, payments for capital.\n也叫做会计成本[accounting cost]，都是花出去的钱，购买东西直接看得见的账单。比如工人工资，原料成本，购买机器成本等等。", "chNum": 12, "chTitle": "3.4 Types of Profit", "id": "apm0138"}, {"term": "Implicit costs", "zh": "隐形成本", "note": "Indirect, non-purchased, or opportunity costs of resources provided by the entrepreneur. Also called economic costs. such as lost income, lost interest or forgone rent.\n也会叫做[经济成本]，其实就是机会成本，我们看不见的一些成本，我做这个行业所放弃的其他一些利润，租金或者收益。", "chNum": 12, "chTitle": "3.4 Types of Profit", "id": "apm0139"}, {"term": "Normal Profit", "zh": "正常利润", "note": "zero economic profit, where an entrepreneur will not be better off in any other venture\n相当于经济利润为0，也就是说你的accounting profit刚好cover掉opportunity cost，做别的工作并不会更好，你的才能得到了使用", "chNum": 12, "chTitle": "3.4 Types of Profit", "id": "apm0140"}, {"term": "Short run", "zh": "短期", "note": "A period of time too short to change the size of the plant, but many other, more variable resources can be adjusted to meet demand.\n可以决定雇佣人数的多少，购买材料的多少。但是不能改变厂家的规模，capital的数量，不能进入或者退出市场。\n微观经济学当中的短期和长期不是指具体时间的长短，而是资源转换的容易程度。Fixed cost和input越多就越短期，variable cost和input越多就越长期。", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0141"}, {"term": "Long run", "zh": "长期", "note": "A period of time long enough to alter the plant size.  New firms can enter the industry and existing firms can liquidate and exit.\n时间长的足以改变公司的规模，capital的数量，新的公司可以进入这个行业，现有的公司可以清算和退出。\n微观经济学当中的短期和长期不是指具体时间的长短，而是资源转换的容易程度。Fixed cost和input越多就越短期，variable cost和input越多就越长期。", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0142"}, {"term": "Profit Maximizing Rule", "zh": "利润最大化原则", "note": "All firms maximize profit by producing where MR =MC.\n生产者选择MR=MC的地方生产，所有的市场中都是这样，消费者是Utility Maximizing Rule，生产者是Profit Maximizing Rule", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0143"}, {"term": "Marginal revenue (MR)", "zh": "边际收益", "note": "Marginal revenue (MR) is the change in total revenue from the sale of an additional product.\n代表Total revenue的改变量，也就是你多卖出去一个产品能够给你额外带来的收益。 Consumer的marginal benefit是marginal utility。 Firm的marginal benefit用marginal revenue表示", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0144"}, {"term": "Breakeven point", "zh": "盈亏临界点", "note": "The output where ATC is minimized and economic profit is zero.\n就是赚normal profit的地方， economic profit等于0， Total revenue等于Total Cost的地方。", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0145"}, {"term": "long-run equilibrium", "zh": "长期均衡", "note": "Occurs when there is no more incentive for firms to enter or exit. P = MR = MC = ATC and Π = 0.\n长期市场中的一个均衡，在完全竞争市场中，当firm没有动机进入或者退出市场了就是一个长期均衡。在这里P=MR=MC=ATC，并且大家赚的都是一个normal profit。", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0146"}, {"term": "Shutdown point", "zh": "亏损点", "note": "The output where AVC is minimized. If the price falls below this point, the firm chooses to shut down or produce zero units in the short run.\n当P小于AVC的最低点的时候，firm的生产量为0，直接不干了。AVC的最低点就叫做shutdown point，注意区分Breakeven和shutdown point。", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0147"}, {"term": "Lump-Sum Tax", "zh": "一次总付税，人头税", "note": "A lump-sum tax is a fixed and unchanging tax regardless of the amount a firm produces. As such, this tax affects only fixed, not variable, costs: total and average costs change but it has no impact on marginal and variable costs and their averages.\n这是一次性的税收，不会改变variable cost和marginal cost，只会改变fixed cost和total cost。所以在短期内不会改变产量。", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0148"}, {"term": "Per-unit taxes", "zh": "单位税收", "note": "a tax on each additional unit produced; affects variable costs: marginal cost, average total cost, and average variable cost\n考试中这种税收出现的更多一些，增加这种税收会改变MC, AVC和ATC。", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0149"}, {"term": "Economies of scale", "zh": "规模经济", "note": "the stage of output where, as a firm’s output increases, its long-run average total cost (LRATC) curve decreases. Also known as increasing returns to scale. The downward-sloping part of the LRATC.\n规模经济也叫做increasing returns to scale，是long run ATC下降的那一部分，这个时候△%output > △%input", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0150"}, {"term": "Constant returns to scale", "zh": "规模报酬固定", "note": "Occurs when LRAC is constant over a variety of plant sizes.\n在long run ATC是水平的线的那一部分，这个时候△%output = △%input", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0151"}, {"term": "Diseconomies of scale", "zh": "规模不经济", "note": "The upward part of the LRAC curve where LRAC rises as plant size increases. This is usually the result of the increased difficulty of managing larger firms, which results in lost efficiency and rising per unit costs.\n也叫做decreasing return to scale。规模太大导致额外投入比额外产出多，是long run ATC上升的那一部分，这个时候△%output < △%input", "chNum": 13, "chTitle": "3.5-3.6 Profit Maximization, Short-run and Long-run Decisions", "id": "apm0152"}, {"term": "Market structure", "zh": "[贸易] 市场结构", "note": "我们会学习四种product market里面的市场，分别为完全竞争，垄断，垄断竞争，寡头市场。", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0153"}, {"term": "Perfect competition", "zh": "完全竞争市场", "note": "a market structure characterized by a larger number of sellers with a homogeneous product, perfectly elastic (horizontal) demand for firms, and no barriers to entry or exit for “price takers.”\n一种有很多卖家的市场，卖的产品无差异，每个卖家face一条水平的demand curve，卖家都是price takers。", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0154"}, {"term": "Price taker", "zh": "市场价格的接受者", "note": "自己没有决定价格的权利，只能接受市场的价格。", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0155"}, {"term": "homogeneous", "zh": "均匀的；[数] 齐次的；同种的；同类的，同质的", "note": "完全竞争市场中的产品都是homogeneous的，同义词identical，指产品之间没什么区别", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0156"}, {"term": "side-by-side graphs", "zh": "肩并肩的图", "note": "画完全竞争市场，要画这种side-by-side graph，就是平行的两幅图。一个代表firm，一个代表industry。由industry demand和supply的交点决定firm所面对的不变的价格", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0157"}, {"term": "Allocative Efficiency", "zh": "分配有效", "note": "Allocative Efficiency is when a firm produces the socially optimal output level where P = MC. This output level means the exact amount that society desires is being produced.\n之前在PPF当中介绍过，在市场中Allocative Efficiency指的是P= MC的地方", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0158"}, {"term": "Productive Efficiency", "zh": "生产有效", "note": "Productive Efficiency is when a good is being produced where P = minimum ATC, which is the lowest possible cost.\n成本最低的地方，也就是P=min ATC的地方。", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0159"}, {"term": "Constant cost industry", "zh": "成本不变工业", "note": "Entry (or exit) of firms does not shift the cost curves of firms in the industry.\n指的是企业进入或者退出市场不会改变资源的价格，所以企业的进入(或退出)不会改变该行业企业的成本曲线。", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0160"}, {"term": "Increasing cost industry", "zh": "成本递增产业", "note": "Entry of new firms shifts the cost curves for all firms upward.\n现实生活中基本上实这样的产业，更多的firms竞争资源会导致资源的价格上升，所以更多firm进入市场时，这个产业的成本线会向上移动。", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0161"}, {"term": "Decreasing cost industry", "zh": "成本递减产业", "note": "A decreasing cost industry is one in which the entry of new firms actually decreases the price of key inputs and causes the cost curves to shift downward.\n成本递减产业就是当更多firm进入市场的时候，会导致资源的价格下降，所以成本线向下移动。这比如一些芯片或者软件资源，更多的firm进入导致更多firm开发这种technology从而资源价格下降。", "chNum": 14, "chTitle": "3.7 Perfect Competition", "id": "apm0162"}, {"term": "Monopoly", "zh": "n. 垄断；垄断者", "note": "The least competitive market structure: it is characterized by a single producer, with no close substitutes, barriers to entry, and price-making power.\n这个市场中没什么竞争，一个生产者，没有替代品，有很高的进入市场的壁垒，firm就是industry。然后有制定价格的能力", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0163"}, {"term": "barrier to entry", "zh": "进入市场壁垒", "note": "导致新企业无法进入市场的一些障碍", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0164"}, {"term": "Price maker", "zh": "价格制定者，定价人", "note": "垄断市场的厂家是price maker。对比完全竞争市场，完全竞争市场的firms是price taker。", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0165"}, {"term": "Market power", "zh": "市场权力", "note": "he ability to set the price above the perfectly competitive level.\n指一个或一组企业对某一行业的价格和生产决策的控制程度。它有多大的掌控能力的价格", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0166"}, {"term": "Natural monopoly", "zh": "自然垄断", "note": "Monopolies that have extensive economies of scale and can provide a product at a lower cost than can several firms.\n这种垄断达到了规模经济，占有了一定的资源，有一定的声誉，因此自然形成了垄断。", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0167"}, {"term": "Monopoly long-run equilibrium", "zh": "垄断的长期均衡", "note": "Pm > MR = MC, which is not allocatively efficient and deadweight loss exists. Pm > ATC, which is not productively efficient. Πm > 0 so consumer surplus is transferred to the monopolist as profit.\n因为垄断市场MR below demand，所有市场都是由MR=MC决定生产量，垄断市场里最后的价格会比MR=MC要大，他们的利润是可以长期存在的。但是市场是inefficient的", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0168"}, {"term": "Price discrimination", "zh": "价格歧视", "note": "The practice of selling essentially the same good to different groups of consumers at different prices.\n对不同的顾客再同样的商品或者服务商charge不一样的价格。比如公交车的学生票和老人票，国际生和本地生的学费等等。价格歧视只会在垄断市场中存在，能够让市场更加的efficiency", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0169"}, {"term": "perfect price discrimination", "zh": "完美的价格歧视", "note": "也叫作First-Degree Price Discrimination，AP中只考这一种，它要最大限度地榨取顾客的消费者剩余。能够帮助市场达到efficiency。这是假设生产者知道每个人心中愿意付的最高价并且charge这个最高价。", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0170"}, {"term": "Regulated Monopoly", "zh": "垄断管制", "note": "垄断市场的价格因为过高，一直设定在的demand有弹性的部分，所以政府会设置price ceiling regulated monopoly。管制Monopoly制定的price ceiling 分为两种，fair-return price，socially optimal price", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0171"}, {"term": "Fair-Return Price", "zh": "合理收益价格", "note": "Price = average total cost (at intersection of demand curve and average total cost curve)\n这样的price 不会让monopoly退出市场，他们能够赚一个normal profit把价格设置在Demand等于ATC的地方", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0172"}, {"term": "Socially Optimal Price", "zh": "社会的最优价格", "note": "Price = marginal cost (at the intersection of demand curve and marginal cost curve)", "chNum": 15, "chTitle": "4.1-4.3 Monopoly and Price Discrimination44..11--", "id": "apm0173"}, {"term": "Imperfect competition", "zh": "不完全竞争", "note": "imperfect competition is a type of market structure showing some but not all features of competitive markets.\nForms of imperfect competition include: Oligopoly, in which there are few sellers of a product.\nMonopolistic competition, in which there are many sellers producing highly differentiated products.\n拥有一些完全竞争市场的特征的市场。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0174"}, {"term": "Monopolistic Competition", "zh": "垄断性竞争", "note": "this form of market structure is characterized by many medium-sized firms that need to innovate and differentiate their products in both price and non-price competition.\n这种市场结构的特点是，许多中型企业，产品类别相同，但是设计，服务不一样【如服装行业】，对价格有一定的掌控能力，非常容易进入或者退出市场。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0175"}, {"term": "Differentiated", "zh": "adj. 分化型；已分化的；可区分的", "note": "Monopolistic Competition里面的产品都是Differentiated，是可区分的", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0176"}, {"term": "Excess capacity", "zh": "过剩生产能力；产能过剩", "note": "The difference between the monopolistic competition output Qmc and the output at minimum ATC. Excess capacity is underused plant and equipment.\n垄断竞争市场当中都会出现Excess capacity，指的就是目前生产量和min ATC对应产量的差，我们有一部分的机器资源还没得到使用。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0177"}, {"term": "Advertising", "zh": "n. 广告；广告业；登广告", "note": "广告对Monopolistic Competition和Oligopoly的作用较大，monopoly会有一些pubic Advertising， pure competition不需要advertising。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0178"}, {"term": "Oligopoly", "zh": "n. 寡占；寡头买主垄断", "note": "A very diverse market structure characterized by a small number of interdependent large firms, producing a standardized or differentiated product in a market with a barrier to entry.\n有少数企业的一个市场，特点是firm少，产品一样活着不一样，有很大的进入市场的壁垒.他们会通过对手的决策来做自己的决策。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0179"}, {"term": "mutual independence", "zh": "n. 相互独立", "note": "在寡头市场中firm是相互独立的", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0180"}, {"term": "Duopoly", "zh": "两家卖主垄断市场，双头市场", "note": "是一种寡头市场，只有两个公司的寡头市场。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0181"}, {"term": "non-collusive oligopoly", "zh": "无合作寡头市场", "note": "Models where firms are competitive rivals seeking to gain at the expense of their rivals.\n在这种模式中，公司是竞争对手，以牺牲对手为代价来获取利益。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0182"}, {"term": "Game Theory", "zh": "博弈论", "note": "a theory of competition stated in terms of gains and losses among opposing players\n应用在寡头市场中做决策的理论，和下棋一样，由对手的决策来决定自己的决策。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0183"}, {"term": "payoff matrix", "zh": "收益矩阵", "note": "玩家在不同决策下的outcomes会用一个矩阵表达出来，叫做payoff matrix。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0184"}, {"term": "Nash Equilibrium", "zh": "纳什均衡", "note": "game theory outcome that occurs when both players choose the action that is best for them given the actions of the other players and reach the same payoff matrix cell.\n在矩阵中就是两个人的决策match到一起的那个框，在这（几）种策略组合下，所有的player都没有动机去move到其他的决策，因为其他的决策只会使收益更低。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0185"}, {"term": "Dominant Strategy", "zh": "最优决策", "note": "best strategy no matter what the opponent does.\n无论对手如何选择，都会选择的一个策略。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0186"}, {"term": "Prisoner’s Dilemma", "zh": "囚徒困境", "note": "A game in which each player has a dominate strategy and when each player chooses the dominant strategy, the resulting payoffs are smaller than if each hadn’t chosen the dominate strategy.\n每个参与人都有一个优势策略，当每个参与人都选择优势策略时，所得收益会比没有选择优势策略时要小。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0187"}, {"term": "Collusion", "zh": "n. 勾结；共谋", "note": "secret agreement especially in order to do sth dishonest or to trick people\n指寡头之间秘密勾结，使得收益最大化。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0188"}, {"term": "Cartel", "zh": "卡特尔，企业联合", "note": "A group of firms that agree not to compete with each other on the basis of price, production, or other competitive dimensions. Cartel members operate as a monopolist to maximize their joint profits.\n寡头市场通过统一价格、防止竞争来最大化共同利润，叫做卡特尔，对市场产生的结果和垄断市场一样。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0189"}, {"term": "Collusive oligopoly", "zh": "勾结性垄断", "note": "Collusive oligopoly: oligopoly where participants act as a cartel。\n和cartel一样，但是合作会有信任危机，大家都有背叛对方的动机。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0190"}, {"term": "Antitrust Policy", "zh": "反垄断政策", "note": "is used by governments to prevent oligopolies from becoming monopolies with no competition for the benefit of consumers and society.\n这种政策其实就是为了防止垄断市场的出现，因为垄断市场一般price高，CS很小。没有效率。这是为了保护消费者指定的政策。", "chNum": 16, "chTitle": "4.4-4.5 Monopolistic Competition, Oligopoly and Game Theory", "id": "apm0191"}, {"term": "Product Market", "zh": "产品市场", "note": "place where goods and services produced by producers are bought and sold.\n产品出售和消费的地方，我们上一单元学的四个Market structure： pure competition， monopoly， monopolistic competition， oligopoly都是属于产品市场。", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0192"}, {"term": "Resource /Factor Market", "zh": "资源/生产要素市场", "note": "the place of resources are bought and sold.\n资源出售和消费的地方。", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0193"}, {"term": "Labor market", "zh": "劳动力市场", "note": "The theory of factor (or resource, or input) demand is applicable to any factor of production, but it is more intuitive if we focus on labor, the production input with which we are all most comfortable.\n在AP当中主要研究factor market里面的劳动力市场，因为劳动力是我们最熟悉的一种资源，学会了劳动力市场，可以把对应的知识点应用在任何其它的factor market里面。", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0194"}, {"term": "Marginal revenue product (MRP)", "zh": "边际生产收益\n[也是demand for labor]", "note": "Measures the value of what the next unit of a resource (e.g., labor) brings to the firm. MRPL = MR × MPL. In a perfectly competitive product market, MRPL = P × MPL. In a monopoly product market, MR < P so MRPm < MRPc.\n代表你雇佣下一个工人可以给你带来多少的价值，其实就是劳动力市场中的demand curve。等于MR（每卖一个产品带来的收益）乘以MP（这个工人的产量）。在完全竞争的产品市场中 MR=P，在垄断产品市场中，MR<P。", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0195"}, {"term": "Derived demand", "zh": "衍生需求", "note": "Demand for a resource like labor is derived from the demand for the goods produced by the resource.\nLabor demand 就是一种衍生需求，对劳动力的需求是由对应的产品市场里得需求衍生的。", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0196"}, {"term": "Marginal resource Cost/ Marginal Factor Cost (MRC/MFC)", "zh": "边际资源成本", "note": "Measures the cost the firm incurs from using an additional unit of an input. In a perfectly competitive labor market, MRC =Wage. In a monopsony labor market, the MRC > Wage.\n每额外雇佣一个人的产生的额外费用叫MRC/MFC。在完全竞争的劳动力市场里，MRC=Wages，是labor supply。在买方垄断的劳动力市场里，MRC> Wages，也就是在这种市场里，MRC在labor Supply上方。", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0197"}, {"term": "Wages", "zh": "n. [劳经] 工资；报酬", "note": "Price of labor。工人的价格，所以在劳动力市场中，纵坐标是工资，横坐标是工人的数量，", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0198"}, {"term": "leisure", "zh": "休闲，娱乐", "note": "The firms supply of labour is derived from the trade-off between labour and leisure.\n劳动力的供给就是决定于劳动力在休闲和工作之间的一个权衡结果。", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0199"}, {"term": "Economic Rent", "zh": "经济租金", "note": "occurs when payment for one of the factors of production (land, labor, capital, and entrepreneurship) exceeds the minimum amount needed to continue with a market transaction.\n当购买资源所需要的费用，超过继续进行市场交易所需的最低金额，就会产生经济租金。\n比如你去工作，市场工资是20，但是经过协商后公司给了你25，那5块就是你赚的economic rent。\n比如你去租房子，市场价格是1000，但是因为shortage，你愿意支付1500租，500就是经济租金。", "chNum": 17, "chTitle": "5.1 Introduction to Factor Markets", "id": "apm0200"}, {"term": "Determinants of Resource/Labor Demand", "zh": "劳动力需求的决定因素", "note": "One of the external factors that influences labor demand. When these variables change, the entire demand curve shifts to the left or right. Product demand, Productivity, Prices of other resources\n什么会导致劳动力需求线的移动，这包括了对产品的需求，小产效率，还有其它资源的价格", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0201"}, {"term": "Productivity", "zh": "生产效率", "note": "output per resource unit。也就是每个工人能生产多少产品，生产数量越多生产效率越高。", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0202"}, {"term": "Substitute Resources", "zh": "替代资源", "note": "两种资源互为替代关系", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0203"}, {"term": "Complementary resources", "zh": "互补资源", "note": "When labor and machine work together, a lower price of the machine makes it more affordable to purchase more machinery but also increases the demand for labor.\n两个资源必须放在一起使用，比如一个劳动力操控一个机器，机器的价格下降，这个时候没有SE只有OE，劳动力和机器都会雇佣的更多", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0204"}, {"term": "Determinants of Resource Supply", "zh": "劳动力供给的决定因素", "note": "such as immigration, education, working conditions, age distribution, availability of alternative options, preferences for leisure, and cultural expectations\n什么会导致劳动力供给线的移动。", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0205"}, {"term": "Immigration", "zh": "外来移民；移居", "note": "migration into a place. An increase in immigration causes an increase in the supply of labor 移民多劳动力的供给会增加", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0206"}, {"term": "Education", "zh": "n. 教育；培养", "note": "The higher the level of education needed the lower the supply of labor. 一个公司对教育程度的需求高，supply会减少。", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0207"}, {"term": "Conditions", "zh": "n. （生活或工作等的）条件；（影响某事发生的）物质环境；（天气、地面等的）情况", "note": "条件越好，供给越高。", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0208"}, {"term": "Age distribution", "zh": "[统计] 年龄分布", "note": "年轻人多，labor supply增加。【因为16岁以下和太老的不算在劳动力里面】", "chNum": 18, "chTitle": "5.2 Changes in Factor Demand and Factor Supply", "id": "apm0209"}, {"term": "Least-Cost Rule", "zh": "最小成本法则", "note": "The combination of labor and capital that minimizes total costs for a given production rate. Hire L and K so that MPL/PL = MPK/PK or MPL/MPK = PL/PK.\n类似于我们当时学的Utility maximization rule。只不过现在是如何把有限的money分配在两种资源上。原理是一样的，我花的最后一块钱，在劳动力上给我带来的生产量需要和机器上给我带来的生产量相等。", "chNum": 19, "chTitle": "5.3-5.4 Profit-Maximizing Behavior in Perfectly Competitive Factor Markets and Monopsonistic Markets", "id": "apm0210"}, {"term": "Perfectly Competitive Labor Market", "zh": "完全竞争的劳动力市场", "note": "Many small firms are hiring workers，Workers with identical skills，Wage is constant，Firms are wage takers\n有点像完全竞争产品市场，有很多的firms和很多的workers，workers之间没有区别，firm是个wage takers，每个firm face的MRC是一条水平的线。注意完全竞争劳动力也是side-by-side graph。", "chNum": 19, "chTitle": "5.3-5.4 Profit-Maximizing Behavior in Perfectly Competitive Factor Markets and Monopsonistic Markets", "id": "apm0211"}, {"term": "Identical skills", "zh": "相同的能力", "note": "完全竞争劳动力市场当中工人的能力都是相同的", "chNum": 19, "chTitle": "5.3-5.4 Profit-Maximizing Behavior in Perfectly Competitive Factor Markets and Monopsonistic Markets", "id": "apm0212"}, {"term": "Wage takers", "zh": "工资接受者", "note": "Firm无法决定工资价格，也是由劳动力市场决定价格，然后firm只能完全接受这个工资价格。MRC是一条水平的线。", "chNum": 19, "chTitle": "5.3-5.4 Profit-Maximizing Behavior in Perfectly Competitive Factor Markets and Monopsonistic Markets", "id": "apm0213"}, {"term": "Monopsony/ Monopsonist", "zh": "n. 买主独家垄断，买方垄断/\n买主垄断者", "note": "a market in which there is a single buyer of labor, the firm has market power in labor market.\n劳动力市场只有这一个买家。", "chNum": 19, "chTitle": "5.3-5.4 Profit-Maximizing Behavior in Perfectly Competitive Factor Markets and Monopsonistic Markets", "id": "apm0214"}, {"term": "Wage setter/maker", "zh": "工资的决定者", "note": "买方垄断劳动力市场的厂家是一个工资的决定者", "chNum": 19, "chTitle": "5.3-5.4 Profit-Maximizing Behavior in Perfectly Competitive Factor Markets and Monopsonistic Markets", "id": "apm0215"}, {"term": "Minimum Wages", "zh": "最低工资", "note": "劳动力市场里面的一个price floor，公司制定的工资必须高于等于minimum wages", "chNum": 19, "chTitle": "5.3-5.4 Profit-Maximizing Behavior in Perfectly Competitive Factor Markets and Monopsonistic Markets", "id": "apm0216"}, {"term": "Unemployment", "zh": "n. 失业；失业率；失业人数", "note": "市场上有多少的人没有被雇佣【劳动力市场里的surplus或者shortage】", "chNum": 19, "chTitle": "5.3-5.4 Profit-Maximizing Behavior in Perfectly Competitive Factor Markets and Monopsonistic Markets", "id": "apm0217"}, {"term": "Market Failure", "zh": "市场失灵", "note": "Market failure is a concept within economic theory describing when the allocation of goods and services by a free market is not efficient.\n也就是在市场自由运行的情况下，社会并不是最efficient的，CS和PS的和不是最大化的。", "chNum": 20, "chTitle": "6.1 Socially Efficient and Inefficient Market Outcomes", "id": "apm0218"}, {"term": "Information Asymmetry", "zh": "信息不对称", "note": "information asymmetry deals with the study of decisions in transactions where one party has more or better information than the other.\n买家和卖家会存在信息不对成的情况，很多时候卖家对产品性能完全了解，但是买家不了解。包括产品造成了什么污染和产品的来源，很多时候买家也不了解。", "chNum": 20, "chTitle": "6.1 Socially Efficient and Inefficient Market Outcomes", "id": "apm0219"}, {"term": "Marginal Private Benefit (MPB)", "zh": "私人边际收益", "note": "The benefits enjoyed by the individual consumers of a particular good. Does not take into account any external benefits or costs arising from a goods consumption.\n就是消费者从交易中得到的所有收益，不是社会的收益，不包括第三方", "chNum": 20, "chTitle": "6.1 Socially Efficient and Inefficient Market Outcomes", "id": "apm0220"}, {"term": "Marginal Private Cost (MPC)", "zh": "私人边际成本", "note": "The private cost of an additional unit of output of a good experienced by an individual firm. Does takes into account only the explicit and implicit costs faced by the firm, and does not include external costs (the social or environmental costs which may arise from the production of a good).\n只考虑生产这个产品厂家所面临的显性和隐性成本，而不包括外部成本(生产一种商品可能产生的社会或环境成本)。", "chNum": 20, "chTitle": "6.1 Socially Efficient and Inefficient Market Outcomes", "id": "apm0221"}, {"term": "Marginal Social Benefit (MSB)", "zh": "社会边际收益", "note": "the benefit that accrues to society when consuming a ­product; MPB + MEB (marginal external benefit) = MSB\n某个产品给整个社会带来的边际收益，它等于边际私人收益加上外部收益。也就是说除了消费者得到的一些收益，也加上了和交易无关的第三方带来了一些收益。比如教育，疫苗。", "chNum": 20, "chTitle": "6.1 Socially Efficient and Inefficient Market Outcomes", "id": "apm0222"}, {"term": "Marginal Social Cost (MSC)", "zh": "社会边际成本", "note": "The private costs faced by producers of a particular good plus any external costs placed on third parties, such as environmental or social costs, arising from a good’s production. MPC + MEC (marginal external cost) = MSC\n除了交易中厂商生产产品的成本意外，还包括了等社会的污染等等。", "chNum": 20, "chTitle": "6.1 Socially Efficient and Inefficient Market Outcomes", "id": "apm0223"}, {"term": "Externality", "zh": "外部性", "note": "Benefits or costs that accrue to some third party that is external to the market transaction.\n也叫做Spillover or neighborhood effects。指的是一场交易中，影响到了没参与这场交易的第三方，可能是正面影响也可能是负面影响。", "chNum": 21, "chTitle": "6.2 Externalities", "id": "apm0224"}, {"term": "Spillover/External benefits", "zh": "外部效益", "note": "Additional benefits to society, not captured by the market demand curve from the production of a good, result in a price that is too high and a market quantity that is too low. Resources are underallocated to the production of this good.\n这是一些的外部收益，没有体现在市场可以观察到的MPB和MPC上，这个时候私人市场的均衡中，价格太高，生产的太少，是一个underallocation。", "chNum": 21, "chTitle": "6.2 Externalities", "id": "apm0225"}, {"term": "Positive externality", "zh": "正外部性", "note": "Exists when the production of a good creates utility (the spillover benefits) for third parties not directly involved in the consumption or production of the good.\n当市场上有一个spillover benefit产生的时候我们就说这是一个正外部性。", "chNum": 21, "chTitle": "6.2 Externalities", "id": "apm0226"}, {"term": "Spillover/External costs", "zh": "外部成本", "note": "Additional costs to society, not captured by the market supply curve from the production of a good, result in a price that is too low and market quantity that is too high. Resources are overallocated to the production of this good.\n对社会来说额外的一些成本，没有体现在交易的市场上，这种请况私人市场的均衡价格太低，而且成交量太高，社会是不需要这么多产量的，这是一个overallocation。", "chNum": 21, "chTitle": "6.2 Externalities", "id": "apm0227"}, {"term": "Ownership", "zh": "所有权；物主身份", "note": "所有权；物主身份", "chNum": 21, "chTitle": "6.2 Externalities", "id": "apm0229"}, {"term": "Rivalry", "zh": "竞争性", "note": "the same unit of goods can’t be consumed by more than one person at the same time. EX: Haircut, hamburger, chocolate bar\n竞争性指的是我消费了这一个产品，你就不能消费了。我买了一个巧克力棒，这个市场上的巧克力棒就少了一个，我吃了你就没了。", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0230"}, {"term": "Excludability", "zh": "排他性", "note": "suppliers of the goods can prevent people who don’t pay from consuming it. EX: College education, park, TV show.\n排他性指的是，市场可以把付钱和没付钱的人区分开来，你付钱了，你就可以享受这个服务或者产品，没有付钱就不能享受这个服务或者产品", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0231"}, {"term": "Private Goods", "zh": "私人产品", "note": "Goods that are both rival and excludable. Only one person can consume the good at a time, and consumers who do not pay for the good are excluded from the consumption.\n同时具有竞争性和排他性的产品，比如汉堡，巧克力棒，剪发服务。", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0232"}, {"term": "Nonrivalry", "zh": "非竞争性", "note": "more than one person can consume the same unit of goods at the same time.\nSuch as TV shows, college education, health care.\n多人可以同时享用这个产品，多consume不会减少这个市场上的availability。比如爱奇艺会员，学校教育等等。", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0233"}, {"term": "Non excludability", "zh": "非排他性", "note": "no effective way to exclude individuals who don’t pay from consuming the goods.\n没有办法有效的把付钱的人和没付钱的人区分开来", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0234"}, {"term": "Public Goods", "zh": "消费者盈余", "note": "Goods that are both nonrival and nonexcludable. One person’s consumption does not prevent another from also consuming the good, and if it is provided to some, it is necessarily provided to all, even if they do not pay for the good. Examples are local police services and national defense.\n同时具有非竞争性和非排他性的产品，如国防。", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0235"}, {"term": "National defense", "zh": "国防", "note": "公共产品的一种。", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0236"}, {"term": "Free Rider", "zh": "搭便车的人", "note": "people who receive the benefit of goods but don’t pay for it.\n传说中的“白嫖客”，不付钱也享受服务的人。", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0237"}, {"term": "The tragedy of commons", "zh": "共有性悲剧", "note": "the overuse and depletion of a resource that no one can be excluded from because of missing property rights.\n因为某些资源没有产权，所以很快被耗尽的问题，", "chNum": 22, "chTitle": "6.3 Public and Private Goods", "id": "apm0238"}, {"term": "Marginal Productivity Theory", "zh": "边际生产率理论", "note": "The philosophy that a citizen should receive a share of economic resources proportional to the marginal revenue product of his or her productivity.\n这群人认为人们生产力有多少，就应该得到多少的回报。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0240"}, {"term": "Income Inequality", "zh": "收入不平衡；所得不均", "note": "就是贫富差距大", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0241"}, {"term": "Lorenz Curve", "zh": "洛伦兹曲线", "note": "curve that shows how much of a country’s total income is earned by the number of households.\n一个表示一个国家收入状况的线。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0242"}, {"term": "Quintiles", "zh": "五分位", "note": "Lorenz Curve把人口和收入五等分。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0243"}, {"term": "Gini Coefficient/Ratio", "zh": "基尼系数", "note": "A measure of a nation’s income inequality.  This measure uses a scale between zero and one. The closer it lies to zero, the more equal the distribution of income.\n衡量一个国家收入不平等程度的指标。 基尼系数在0-1之间。 它越接近于零，收入分配就越平等。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0244"}, {"term": "Marginal tax rate", "zh": "边际税率", "note": "The rate paid on the last dollar earned. This is found by taking the ratio of the change in taxes divided by the change in income.\n税收的变化除以收入的变化，比如说你收入增加了100，政府多收了你25，你的边际税收率就是25%", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0245"}, {"term": "Average tax rate", "zh": "平均税率", "note": "The proportion of total income paid to taxes. It is calculated by dividing the total taxes owed by the total taxable income.\n你平均税率，比如每月你的收入1000，税收交200，那你的平均税率就是20%", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0246"}, {"term": "Progressive tax", "zh": "累进税；递增税率", "note": "The proportion of income paid in taxes rises as income rises. An example is the personal income tax.\n随着收入的增加，税收占收入的比例也在增加。这种税收方式会减少基尼系数，个人所得税就是一个例子。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0247"}, {"term": "Proportional tax", "zh": "比例税", "note": "A constant proportion of income is paid in taxes no matter the level of income. An example is a “flat tax” or the corporate income tax.\n随着收入的增加，税收占收入的比例不变。这种税收方式不会改变基尼系数，公司所得税就是一个例子。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0248"}, {"term": "Regressive tax", "zh": "累退税；递减税率", "note": "The proportion of income paid in taxes decreases as income rises. An example is a sales tax.\n随着收入的增加，税收占收入的比例在减少。这种方式会增加基尼系数。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0249"}, {"term": "Tax bracket", "zh": "纳税等级", "note": "A range of income on which a given marginal tax rate is applied.\n政府规定你在多少到多少的收入要纳税百分之多少。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0250"}, {"term": "Lump-Sum Tax", "zh": "定额税", "note": "a fixed tax on producers regardless of the amount produced\n对生产者征收的固定税", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0251"}, {"term": "Per-Unit Tax", "zh": "单位税收", "note": "a tax on producers for each additional unit produced, adding to the marginal cost of production; a solution for negative externalities.\n前面也见过，在这里可以用来解决负面的外部性。", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0252"}, {"term": "Per-Unit Subsidy", "zh": "单位补贴", "note": "a payment to producers from the government for each additional unit produced; a solution for positive externalities.\n给单位补贴，可以用来解决正面的外部性", "chNum": 23, "chTitle": "6.4-6.5 Government Intervention and Inequality", "id": "apm0253"}];
+
+/* ============ FSRS 式记忆模型 ============
+ * 每张卡记录：state(状态) / S(稳定度，天，= 留存跌到 90% 所需天数) / D(难度 1-10) / reps / lapses / last / due
+ * 遗忘曲线（艾宾浩斯指数衰减）：R(t) = e^(-k·t/S)，其中 k = -ln(0.9) ≈ 0.1054
+ * 即 t = S 时 R ≈ 90%，所以“下次复习间隔 = S 天”。
+ */
+const R_TARGET = 0.9;
+const K_DECAY = -Math.log(R_TARGET); // ≈ 0.1053605
+const K_PROG="apmicrowords_progress_v1", K_CHK="apmicrowords_checkin_v1", K_STAT="apmicrowords_stats_v1", K_SESS="apmicrowords_session_v1";
+
+/* ---------- 存储 ---------- */
+function load(k,def){try{return JSON.parse(localStorage.getItem(k))??def}catch(e){return def}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+let PROG = load(K_PROG,{});
+// ---- Phase 3：进度云端同步访问器（供 sync.js 读写本地 PROG/CPROG）----
+window.__deckStore = {
+  deckSlug: DECK_SLUG,
+  getProg: function(){ return PROG; },
+  setProg: function(p){ PROG = p; save(K_PROG, PROG); },
+  hasCloze: function(){ return typeof CPROG !== 'undefined'; },
+  getCProg: function(){ return (typeof CPROG !== 'undefined') ? CPROG : null; },
+  setCProg: function(p){ if (typeof CPROG !== 'undefined') { CPROG = p; save(K_CPROG, CPROG); } }
+};
+let CHK  = load(K_CHK,[]);
+let STAT = load(K_STAT,{});
+
+/* ---------- 旧版 Leitner(盒子) 进度迁移到新模型（不丢已有学生进度） ---------- */
+function migrate(p){
+  if(!p) return null;
+  if(p.S!==undefined) return p;            // 已经是新模型
+  if(p.box===undefined && p.due===undefined) return p;
+  const box = p.box||0;
+  if(box===0) return {state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()};
+  const oldInt = {1:1,2:2,3:4,4:8,5:16}[Math.min(5,box)] || 1;
+  const D = clamp(5 + (p.lapses||0)*1.2 - (p.reps||0)*0.15, 1, 10);
+  const last = addDays(p.due||todayStr(), -oldInt);
+  return {state:"review", S:oldInt, D, reps:p.reps||0, lapses:p.lapses||0, last, due:p.due||todayStr()};
+}
+for(const id in PROG) PROG[id]=migrate(PROG[id]);
+
+/* ---------- 日期 ---------- */
+function todayStr(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDays(ds,n){let d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return todayStr(d)}
+function daysBetween(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+
+/* ---------- 状态 ---------- */
+function st(id){return PROG[id]||{state:"new",S:0,D:5,reps:0,lapses:0,last:null,due:todayStr()}}
+function isNew(id){return st(id).state==="new"}
+function isDue(id){const p=st(id);if(p.state==="new")return false;return p.due<=todayStr()}
+function statusOf(id){const p=st(id);
+  if(p.state==="new")return"new";
+  if(p.state==="relearning")return"learn";
+  if((p.S||0)>=21)return"master";
+  return"learn";
+}
+function levelLabel(id){const p=st(id);
+  if(p.state==="new")return["新词","n"];
+  if(p.state==="relearning")return["再学习","l"];
+  if(statusOf(id)==="master")return["已掌握","m"];
+  if((p.S||0)<=4)return["薄弱","l"];
+  return["学习",""];
+}
+function isWeak(id){const p=st(id);return p.state!=="new"&&(p.state==="relearning"||(p.S||0)<=4)}
+function retention(id){const p=st(id);if(p.state==="new"||!p.S)return 1;
+  const dt=Math.max(0,daysBetween(p.last,todayStr()));return Math.exp(-K_DECAY*dt/Math.max(0.1,p.S));}
+
+/* ---------- 评分 / 排期（FSRS 式） ---------- */
+function rate(id,grade){
+  const p=st(id);
+  let S=p.S||0, D=p.D||5, reps=p.reps||0, lapses=p.lapses||0;
+  const firstSuccess = (p.state==="new"||p.state==="learning"||p.state==="relearning");
+  let np;
+  if(grade==="again"){
+    lapses++;
+    S=Math.max(0.2,(S||1)*0.3);
+    D=clamp(D+1.2,1,10);
+    np={state:"relearning",S,D,reps:reps,lapses,last:todayStr(),due:addDays(todayStr(),1)};
+  } else {
+    if(firstSuccess){
+      const base = grade==="hard"?1.2:2.0;        // 首次间隔
+      S=base;
+      D=clamp(D+(grade==="hard"?0.6:-0.4),1,10);
+      reps=1;
+    } else {
+      const ease = grade==="hard"?1.3:2.1;
+      const diffFactor = 1 + (10-D)/10*0.3;        // 越难(D大)增长越慢
+      S=Math.min(365,Math.max(0.2,S*ease*diffFactor));
+      D=clamp(D+(grade==="hard"?0.3:-0.5),1,10);
+      reps++;
+    }
+    np={state:"review",S,D,reps,lapses,last:todayStr(),due:addDays(todayStr(),Math.round(S))};
+  }
+  PROG[id]=np; save(K_PROG,PROG);
+  const t=todayStr(); STAT[t]=(STAT[t]||0)+1; save(K_STAT,STAT);
+  if(window.Sync)Sync.push();
+}
+
+/* ---------- 打卡（仅由完成学习自动触发，不可手动） ---------- */
+function autoCheckin(){return checkin()}
+function checkin(){
+  const t=todayStr();
+  let added=false;
+  if(!CHK.includes(t)){CHK.push(t);CHK.sort();save(K_CHK,CHK);added=true;}
+  refresh();
+  return added;
+}
+function streak(){
+  if(CHK.length===0)return{cur:0,best:0,tot:0};
+  let best=1,run=1;
+  const sorted=[...CHK].sort();
+  for(let i=1;i<sorted.length;i++){if(daysBetween(sorted[i-1],sorted[i])===1)run++;else run=1;best=Math.max(best,run)}
+  let cur=0;const t=todayStr();
+  if(CHK.includes(t)){cur=1;let d=addDays(t,-1);while(CHK.includes(d)){cur++;d=addDays(d,-1)}}
+  return{cur,best,tot:CHK.length};
+}
+
+/* ---------- 工具 ---------- */
+function toast(m){const el=document.getElementById("toast");el.textContent=m;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800)}
+function $(id){return document.getElementById(id)}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+// Phase5：错误次数加权复习 —— 错得越多的卡越优先进入复习队列（权重 = 1 + 错误次数）
+function wrongCount5(id){
+  const p=st(id);
+  return (p && typeof p.lapses==='number') ? p.lapses : 0;
+}
+// 指数加权洗牌：权重 w 越大越偏向排到队首（会话数量有限时优先保留易错卡）
+function weightedShuffle(ids, wfn){
+  return ids.map(function(id){
+    const w = 1 + (wfn ? wfn(id) : 0);
+    return { id: id, k: Math.pow(Math.random(), 1 / Math.max(0.0001, w)) };
+  }).sort(function(a,b){ return b.k - a.k; }).map(function(o){ return o.id; });
+}
+
+
+/* ---------- 本轮数量 ---------- */
+function getSessionSize(){const n=parseInt(load(K_SESS,"20"),10);return isNaN(n)?20:n}
+function setSessionSize(n){save(K_SESS,String(n));
+  const b=$("sessionSize2"); if(b)b.value=String(n);}
+
+/* ---------- 章节列表与渲染 ---------- */
+function chaptersList(){
+  const seen=new Map();
+  DATA.forEach(d=>{ if(!seen.has(d.chNum)) seen.set(d.chNum,{num:d.chNum,title:d.chTitle,ids:[]}); seen.get(d.chNum).ids.push(d.id); });
+  return [...seen.values()].sort((a,b)=>a.num-b.num);
+}
+function renderChapters(){
+  const box=$("chapterGrid"); if(!box)return;
+  box.innerHTML=chaptersList().map(c=>{
+    const total=c.ids.length;
+    const learned=c.ids.filter(id=>!isNew(id)).length;
+    const mastered=c.ids.filter(id=>statusOf(id)==="master").length;
+    const pct=total?Math.round(learned/total*100):0;
+    return `<button class="chcard" data-ch="${c.num}">
+      <div class="chn">Chapter ${c.num}</div>
+      <div class="cht">${esc(c.title)}</div>
+      <div class="chmeta">${total} 词 · 已学 ${learned} · 掌握 ${mastered}</div>
+      <div class="chbar"><i style="width:${pct}%"></i></div>
+    </button>`;
+  }).join("");
+  box.querySelectorAll(".chcard").forEach(b=>b.onclick=()=>startSession("ch:"+b.dataset.ch,"studyArea"));
+}
+
+/* ---------- 选择卡片 ---------- */
+function pickCards(mode){
+  // 按章节学习：返回该章全部单词，不做数量裁剪
+  if(typeof mode==="string" && mode.indexOf("ch:")===0){
+    const n=parseInt(mode.slice(3),10);
+    return DATA.filter(d=>d.chNum===n).map(d=>d.id);
+  }
+  // 按个数学习：优先未掌握词（Phase5 易错优先），不足再补已掌握，按选定张数裁剪
+  if(typeof mode==="string" && mode.indexOf("count:")===0){
+    const n=parseInt(mode.slice(6),10);
+    const need=DATA.filter(d=>statusOf(d.id)!=="master").map(d=>d.id);
+    const rest=DATA.filter(d=>statusOf(d.id)==="master").map(d=>d.id);
+    let ids=weightedShuffle(need, wrongCount5).concat(shuffle(rest));
+    if(n>0 && n<ids.length) ids=ids.slice(0,n);
+    return ids;
+  }
+  // 复习待办：系统按遗忘曲线自动生成的到期卡，全部返回（不掺新词）；Phase5 易错优先排序
+  if(mode==="due"){
+    return weightedShuffle(DATA.filter(d=>isDue(d.id)).map(d=>d.id), wrongCount5);
+  }
+  // 专攻薄弱 / 全部过一遍：主动加练，按「本轮数量」裁剪；Phase5 易错优先排序（all 保持源顺序）
+  let ids;
+  if(mode==="new") ids=DATA.filter(d=>isNew(d.id)).map(d=>d.id);
+  else if(mode==="weak") ids=DATA.filter(d=>isWeak(d.id)).map(d=>d.id);
+  else if(mode==="all") ids=DATA.map(d=>d.id);
+  else ids=DATA.filter(d=>isDue(d.id)).map(d=>d.id);
+  if(mode!=="all") ids=weightedShuffle(ids, wrongCount5);
+  const n=getSessionSize();
+  if(n>0 && n<ids.length) ids=ids.slice(0,n);
+  return ids;
+}
+
+/* ---------- 学习会话 ---------- */
+let Q=[],QI=0,sessionDone=0,sessionMode="due",activeAreaId="";
+
+/* ---------- 多轮重来（Anki 式：失误重排，最多 MAX_RETRY 轮） ---------- */
+let SESS_TOTAL=0, SESS_PASSED=0;
+const RETRY_MAP={}; const MAX_RETRY=3; const REQ_GAP=3;   // 失误后隔几张再出现
+function onGrade(areaId,id,grade){
+  // 认识 → 本轮通过
+  if(grade==="good"){
+    SESS_PASSED++;
+    if(SESS_PASSED>=SESS_TOTAL){ finishSession(areaId); return; }
+    QI++; if(SESS_PASSED>=SESS_TOTAL || QI>=Q.length) finishSession(areaId); else renderCard(areaId);
+    return;
+  }
+  // 不认识 / 模糊 → 没过，重来（最多 MAX_RETRY 轮）
+  RETRY_MAP[id]=(RETRY_MAP[id]||0)+1;
+  if(RETRY_MAP[id]<=MAX_RETRY){
+    Q.splice(Math.min(QI+1+REQ_GAP, Q.length), 0, id);   // 隔几张再出现，避免机械重复
+  } else {
+    // 超过上限：放弃本轮重来，标记待巩固（rate 已置 relearning），计入已处理
+    SESS_PASSED++;
+    if(SESS_PASSED>=SESS_TOTAL){ finishSession(areaId); return; }
+  }
+  QI++; if(SESS_PASSED>=SESS_TOTAL || QI>=Q.length) finishSession(areaId); else renderCard(areaId);
+}
+
+/* 学习区视图切换：mode=选方式 / chapter=选章节 / count=选个数 / session=学习中 */
+function showStudyView(v){
+  $("studyModeSel").style.display  = v==="mode"    ? "" : "none";
+  $("studyChapter").style.display = v==="chapter" ? "" : "none";
+  $("studyCount").style.display   = v==="count"   ? "" : "none";
+  $("studyArea").style.display    = v==="session" ? "" : "none";
+}
+function backToMode(){ showStudyView("mode"); }
+function backToChapters(){ showStudyView("chapter"); }
+function backToCount(){ showStudyView("count"); }
+function backFromSession(){
+  if(activeAreaId==="studyArea"){
+    if(typeof sessionMode==="string" && sessionMode.indexOf("ch:")===0) showStudyView("chapter");
+    else if(typeof sessionMode==="string" && sessionMode.indexOf("count:")===0) showStudyView("count");
+    else showStudyView("mode");
+  }
+  activeAreaId="";
+}
+function backFromReview(){ const m=$("reviewMenu"); if(m)m.style.display=""; $("reviewArea").style.display="none"; $("reviewArea").innerHTML=""; refresh(); }
+function startSession(mode,areaId){
+  sessionMode=mode;
+  activeAreaId=areaId;
+  Q=pickCards(mode); QI=0; sessionDone=0; SESS_TOTAL=Q.length; SESS_PASSED=0; for(const k in RETRY_MAP) delete RETRY_MAP[k];
+  if(Q.length===0){$(areaId).innerHTML='<div class="empty"><div class="big">🎉</div>暂时没有需要学习的卡片，去“词库”看看，或换个范围吧。</div>';return}
+  if(areaId==="studyArea") showStudyView("session");
+  if(areaId==="reviewArea"){const m=$("reviewMenu"); if(m)m.style.display="none"; $("reviewArea").style.display="";}
+  renderCard(areaId);
+}
+function renderCard(areaId){
+  const id=Q[QI];
+  const card=DATA.find(d=>d.id===id);
+  const total=SESS_TOTAL, left=SESS_TOTAL-SESS_PASSED;
+  const lv=levelLabel(id);
+  const p=st(id);
+  let retP, nextTxt;
+  if(p.state==="new"){retP="—"; nextTxt="首次学习";}
+  else if(p.state==="relearning"){retP="需巩固"; nextTxt="明天再练";}
+  else { retP=Math.round(retention(id)*100)+"%"; const nd=daysBetween(todayStr(),p.due); nextTxt = nd<=0?"今天":nd+"天后"; }
+  let topLine;
+  if(areaId==="studyArea"){
+    const isCh = typeof sessionMode==="string" && sessionMode.indexOf("ch:")===0;
+    const backText = isCh ? "← 返回选章节" : "← 返回选个数";
+    topLine = `<div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromSession()">${backText}</button>
+      <span class="muted small">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</span>
+    </div>`;
+  } else if(areaId==="reviewArea"){
+    topLine = `<div class="row" style="justify-content:space-between;width:100%;align-items:center;margin-bottom:6px">
+      <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="backFromReview()">← 返回复习选项</button>
+      <span class="muted small">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</span>
+    </div>`;
+  } else {
+    topLine = `<div class="muted small" style="width:100%;text-align:right">剩余 ${SESS_TOTAL-SESS_PASSED} / 共 ${SESS_TOTAL}</div>`;
+  }
+  $(areaId).innerHTML=`
+    <div class="progress"><i style="width:${Math.round(SESS_PASSED/SESS_TOTAL*100)}%"></i></div>
+    ${topLine}
+    <div class="stage">
+      <div class="flip" id="flip">
+        <div class="flip-in">
+          <div class="face front">
+            <div class="term">${esc(card.term)}</div>
+            <div class="hint">点击卡片 / 按空格 翻看释义（再点一次返回单词）</div>
+          </div>
+          <div class="face back ap">
+            <div class="tag">定义</div>
+            <div class="def ap-back"><div class="zh">${esc(card.zh).replace(/\n/g,"<br>")}</div>${card.note?`<div class="note">${esc(card.note).replace(/\n/g,"<br>")}</div>`:``}</div>
+            <div class="meta">当前留存 ${retP} · 下次复习 ${nextTxt}</div>
+          </div>
+        </div>
+      </div>
+      <div class="ratings" id="ratings" style="visibility:hidden">
+        <button class="btn bad" data-q="again">不认识</button>
+        <button class="btn warn" data-q="hard">模糊</button>
+        <button class="btn good" data-q="good">认识</button>
+      </div>
+    </div>`;
+  const flip=$(areaId).querySelector("#flip");
+  if(flip){
+    flip.onclick=()=>{const f=flip.classList.toggle("flipped");const r=$(areaId).querySelector("#ratings"); if(r)r.style.visibility=f?"visible":"hidden"};
+  }
+  const rt=$(areaId).querySelector("#ratings");
+  if(rt){
+    rt.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      rate(id,b.dataset.q);
+      onGrade(areaId,id,b.dataset.q);
+    });
+  }
+}
+function sessionChName(mode){
+  if(typeof mode!=="string") return "未选择章节";
+  let chPart="";
+  if(mode.indexOf("cloze:ch:")===0) chPart=mode.slice(9);
+  else if(mode.indexOf("ch:")===0) chPart=mode.slice(3);
+  if(!chPart) return "全库模式";
+  const n=Number(chPart);
+  if(!isNaN(n)){
+    const c=chaptersList().find(x=>x.num===n);
+    return (c && c.title) ? c.title : `Chapter ${chPart}`;
+  }
+  const groups=chaptersList();
+  for(const g of groups){
+    if(g.subs){
+      for(const s of g.subs){
+        if(String(s.key)===chPart) return (s.title) ? s.title : chPart;
+      }
+    }
+  }
+  return chPart;
+}
+function finishSession(areaId){
+  const learned=(SESS_TOTAL>0)?SESS_TOTAL:Q.length;
+  const reReview=Object.keys(RETRY_MAP).filter(k=>RETRY_MAP[k]>0).length;
+  const chName=sessionChName(sessionMode);
+  const justChecked=autoCheckin();          // 完成学习 → 自动打卡（仅记录当天）
+  const s=streak();
+  const chkTxt=justChecked?"✅ 今日打卡已自动记录":"📅 今日已打卡";
+  const streakTxt=s.cur>0?` · 连续 ${s.cur} 天`:"";
+  let backBtns="";
+  if(areaId==="studyArea"){
+    const isCh = typeof sessionMode==="string" && sessionMode.indexOf("ch:")===0;
+    backBtns = isCh
+      ? `<button class="btn soft" onclick="backToChapters()">返回选章节</button>`
+      : `<button class="btn soft" onclick="backToCount()">返回选个数</button>`;
+    backBtns += `<button class="btn ghost" onclick="backToMode()">返回选择学习方式</button>`;
+  } else if(areaId==="reviewArea"){
+    backBtns = `<button class="btn soft" onclick="backFromReview()">返回复习选项</button>`;
+  }
+  $(areaId).innerHTML=`<div class="sum">
+    <div class="big">本轮完成 🎉</div>
+    <p class="muted">章节：${chName}</p>
+    <p class="muted">已学习 ${learned} 张 · ${todayStr()} · 进度已自动保存</p>
+    ${reReview>0?`<p class="muted" style="color:#c0392b">其中 ${reReview} 张需多练几轮，已加入待巩固</p>`:""}
+    <div class="chkline">${chkTxt}${streakTxt}</div>
+    <div class="row" style="justify-content:center;margin-top:10px;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="startSession(sessionMode,'${areaId}')">再来一组</button>
+      ${backBtns}
+      <button class="btn ghost" onclick="switchTab('checkin')">查看打卡</button>
+    </div></div>`;
+  if(window.Sync)Sync.push();
+  refresh();
+}
+function returnToChapters(){ showStudyView("chapter"); }
+let currentMode="due";
+
+/* ---------- 渲染：统计 ---------- */
+function refresh(){
+  $("totalN").textContent=DATA.length;
+  const due=DATA.filter(d=>isDue(d.id)).length;
+  const master=DATA.filter(d=>statusOf(d.id)==="master").length;
+  const s=streak();
+  $("streakN").textContent=s.cur;
+  $("dueN").textContent=due;
+  $("masterN").textContent=master;
+  $("todayStr").textContent=todayStr();
+  const weak=DATA.filter(d=>isWeak(d.id)).length;
+  $("rDue").textContent=due;
+  $("rNew").textContent=DATA.filter(d=>isNew(d.id)).length;
+  $("rWeak").textContent=weak;
+  ["revDueN","revDueN2"].forEach(k=>{const el=$(k);if(el)el.textContent=due;});
+  const rw=$("revWeakN"); if(rw)rw.textContent=weak;
+  $("cCur").textContent=s.cur; $("cBest").textContent=s.best; $("cTot").textContent=s.tot;
+  const tc=$("todayChk"); if(tc){ if(CHK.includes(todayStr())){tc.textContent="今日已打卡 ✓";tc.className="pill good";}else{tc.textContent="今日未打卡 · 去学习后自动记录";tc.className="pill idle";} }
+  renderChapters();
+  renderCal();
+  $("sNew").textContent=DATA.filter(d=>statusOf(d.id)==="new").length;
+  $("sLearn").textContent=DATA.filter(d=>statusOf(d.id)==="learn").length;
+  $("sMaster").textContent=master;
+  $("sDue").textContent=due;
+  renderDonut();
+  renderAct();
+  renderRet();
+  renderBrowse();
+}
+let calY=(new Date()).getFullYear(), calM=(new Date()).getMonth();
+function renderCal(){
+  const y=calY, m=calM;
+  $("calTitle").textContent=`${y} 年 ${m+1} 月`;
+  const first=new Date(y,m,1); const startD=first.getDay();
+  const days=new Date(y,m+1,0).getDate();
+  const wl=["日","一","二","三","四","五","六"];
+  let h=""; wl.forEach(w=>h+=`<div class="d h">${w}</div>`);
+  for(let i=0;i<startD;i++)h+=`<div class="d"></div>`;
+  const t=todayStr();
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const on=CHK.includes(ds)?" on":""; const tod=ds===t?" today":"";
+    h+=`<div class="d${on}${tod}">${d}</div>`;
+  }
+  $("cal").innerHTML=h;
+}
+function calPrev(){ calM--; if(calM<0){calM=11;calY--;} renderCal(); }
+function calNext(){ calM++; if(calM>11){calM=0;calY++;} renderCal(); }
+function calToday(){ const n=new Date(); calY=n.getFullYear(); calM=n.getMonth(); renderCal(); }
+function renderDonut(){
+  const n=DATA.filter(d=>statusOf(d.id)==="new").length;
+  const l=DATA.filter(d=>statusOf(d.id)==="learn").length;
+  const m=DATA.filter(d=>statusOf(d.id)==="master").length;
+  const segs=[["新词",n,"#c9d2e6"],["学习中",l,"#e8833a"],["已掌握",m,"#27a567"]];
+  const total=DATA.length||1; let acc=0,r=54,cx=70,cy=70;
+  let p="";
+  segs.forEach(([nm,v,col])=>{const a0=acc/total*2*Math.PI-Math.PI/2;acc+=v;
+    const a1=acc/total*2*Math.PI-Math.PI/2;
+    if(v>0){const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+      const large=(a1-a0)>Math.PI?1:0;
+      p+=`<path d="M${cx} ${cy} L${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${col}"/>`}});
+  p+=`<circle cx="${cx}" cy="${cy}" r="34" fill="#fff"/>`;
+  p+=`<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="20" font-weight="800" fill="#1f2733">${m}</text>`;
+  p+=`<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="11" fill="#6b7686">已掌握</text>`;
+  $("donut").innerHTML=p;
+  $("legend").innerHTML=segs.map(([nm,v,col])=>`<div><i style="background:${col}"></i>${nm}：${v}</div>`).join("");
+}
+function renderAct(){
+  const days=[];for(let i=13;i>=0;i--)days.push(addDays(todayStr(),-i));
+  const max=Math.max(1,...days.map(d=>STAT[d]||0));
+  $("actBars").innerHTML=days.map(d=>{const v=STAT[d]||0;const h=Math.round(v/max*100);
+    const on=CHK.includes(d)?"style='background:#19b8a6'":"";
+    return `<div class="b" ${on} style="height:${Math.max(3,h)}%"><span>${v||""}</span><small>${d.slice(5)}</small></div>`}).join("");
+}
+function renderRet(){
+  const S0=12, W=300,H=120, pad=26;
+  const maxT=30;
+  const X=t=> pad + t/maxT*(W-pad-10);
+  const Y=r=> H-pad - r*(H-pad-12);
+  let path="";
+  for(let t=0;t<=maxT;t+=0.5){const r=Math.exp(-K_DECAY*t/S0);path+=(t===0?"M":"L")+X(t).toFixed(1)+" "+Y(r).toFixed(1)+" ";}
+  const sx=X(S0), sy=Y(0.9);
+  $("retCurve").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:340px">
+    <line x1="${pad}" y1="${H-pad}" x2="${W-10}" y2="${H-pad}" stroke="#e6eaf2"/>
+    <line x1="${pad}" y1="10" x2="${pad}" y2="${H-pad}" stroke="#e6eaf2"/>
+    <path d="${path}" fill="none" stroke="#4f6ef7" stroke-width="2.5"/>
+    <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="4" fill="#19b8a6"/>
+    <text x="${(sx+4).toFixed(1)}" y="${(sy-6).toFixed(1)}" font-size="10" fill="#19b8a6">复习点(留存90%)</text>
+    <text x="${pad}" y="9" font-size="10" fill="#6b7686">留存率</text>
+    <text x="${W-30}" y="${H-8}" font-size="10" fill="#6b7686">天数</text>
+  </svg>`;
+  const rev=DATA.filter(d=>!isNew(d.id));
+  const avg= rev.length? Math.round(rev.reduce((a,d)=>a+retention(d.id),0)/rev.length*100):100;
+  $("sRet").textContent=avg+"%";
+}
+
+/* ---------- 词库 ---------- */
+let bFilter="all", bSearch="";
+function renderBrowse(){
+  let arr=DATA.slice();
+  if(bFilter==="new")arr=arr.filter(d=>statusOf(d.id)==="new");
+  else if(bFilter==="learn")arr=arr.filter(d=>statusOf(d.id)==="learn");
+  else if(bFilter==="master")arr=arr.filter(d=>statusOf(d.id)==="master");
+  else if(bFilter==="due")arr=arr.filter(d=>isDue(d.id));
+  if(bSearch)arr=arr.filter(d=>(d.term+" "+(d.zh||"")+" "+(d.note||"")).toLowerCase().includes(bSearch.toLowerCase()));
+  const el=$("bList");
+  if(arr.length===0){el.innerHTML='<div class="empty">没有匹配的卡片</div>';return}
+  el.innerHTML=arr.map(d=>{const lv=levelLabel(d.id);
+    return `<div class="item" onclick="this.classList.toggle('open')">
+      <div class="t"><span>${esc(d.term)}</span><span class="lvl ${lv[1]}">${lv[0]}</span></div>
+      <div class="dd"><span class="bz">中文：</span>${esc(d.zh).replace(/\n/g,"<br>")}${d.note?`<br><span class="bz">笔记：</span>${esc(d.note).replace(/\n/g,"<br>")}`:``}</div></div>`}).join("");
+}
+
+/* ---------- 转义 ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ---------- Tab ---------- */
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="p-"+name));
+  if(name==="study") showStudyView("mode");   // 进入学习页 → 回到“选择学习方式”
+  if(name==="review"){ const m=$("reviewMenu"); if(m)m.style.display=""; const ra=$("reviewArea"); if(ra){ra.style.display="none"; ra.innerHTML="";} }
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
+
+/* ---------- 事件 ---------- */
+$("sessionSize2").onchange=e=>setSessionSize(parseInt(e.target.value,10));
+$("revDue").onclick=()=>startSession("due","reviewArea");
+$("revWeak").onclick=()=>startSession("weak","reviewArea");
+$("revAll").onclick=()=>startSession("all","reviewArea");
+// 学习方式选择
+document.querySelectorAll('#studyModeSel [data-mode]').forEach(b=>b.onclick=()=>{
+  showStudyView(b.dataset.mode==="chapter"?"chapter":"count");
+});
+// 按个数学习
+document.querySelectorAll('#studyCount [data-count]').forEach(b=>b.onclick=()=>startSession("count:"+b.dataset.count,"studyArea"));
+$("search").oninput=e=>{bSearch=e.target.value;renderBrowse()};
+document.querySelectorAll("#bFilters .chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll("#bFilters .chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active");bFilter=c.dataset.f;renderBrowse();
+});
+$("exportBtn").onclick=()=>{
+  const blob=new Blob([JSON.stringify({PROG,CHK,STAT},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="apmicrowords_progress_"+todayStr()+".json";a.click();toast("已导出进度");
+};
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const o=JSON.parse(r.result);
+    if(o.PROG){PROG=o.PROG;for(const id in PROG)PROG[id]=migrate(PROG[id]);save(K_PROG,PROG);}
+    if(o.CHK){CHK=o.CHK;save(K_CHK,CHK);}
+    if(o.STAT){STAT=o.STAT;save(K_STAT,STAT);}
+    refresh();toast("进度已导入");}catch(err){toast("文件格式错误")}};
+  r.readAsText(f)};
+$("resetBtn").onclick=()=>{if(confirm("确定要清空所有学习进度和打卡记录吗？")){
+  PROG={};CHK=[];STAT={};save(K_PROG,PROG);save(K_CHK,CHK);save(K_STAT,STAT);refresh();toast("已重置");}};
+
+/* ---------- 键盘 ---------- */
+document.addEventListener("keydown",e=>{
+  const ps=$("p-study"), pr=$("p-review");
+  let panel=null;
+  if(ps&&ps.classList.contains("active"))panel=ps;
+  else if(pr&&pr.classList.contains("active"))panel=pr;
+  if(!panel)return;
+  const flip=panel.querySelector("#flip"); if(!flip)return;
+  if(e.code==="Space"){e.preventDefault();flip.click();}
+  if(flip.classList.contains("flipped")){
+    const rt=panel.querySelector("#ratings"); if(!rt)return;
+    if(e.key==="1")rt.querySelector('[data-q=again]').click();
+    if(e.key==="2")rt.querySelector('[data-q=hard]').click();
+    if(e.key==="3")rt.querySelector('[data-q=good]').click();
+  }
+});
+
+/* ---------- 初始化 ---------- */
+if (typeof AuthGate !== "undefined") {
+  AuthGate.start({
+    deck: DECK_SLUG,
+    onSuccess: function(){
+      var after = function(){ $("sessionSize2").value=String(getSessionSize()); refresh(); };
+      if (window.Sync) { Sync.init(DECK_SLUG); Sync.pull().finally(after); }
+      else after();
+    }
+  });
+} else {
+  // 登录脚本未加载时（如 CDN 失败或本地调试），降级为原有本地模式
+  $("sessionSize2").value=String(getSessionSize());
+  refresh();
+}
+</script>
+<script>
+// Phase5：复习页提示「易错优先」
+(function(){
+  var rm=document.getElementById('reviewMenu');
+  if(rm && !document.getElementById('p5hint')){
+    var d=document.createElement('div');
+    d.id='p5hint'; d.className='pill idle';
+    d.style.margin='0 0 14px'; d.style.fontSize='13px';
+    d.textContent='\u2696 \u6613\u9519\u4f18\u5148\uff1a\u9519\u5f97\u8d8a\u591a\u7684\u8bcd\u8d8a\u6392\u5230\u524d\u9762\u3001\u88ab\u4f18\u5148\u62bd\u5230\uff08\u6309\u4f60\u7684\u9519\u8bef\u6b21\u6570\u52a0\u6743\uff09\u3002';
+    rm.insertBefore(d, rm.firstChild);
+  }
+})();
+</script>
+</body>
+</html>

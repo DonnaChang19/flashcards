@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>经济闪卡学习中心</title>
+<style>
+:root{
+  --bg:#f5f7fb; --card:#ffffff; --text:#1f2733; --muted:#5b6675;
+  --accent:#3b6ef0; --accent2:#7b5bf0; --border:#e4e8f0; --shadow:0 6px 20px rgba(20,40,80,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1420; --card:#1a2030; --text:#e8edf6; --muted:#9aa7bd;
+    --accent:#5b86f5; --accent2:#9b7bf5; --border:#2a3346; --shadow:0 6px 22px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;padding:0 16px 48px;}
+header{max-width:980px;margin:0 auto;padding:48px 0 24px;text-align:center;}
+h1{font-size:clamp(26px,5vw,40px);margin:0 0 10px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.subtitle{color:var(--muted);font-size:16px;margin:0 auto;max-width:660px;}
+.grid{max-width:980px;margin:24px auto 0;display:grid;gap:18px;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 22px 18px;
+  box-shadow:var(--shadow);transition:transform .15s ease,box-shadow .15s ease;text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;gap:8px;}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(20,40,80,.16);}
+.card .tag{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--accent);text-transform:uppercase;}
+.card h2{margin:0;font-size:19px;}
+.card p{margin:0;color:var(--muted);font-size:14px;flex:1;}
+.card .go{margin-top:6px;font-size:14px;font-weight:600;color:var(--accent);}
+.card.teacher{background:linear-gradient(135deg,rgba(59,110,240,.10),rgba(123,91,240,.10));border-color:var(--accent2);}
+.note{max-width:980px;margin:28px auto 0;background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:20px 24px;box-shadow:var(--shadow);}
+.note h3{margin:0 0 10px;font-size:16px;}
+.note ul{margin:0;padding-left:20px;color:var(--muted);font-size:14px;}
+.note code{background:rgba(120,140,180,.15);padding:1px 6px;border-radius:6px;font-size:13px;}
+footer{max-width:980px;margin:36px auto 0;text-align:center;color:var(--muted);font-size:13px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>经济闪卡学习中心</h1>
+  <p class="subtitle">学生 Key 登录 · 云端进度同步 · 易错优先复习 · 老师后台看板。每套闪卡均支持离线单文件使用，登录后进度自动上云。</p>
+</header>
+
+<main class="grid">
+  <a class="card" href="./CIE-AS核心定义和单词卡.html">
+    <span class="tag">CIE · AS</span>
+    <h2>CIE AS 经济闪卡</h2>
+    <p>CIE 考试局 AS 阶段核心定义与术语，含挖空练习与 FSRS 遗忘曲线排期。</p>
+    <span class="go">开始学习 →</span>
+  </a>
+
+  <a class="card" href="./CIE-A2核心定义和单词卡.html">
+    <span class="tag">CIE · A2</span>
+    <h2>CIE A2 经济闪卡</h2>
+    <p>CIE 考试局 A2 阶段核心定义与术语，含挖空练习与遗忘曲线排期。</p>
+    <span class="go">开始学习 →</span>
+  </a>
+
+  <a class="card" href="./EDX-AS核心定义和单词卡.html">
+    <span class="tag">Edexcel · AS</span>
+    <h2>Edexcel AS 经济闪卡</h2>
+    <p>Edexcel（爱德思）AS 阶段核心定义与术语，含挖空练习与排期。</p>
+    <span class="go">开始学习 →</span>
+  </a>
+
+  <a class="card" href="./EDX-A2核心定义和单词卡.html">
+    <span class="tag">Edexcel · A2</span>
+    <h2>Edexcel A2 经济闪卡</h2>
+    <p>Edexcel（爱德思）A2 阶段核心定义与术语，含挖空练习与排期。</p>
+    <span class="go">开始学习 →</span>
+  </a>
+
+  <a class="card" href="./AP微观词汇闪卡.html">
+    <span class="tag">AP · Micro</span>
+    <h2>AP 微观经济闪卡</h2>
+    <p>AP 微观经济学核心词汇（含中文释义与笔记），按章节顺序学习。</p>
+    <span class="go">开始学习 →</span>
+  </a>
+
+  <a class="card" href="./AP宏观经济词汇闪卡.html">
+    <span class="tag">AP · Macro</span>
+    <h2>AP 宏观经济闪卡</h2>
+    <p>AP 宏观经济学的核心词汇（含中文释义与笔记），按章节顺序学习。</p>
+    <span class="go">开始学习 →</span>
+  </a>
+
+  <a class="card teacher" href="./teacher.html">
+    <span class="tag">Teacher</span>
+    <h2>老师后台</h2>
+    <p>用教师 Key 登录，查看学生完成情况、高频错误术语、按学生筛选，并管理学习 Key。</p>
+    <span class="go">进入后台 →</span>
+  </a>
+</main>
+
+<section class="note">
+  <h3>使用说明</h3>
+  <ul>
+    <li><b>学生</b>：打开任意闪卡 → 输入老师发放的学习 Key → 进度自动同步到云端，换设备或清理浏览器缓存后仍可恢复（每台设备首次登录需绑定）。</li>
+    <li><b>老师</b>：进入「老师后台」用教师 Key 登录，查看学生完成情况、高频错误术语（可按具体学生筛选）与 Key 管理。</li>
+    <li><b>复习</b>：系统按错误次数加权（易错优先），薄弱项会更高频出现；「通盘 / 按章」模式保持源顺序。</li>
+    <li>未登录时仍可离线使用，进度仅保存在本机浏览器。</li>
+  </ul>
+</section>
+
+<footer>制作：常亚菲 Donna · 部署于 GitHub Pages · 数据存储于 Supabase</footer>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>老师后台 · 闪卡学习管理</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f4f6fb; color: #1f2937; line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(120deg, #4f46e5, #7c3aed);
+    color: #fff; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 20px; margin: 0; font-weight: 700; }
+  header .who { font-size: 14px; opacity: .9; }
+  header button {
+    background: rgba(255,255,255,.2); color:#fff; border:1px solid rgba(255,255,255,.4);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px;
+  }
+  .wrap { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .tabs button {
+    border: none; background: #e5e7eb; color: #374151; padding: 9px 16px; border-radius: 10px;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+  }
+  .tabs button.active { background: #4f46e5; color: #fff; }
+  .panel { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #eef0f4; }
+  th { color: #6b7280; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .bar { background: #eef2ff; border-radius: 6px; height: 8px; width: 120px; overflow: hidden; display: inline-block; vertical-align: middle; }
+  .bar > i { display: block; height: 100%; background: #4f46e5; }
+  .muted { color: #9ca3af; font-size: 13px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  input, select {
+    border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 10px; font-size: 14px;
+  }
+  .btn {
+    background: #4f46e5; color: #fff; border: none; border-radius: 8px; padding: 9px 16px;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+  }
+  .btn.ghost { background: #eef2ff; color: #4f46e5; }
+  .msg { font-size: 13px; margin-top: 8px; }
+  .msg.err { color: #dc2626; }
+  .msg.ok { color: #059669; }
+  .keys { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .keychip {
+    background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 10px;
+    font-family: ui-monospace, monospace; font-size: 14px; display: flex; gap: 6px; align-items: center;
+  }
+  .keychip button { border: none; background: none; cursor: pointer; color: #6b7280; font-size: 12px; }
+  .stu {
+    display: inline-block; background: #fef2f2; border: 1px solid #fee2e2; color: #b91c1c;
+    border-radius: 7px; padding: 3px 8px; margin: 2px 4px 2px 0; font-size: 12px; font-family: ui-monospace, monospace;
+  }
+  .stu em { font-style: normal; font-weight: 700; opacity: .85; margin-left: 2px; }
+  .stus { line-height: 1.4; }
+  /* 登录浮层 */
+  #loginGate {
+    position: fixed; inset: 0; background: rgba(15,23,42,.6); display: flex; align-items: center; justify-content: center; z-index: 50;
+  }
+  #loginGate .box {
+    background: #fff; border-radius: 16px; padding: 28px; width: 340px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,.25);
+  }
+  #loginGate h2 { margin: 0 0 6px; font-size: 18px; }
+  #loginGate p { margin: 0 0 16px; color: #6b7280; font-size: 13px; }
+  #loginGate input { width: 100%; margin-bottom: 12px; }
+  #loginGate .btn { width: 100%; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+  <!-- 登录浮层 -->
+  <div id="loginGate">
+    <div class="box">
+      <h2>老师后台登录</h2>
+      <p>请输入老师 Key（由系统在数据库中预设）。</p>
+      <input id="teacherKey" type="text" placeholder="例如 TEACHER-DONNA-2026" autocomplete="off" />
+      <button class="btn" id="teacherLoginBtn">进入后台</button>
+      <div class="msg err hidden" id="teacherErr"></div>
+    </div>
+  </div>
+
+  <header>
+    <h1>📊 闪卡学习管理后台</h1>
+    <div class="who hidden" id="whoBar"></div>
+  </header>
+
+  <div class="wrap hidden" id="dash">
+    <div class="tabs">
+      <button data-tab="students" class="active">学生总览</button>
+      <button data-tab="weak">高频错误术语</button>
+      <button data-tab="keys">Key 管理</button>
+    </div>
+
+    <!-- 学生总览 -->
+    <div class="panel" id="tab-students">
+      <div class="row">
+        <strong>学生列表</strong>
+        <button class="btn ghost" id="refreshStudents">刷新</button>
+        <span class="muted" id="studentCount"></span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Key</th><th>姓名</th><th>已学</th><th>完成率</th><th>掌握</th><th>薄弱</th><th>最近登录</th></tr>
+        </thead>
+        <tbody id="studentBody"></tbody>
+      </table>
+      <div class="msg err hidden" id="studentErr"></div>
+    </div>
+
+    <!-- 高频错误 -->
+    <div class="panel hidden" id="tab-weak">
+      <div class="row">
+        <label>选择套册：</label>
+        <select id="weakDeck"></select>
+        <label>按学生筛选：</label>
+        <select id="weakStudent"><option value="">全部学生</option></select>
+        <button class="btn" id="weakBtn">查询</button>
+      </div>
+      <table>
+        <thead><tr><th>术语</th><th>累计错误</th><th>涉及学生数</th><th>具体学生（Key·姓名·次数）</th></tr></thead>
+        <tbody id="weakBody"></tbody>
+      </table>
+      <div class="msg err hidden" id="weakErr"></div>
+    </div>
+
+    <!-- Key 管理 -->
+    <div class="panel hidden" id="tab-keys">
+      <div class="row">
+        <label>生成数量：</label>
+        <input id="genCount" type="number" min="1" max="200" value="10" style="width:90px" />
+        <button class="btn" id="genBtn">生成 Key</button>
+        <span class="muted">生成的 Key 即可分发给学生使用（仅白名单内 Key 可被激活）。</span>
+      </div>
+      <div class="keys" id="keyList"></div>
+      <hr style="border:none;border-top:1px solid #eee;margin:18px 0" />
+      <div class="row">
+        <label>解绑/重置设备（学生换设备时）：</label>
+        <input id="resetKey" type="text" placeholder="输入学生 Key" style="width:160px" />
+        <button class="btn ghost" id="resetBtn">解绑</button>
+      </div>
+      <div class="msg" id="keyMsg"></div>
+    </div>
+  </div>
+
+  <!-- 依赖 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="cloudstore.js"></script>
+  <script src="teacher.js"></script>
+</body>
+</html>
